@@ -173,8 +173,8 @@ export const CoursesScreen: React.FC = () => {
               </View>
             )}
           </View>
-          <Text style={styles.courseDescription} numberOfLines={1}>
-            {item.description}
+          <Text style={styles.courseDescription} numberOfLines={2}>
+            {item.description || ''}
           </Text>
 
           {/* Course Meta */}

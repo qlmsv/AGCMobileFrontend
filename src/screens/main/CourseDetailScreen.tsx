@@ -199,9 +199,9 @@ export const CourseDetailScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Course Image */}
-        {(course.cover || course.thumbnail) ? (
+        {course.cover ? (
           <Image
-            source={{ uri: (course.cover || course.thumbnail)! }}
+            source={{ uri: course.cover }}
             style={styles.courseImage}
             resizeMode="cover"
           />

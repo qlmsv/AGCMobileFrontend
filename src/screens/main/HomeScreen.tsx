@@ -110,9 +110,9 @@ export const HomeScreen: React.FC = () => {
                 activeOpacity={0.9}
                 onPress={() => handleCoursePress(course)}
             >
-                {(course.cover || course.thumbnail) ? (
+                {course.cover ? (
                     <Image
-                        source={{ uri: (course.cover || course.thumbnail)! }}
+                        source={{ uri: course.cover }}
                         style={[styles.courseImage, isLarge && styles.courseImageLarge]}
                         resizeMode="cover"
                     />
