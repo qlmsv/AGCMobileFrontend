@@ -19,6 +19,7 @@ import { Course, Category } from '../../types';
 import { courseService } from '../../services/courseService';
 import { colors } from '../../theme';
 import { logApiError } from '../../utils/errorUtils';
+import { logger } from '../../utils/logger';
 
 const extractCategories = (data: unknown): Category[] => {
   if (Array.isArray(data)) {
@@ -49,11 +50,11 @@ export const CoursesScreen: React.FC = () => {
 
   const fetchCategories = useCallback(async () => {
     try {
-      console.log('📥 Loading categories...');
+      logger.debug('📥 Loading categories...');
       await courseService.getCategories();
       setCategoriesError(null);
     } catch (error) {
-      console.error('❌ Failed to load categories:', error);
+      logger.error('❌ Failed to load categories:', error);
       logApiError('Failed to load categories', error);
       setCategoriesError('Failed to load categories');
     }
@@ -66,7 +67,7 @@ export const CoursesScreen: React.FC = () => {
       }
 
       try {
-        console.log('📥 Loading courses...', { activeTab });
+        logger.debug('📥 Loading courses...', { activeTab });
         let coursesData: Course[];
 
         if (activeTab === 'my') {
@@ -75,11 +76,11 @@ export const CoursesScreen: React.FC = () => {
           coursesData = await courseService.getCourses();
         }
 
-        console.log('✅ Courses loaded:', coursesData.length);
+        logger.debug('✅ Courses loaded:', coursesData.length);
         setCourses(coursesData);
         setCoursesError(null);
       } catch (error) {
-        console.error('❌ Failed to load courses:', error);
+        logger.error('❌ Failed to load courses:', error);
         logApiError('Failed to load courses', error);
         setCourses([]);
         setCoursesError('Failed to load courses');
@@ -128,13 +129,12 @@ export const CoursesScreen: React.FC = () => {
     return courses.filter(
       (course) =>
         course.title.toLowerCase().includes(query) ||
-        course.description.toLowerCase().includes(query)
+        course.description?.toLowerCase().includes(query)
     );
   }, [courses, searchQuery]);
 
   const renderCourse = ({ item }: { item: Course }) => {
-    // Debug: Log image URL
-    console.log('Course image URL:', item.cover);
+    logger.debug('Course image URL:', item.cover);
     const isEnrolled = (item as any).is_enrolled || false;
 
     return (
@@ -151,7 +151,7 @@ export const CoursesScreen: React.FC = () => {
               style={styles.courseImage}
               resizeMode="cover"
               onError={(error) => {
-                console.error('Image load error:', error.nativeEvent.error);
+                logger.error('Image load error:', error.nativeEvent.error);
               }}
             />
           ) : (

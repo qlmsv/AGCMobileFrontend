@@ -19,6 +19,7 @@ import { courseService } from '../../services/courseService';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
 import { logApiError } from '../../utils/errorUtils';
+import { logger } from '../../utils/logger';
 import { RootStackParamList } from '../../navigation/types';
 
 type CourseDetailRouteProp = RouteProp<RootStackParamList, 'CourseDetail'>;
@@ -39,15 +40,15 @@ export const CourseDetailScreen: React.FC = () => {
 
   const loadCourse = useCallback(async () => {
     try {
-      console.log('📥 Loading course:', courseId);
-      const courseData = await courseService.getCourse(courseId);
-      console.log('✅ Course loaded:', courseData.title);
+      logger.debug('📥 Loading course:', courseId);
+      const courseData = await courseService.getCourse(String(courseId));
+      logger.debug('✅ Course loaded:', courseData.title);
       setCourse(courseData);
       setIsFavourite(courseData.is_favourite || false);
       // Check if user is already enrolled (you can add this field to Course type)
       setIsEnrolled((courseData as any).is_enrolled || false);
     } catch (error) {
-      console.error('❌ Failed to load course:', error);
+      logger.error('❌ Failed to load course:', error);
       logApiError('Failed to load course', error);
     } finally {
       setIsLoading(false);
@@ -82,7 +83,7 @@ export const CourseDetailScreen: React.FC = () => {
         setIsFavourite(true);
       }
     } catch (error) {
-      console.error('Failed to update favourite:', error);
+      logger.error('Failed to update favourite:', error);
     }
   };
 
@@ -116,7 +117,7 @@ export const CourseDetailScreen: React.FC = () => {
                 // Reload course data
                 await loadCourse();
               } catch (error) {
-                console.error('Failed to enroll:', error);
+                logger.error('Failed to enroll:', error);
                 Alert.alert(
                   'Enrollment Failed',
                   'Failed to enroll in the course. Please try again.',
@@ -140,7 +141,7 @@ export const CourseDetailScreen: React.FC = () => {
             text: 'Continue',
             onPress: () => {
               // TODO: Implement payment flow
-              console.log('Open payment for course:', course.id);
+              logger.debug('TODO: Open payment for course:', course.id);
               Alert.alert('Coming Soon', 'Payment integration will be available soon!');
             },
           },
@@ -200,7 +201,7 @@ export const CourseDetailScreen: React.FC = () => {
         {/* Course Image */}
         {(course.cover || course.thumbnail) ? (
           <Image
-            source={{ uri: course.cover || course.thumbnail }}
+            source={{ uri: (course.cover || course.thumbnail)! }}
             style={styles.courseImage}
             resizeMode="cover"
           />
@@ -264,7 +265,7 @@ export const CourseDetailScreen: React.FC = () => {
             {/* Coach Card */}
             <TouchableOpacity
               style={styles.coachCard}
-              onPress={() => console.log('View coach profile')}
+              onPress={() => logger.debug('TODO: View coach profile')}
             >
               <View style={styles.coachInfo}>
                 <View style={styles.coachAvatar}>
@@ -304,7 +305,7 @@ export const CourseDetailScreen: React.FC = () => {
               <TouchableOpacity
                 key={module.id || index}
                 style={styles.moduleCard}
-                onPress={() => console.log('Open module:', module.id)}
+                onPress={() => logger.debug('TODO: Open module:', module.id)}
               >
                 <View style={styles.moduleInfo}>
                   <Ionicons name="folder-outline" size={24} color="#737373" />
@@ -325,7 +326,7 @@ export const CourseDetailScreen: React.FC = () => {
                   <TouchableOpacity
                     key={num}
                     style={styles.moduleCard}
-                    onPress={() => console.log('Open module:', num)}
+                    onPress={() => logger.debug('TODO: Open module:', num)}
                   >
                     <View style={styles.moduleInfo}>
                       <Ionicons name="folder-outline" size={24} color="#737373" />
@@ -357,8 +358,8 @@ export const CourseDetailScreen: React.FC = () => {
               {isEnrolled
                 ? 'Already Enrolled'
                 : course.is_free || Number(course.price) === 0
-                ? 'Enroll for Free'
-                : `Buy for $${course.price}`}
+                  ? 'Enroll for Free'
+                  : `Buy for $${course.price}`}
             </Text>
           )}
         </TouchableOpacity>
@@ -411,13 +412,12 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   courseImage: {
-    width: '100%',
+    width: '90%',
     height: 200,
     marginHorizontal: 20,
     marginTop: 8,
     borderRadius: 16,
     alignSelf: 'center',
-    width: '90%',
   },
   coursePlaceholder: {
     backgroundColor: colors.primary.main,

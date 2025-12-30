@@ -1,21 +1,23 @@
-// Typography system extracted from Figma design
+// Typography system - Pixel-perfect match with Figma Foundation/Typography
+// Font: Inter (or system San Francisco on iOS)
+
 export const typography = {
   // Font families
   fonts: {
-    primary: 'Rubik',
-    secondary: 'Montserrat',
+    primary: 'Inter',
+    secondary: 'Inter',
     system: 'System',
   },
 
-  // Font sizes
+  // Font sizes (from Figma)
   sizes: {
     xs: 10,
-    sm: 12,
-    base: 14,
-    md: 16,
-    lg: 17,
-    xl: 24,
-    xxl: 32,
+    sm: 12,     // Caption
+    base: 14,   // Body Medium
+    md: 16,     // Body Large
+    lg: 20,     // H3
+    xl: 24,     // H2
+    xxl: 32,    // H1/Title
   },
 
   // Font weights
@@ -29,31 +31,42 @@ export const typography = {
   // Line heights
   lineHeights: {
     tight: 1.2,
-    normal: 1.5,
-    relaxed: 1.75,
+    normal: 1.4,
+    relaxed: 1.6,
   },
 } as const;
 
 // Common text styles from Figma
 export const textStyles = {
+  // Title/H1: 32px, SemiBold
   h1: {
     fontFamily: typography.fonts.primary,
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.bold,
-    lineHeight: typography.sizes.xl * typography.lineHeights.tight,
+    fontSize: typography.sizes.xxl,
+    fontWeight: typography.weights.semiBold,
+    lineHeight: typography.sizes.xxl * typography.lineHeights.tight,
   },
+  // H2: 24px, SemiBold
   h2: {
     fontFamily: typography.fonts.primary,
-    fontSize: typography.sizes.lg,
+    fontSize: typography.sizes.xl,
     fontWeight: typography.weights.semiBold,
-    lineHeight: typography.sizes.lg * typography.lineHeights.tight,
+    lineHeight: typography.sizes.xl * typography.lineHeights.tight,
   },
+  // H3: 20px, Medium
   h3: {
     fontFamily: typography.fonts.primary,
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.medium,
+    lineHeight: typography.sizes.lg * typography.lineHeights.normal,
+  },
+  // Body Large: 16px, Regular
+  bodyLarge: {
+    fontFamily: typography.fonts.primary,
     fontSize: typography.sizes.md,
-    fontWeight: typography.weights.semiBold,
+    fontWeight: typography.weights.regular,
     lineHeight: typography.sizes.md * typography.lineHeights.normal,
   },
+  // Body Medium: 14px, Regular (default text)
   body: {
     fontFamily: typography.fonts.primary,
     fontSize: typography.sizes.base,
@@ -72,11 +85,19 @@ export const textStyles = {
     fontWeight: typography.weights.semiBold,
     lineHeight: typography.sizes.base * typography.lineHeights.normal,
   },
+  // Caption: 12px, Regular
   caption: {
     fontFamily: typography.fonts.primary,
     fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.medium,
+    fontWeight: typography.weights.regular,
     lineHeight: typography.sizes.sm * typography.lineHeights.normal,
+  },
+  // Button text: 16px, SemiBold
+  button: {
+    fontFamily: typography.fonts.primary,
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.semiBold,
+    lineHeight: typography.sizes.md * typography.lineHeights.tight,
   },
   label: {
     fontFamily: typography.fonts.primary,

@@ -173,7 +173,7 @@ export const ProfileScreen: React.FC = () => {
             ? `${profile.first_name} ${profile.last_name}`
             : 'User'}
         </Text>
-        <Text style={styles.roleTextSecondary}>{user?.phone || user?.email}</Text>
+        <Text style={styles.roleTextSecondary}>{profile?.phone_number || user?.email}</Text>
 
         <View style={styles.rolePill}>
           <Text style={styles.rolePillText}>
@@ -181,11 +181,11 @@ export const ProfileScreen: React.FC = () => {
           </Text>
         </View>
 
-        {(profile?.city || profile?.country) && (
+        {profile?.country && (
           <View style={styles.locationRow}>
             <Ionicons name="location-outline" size={16} color={colors.text.secondary} />
             <Text style={styles.locationText}>
-              {[profile.city, profile.country].filter(Boolean).join(', ')}
+              {profile.country}
             </Text>
           </View>
         )}
@@ -267,8 +267,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   avatar: {
-    width: layout.avatar.large,
-    height: layout.avatar.large,
+    width: layout.avatar.xl,
+    height: layout.avatar.xl,
     borderRadius: borderRadius.round,
   },
   avatarPlaceholder: {

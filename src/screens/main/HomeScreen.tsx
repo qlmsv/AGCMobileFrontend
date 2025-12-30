@@ -19,6 +19,7 @@ import { courseService } from '../../services/courseService';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '../../theme';
 import { logApiError } from '../../utils/errorUtils';
+import { logger } from '../../utils/logger';
 import { RootStackParamList, MainTabParamList } from '../../navigation/types';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -38,12 +39,12 @@ export const HomeScreen: React.FC = () => {
 
     const loadCourses = useCallback(async () => {
         try {
-            console.log('📥 Loading courses...');
+            logger.debug('📥 Loading courses...');
             const coursesData = await courseService.getCourses({ status: 'published' });
-            console.log('✅ Courses loaded:', coursesData.length);
+            logger.debug('✅ Courses loaded:', coursesData.length);
             setCourses(coursesData);
         } catch (error) {
-            console.error('❌ Failed to load courses:', error);
+            logger.error('❌ Failed to load courses:', error);
             logApiError('Failed to load courses', error);
             setCourses([]);
         } finally {
@@ -79,11 +80,11 @@ export const HomeScreen: React.FC = () => {
             if (newFavourites.has(courseId)) {
                 newFavourites.delete(courseId);
                 // Call API to remove from favourites
-                courseService.removeFromFavourites(courseId).catch(console.error);
+                courseService.removeFromFavourites(String(courseId)).catch((e) => logger.error('Failed to remove from favourites', e));
             } else {
                 newFavourites.add(courseId);
                 // Call API to add to favourites
-                courseService.addToFavourites(courseId).catch(console.error);
+                courseService.addToFavourites(String(courseId)).catch((e) => logger.error('Failed to add to favourites', e));
             }
             return newFavourites;
         });
@@ -111,7 +112,7 @@ export const HomeScreen: React.FC = () => {
             >
                 {(course.cover || course.thumbnail) ? (
                     <Image
-                        source={{ uri: course.cover || course.thumbnail }}
+                        source={{ uri: (course.cover || course.thumbnail)! }}
                         style={[styles.courseImage, isLarge && styles.courseImageLarge]}
                         resizeMode="cover"
                     />

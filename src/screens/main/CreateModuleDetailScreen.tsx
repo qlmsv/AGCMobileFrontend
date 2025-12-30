@@ -14,6 +14,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
+import { logger } from '../../utils/logger';
 
 type CreateModuleDetailRouteProp = RouteProp<RootStackParamList, 'CreateModuleDetail'>;
 
@@ -64,7 +65,7 @@ export const CreateModuleDetailScreen = () => {
                             <TouchableOpacity
                                 key={lesson.id}
                                 style={styles.lessonCard}
-                                onPress={() => console.log('Edit lesson:', lesson.id)}
+                                onPress={() => logger.debug('TODO: Edit lesson:', lesson.id)}
                             >
                                 <View style={styles.lessonLeft}>
                                     <View style={styles.lessonIconContainer}>

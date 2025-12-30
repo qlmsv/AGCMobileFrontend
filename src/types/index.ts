@@ -1,101 +1,169 @@
 export interface User {
-  id: string | number;
+  id: string;
   email: string;
-  phone?: string;
+  is_active: boolean;
+  is_staff: boolean;
   role: 'student' | 'teacher' | 'admin';
-  created_at: string;
-  updated_at: string;
+  confirmed_at: string | null;
+  date_joined: string;
 }
 
 export interface Profile {
-  id: string | number;
-  user: string | number;
-  first_name?: string;
-  last_name?: string;
-  avatar?: string;
-  bio?: string;
-  date_of_birth?: string;
-  country?: string;
-  city?: string;
-  language?: string;
+  id: string;
+  user: string;
+  first_name: string | null;
+  last_name: string | null;
+  date_of_birth: string | null;
+  avatar: string | null;
+  bio: string | null;
+  timezone: string | null;
+  dark_mode: boolean;
+  notifications: boolean;
+  phone_number: string | null;
+  country: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
 }
 
 export interface AuthTokens {
   access: string;
   refresh: string;
-  access_expiration: string;
-  refresh_expiration: string;
+  access_expires_in?: number;
+  refresh_expires_in?: number;
+}
+
+export interface SendCodeRequest {
+  email: string;
+  code_type?: 'signup' | 'login' | 'password_reset';
+}
+
+export interface SendCodeResponse {
+  detail: string;
+  expires_in: number;
+}
+
+export interface VerifyCodeRequest {
+  email: string;
+  code: string;
+  code_type?: 'signup' | 'login' | 'password_reset';
+  remember_me?: boolean;
+}
+
+export interface VerifyCodeResponse {
+  detail: string;
+  user_id: string;
+  confirmed_at: string | null;
+  access: string;
+  refresh: string;
 }
 
 export interface Course {
-  id: string | number;
+  id: string;
+  author: string;
   title: string;
-  description: string;
-  category?: {
-    id: string;
-    name: string;
-  };
-  price: string | number;
-  is_free?: boolean;
-  currency?: string;
+  description?: string;
   language?: string;
   duration?: string;
+  start_date: string | null;
+  price?: string;
+  is_free?: boolean;
+  certificate?: boolean;
   status?: 'draft' | 'published' | 'archived';
-  cover?: string;
-  thumbnail?: string;
-  is_favourite?: boolean;
-  is_enrolled?: boolean;
-  created_at?: string;
-  updated_at?: string;
-  modules?: any[];
+  cover: string | null;
+  thumbnail?: string | null;
+  meta?: any;
+  category: Category;
+  category_id?: string;
+  modules: Module[];
+  created_at: string;
+  updated_at: string;
+  is_favourite: boolean;
+  is_enrolled: boolean;
+  managers: string[];
 }
 
 export interface Category {
-  id: string | number;
+  id: string;
   name: string;
-  description?: string;
-  icon?: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Module {
-  id: string | number;
-  course: string | number;
+  id: string;
+  course: string;
   title: string;
   description?: string;
-  order?: number;
-  is_free?: boolean;
-  lessons?: Lesson[];
-  created_at?: string;
+  position: number;
+  price?: string;
+  lessons: Lesson[];
+  created_at: string;
+  updated_at: string;
+  is_free: string | boolean;
+  has_access: string | boolean;
 }
 
 export interface Lesson {
-  id: string | number;
-  module: string | number;
+  id: string;
+  module: string;
   title: string;
-  content?: string;
-  video_url?: string;
-  order?: number;
-  duration?: number;
-  created_at?: string;
+  description?: string;
+  duration_minutes?: number;
+  start_time: string | null;
+  external_link: string | null;
+  position: number;
+  created_at: string;
+  updated_at: string;
+  has_access: string | boolean;
+}
+
+export interface CourseStudent {
+  id: string;
+  email: string;
+  role: 'student' | 'teacher' | 'admin';
+  profile: {
+    first_name: string | null;
+    last_name: string | null;
+    avatar: string | null;
+  };
 }
 
 export interface Chat {
-  id: string | number;
+  id: string;
   type: 'dm' | 'group';
-  name?: string;
-  avatar?: string;
+  title: string | null;
+  description: string | null;
+  display_title: string;
+  display_avatar: string;
+  avatar: string | null;
+  course: string | null;
+  created_by: string;
+  settings_json?: any;
   created_at: string;
-  updated_at: string;
-  last_message?: Message;
-  unread_count?: number;
+  messages_counter: number;
+  unread_count: string;
+  last_message: string;
+}
+
+export interface ChatList extends Chat {
+  members_count: number;
+}
+
+export interface ChatCreate {
+  type: 'dm' | 'group';
+  user_id?: string;
+  title?: string;
+  description?: string | null;
+  avatar?: string | null;
+  course?: string | null;
+  member_ids?: string[];
 }
 
 export interface Message {
-  id: string | number;
-  chat: string | number;
-  sender: string | number;
+  id: number;
+  chat: string;
+  sender: string;
   sender_profile?: Profile;
   content: string;
   attachments?: string[];
@@ -105,24 +173,57 @@ export interface Message {
 }
 
 export interface Notification {
-  id: number;
-  user: number;
+  id: string;
   type: 'CLASS_REMINDER_T15' | 'ADMIN_ANNOUNCEMENT' | 'NEW_COURSE' | 'CHAT_MESSAGE';
   title: string;
-  message: string;
-  is_read: boolean;
+  body?: string;
+  payload: NotificationPayload;
   created_at: string;
-  data?: any;
+}
+
+export interface NotificationPayload {
+  chat_id?: string;
+  message_id?: number;
+  author_id?: string;
+  author?: NotificationAuthor;
+}
+
+export interface NotificationAuthor {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+}
+
+export interface NotificationDelivery {
+  id: string;
+  notification: Notification;
+  status: 'pending' | 'sent' | 'read';
+  sent_at: string | null;
+  read_at: string | null;
+  dedupe_key: string | null;
+  created_at: string;
+}
+
+export interface WebPushSubscription {
+  id?: number;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  user_agent?: string;
+  created_at?: string;
 }
 
 export interface Banner {
   id: number;
   title: string;
-  description?: string;
-  image: string;
-  link?: string;
-  is_active: boolean;
-  order: number;
+  subtitle?: string;
+  image_url: string;
+  link_url?: string;
+  button_text?: string;
+  order?: number;
+  starts_at: string | null;
+  ends_at: string | null;
 }
 
 export interface CalendarEvent {

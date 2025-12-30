@@ -1,6 +1,6 @@
 import apiService from './api';
 import { API_ENDPOINTS } from '../config/api';
-import { Course, Category, Module, Lesson } from '../types';
+import { Course, Category, Module, Lesson, CourseStudent } from '../types';
 
 // Helper to extract data from paginated responses
 const extractResults = <T>(data: any): T[] => {
@@ -15,18 +15,36 @@ const extractResults = <T>(data: any): T[] => {
 
 export const courseService = {
   async getCourses(params?: {
-    category?: number | string;
-    price_min?: number;
-    price_max?: number;
+    author?: string;
+    category?: string;
+    category_slug?: string;
+    is_free?: boolean;
     language?: string;
-    status?: string;
+    min_price?: number;
+    max_price?: number;
+    status?: 'draft' | 'published' | 'archived';
+    ordering?: string;
+    page?: number;
+    search?: string;
   }): Promise<Course[]> {
     const data = await apiService.get(API_ENDPOINTS.COURSES, { params });
     return extractResults<Course>(data);
   },
 
-  async getCourse(id: string | number): Promise<Course> {
-    return await apiService.get<Course>(`${API_ENDPOINTS.COURSES}${id}/`);
+  async getCourse(id: string): Promise<Course> {
+    return await apiService.get<Course>(API_ENDPOINTS.COURSE_BY_ID(id));
+  },
+
+  async createCourse(data: Partial<Course>): Promise<Course> {
+    return await apiService.post<Course>(API_ENDPOINTS.COURSES, data);
+  },
+
+  async updateCourse(id: string, data: Partial<Course>): Promise<Course> {
+    return await apiService.patch<Course>(API_ENDPOINTS.COURSE_BY_ID(id), data);
+  },
+
+  async deleteCourse(id: string): Promise<void> {
+    await apiService.delete(API_ENDPOINTS.COURSE_BY_ID(id));
   },
 
   async getMyCourses(): Promise<Course[]> {
@@ -39,28 +57,52 @@ export const courseService = {
     return extractResults<Course>(data);
   },
 
-  async addToFavourites(courseId: string | number): Promise<void> {
-    await apiService.post(`${API_ENDPOINTS.COURSES}${courseId}/favourite/`);
+  async addToFavourites(courseId: string): Promise<Course> {
+    return await apiService.post<Course>(API_ENDPOINTS.ADD_TO_FAVOURITES(courseId), {});
   },
 
-  async removeFromFavourites(courseId: string | number): Promise<void> {
-    await apiService.post(`${API_ENDPOINTS.COURSES}${courseId}/unfavourite/`);
+  async removeFromFavourites(courseId: string): Promise<Course> {
+    return await apiService.post<Course>(API_ENDPOINTS.REMOVE_FROM_FAVOURITES(courseId), {});
   },
 
-  async enrollInCourse(courseId: string | number): Promise<void> {
-    // Get all modules for the course
-    const modules = await this.getModules(Number(courseId));
+  async getCourseManagers(courseId: string): Promise<any> {
+    return await apiService.get(API_ENDPOINTS.COURSE_MANAGERS(courseId));
+  },
+
+  async addManager(courseId: string, managerId: string): Promise<Course> {
+    return await apiService.post<Course>(API_ENDPOINTS.ADD_MANAGER(courseId), {
+      manager_id: managerId
+    });
+  },
+
+  async removeManager(courseId: string, managerId: string): Promise<Course> {
+    return await apiService.post<Course>(API_ENDPOINTS.REMOVE_MANAGER(courseId), {
+      manager_id: managerId
+    });
+  },
+
+  async getCourseStudents(courseId: string): Promise<CourseStudent[]> {
+    const data = await apiService.get(API_ENDPOINTS.COURSE_STUDENTS(courseId));
+    return extractResults<CourseStudent>(data);
+  },
+
+  async getMyStudents(): Promise<CourseStudent[]> {
+    const data = await apiService.get(API_ENDPOINTS.MY_STUDENTS);
+    return extractResults<CourseStudent>(data);
+  },
+
+  async enrollInCourse(courseId: string): Promise<void> {
+    const course = await this.getCourse(courseId);
+    const modules = course.modules || [];
 
     if (modules.length === 0) {
       throw new Error('Course has no modules available for enrollment');
     }
 
-    // Enroll in each module, ignoring already_enrolled errors
     const results = await Promise.allSettled(
       modules.map(module => this.enrollInModule(module.id))
     );
 
-    // Check if any modules require payment
     const paymentRequired = results.some(result =>
       result.status === 'rejected' &&
       (result.reason as any)?.response?.data?.code === 'payment_required'
@@ -70,14 +112,12 @@ export const courseService = {
       throw new Error('Some modules require payment. Please purchase the course first.');
     }
 
-    // If all rejections are "already_enrolled", consider it success
     const allAlreadyEnrolled = results.every(result =>
       result.status === 'fulfilled' ||
       (result.status === 'rejected' && (result.reason as any)?.response?.data?.code === 'already_enrolled')
     );
 
     if (!allAlreadyEnrolled) {
-      // Some other error occurred
       const otherErrors = results.filter(result =>
         result.status === 'rejected' &&
         (result.reason as any)?.response?.data?.code !== 'already_enrolled' &&
@@ -90,36 +130,94 @@ export const courseService = {
     }
   },
 
-  async getCategories(): Promise<Category[]> {
-    const data = await apiService.get(API_ENDPOINTS.COURSE_CATEGORIES);
+  async getCategories(params?: {
+    ordering?: string;
+    page?: number;
+    search?: string;
+  }): Promise<Category[]> {
+    const data = await apiService.get(API_ENDPOINTS.COURSE_CATEGORIES, { params });
     return extractResults<Category>(data);
   },
 
-  async getModules(courseId?: number): Promise<Module[]> {
-    const params = courseId ? { course: courseId } : undefined;
+  async getCategory(id: string): Promise<Category> {
+    return await apiService.get<Category>(API_ENDPOINTS.CATEGORY_BY_ID(id));
+  },
+
+  async createCategory(data: Partial<Category>): Promise<Category> {
+    return await apiService.post<Category>(API_ENDPOINTS.COURSE_CATEGORIES, data);
+  },
+
+  async updateCategory(id: string, data: Partial<Category>): Promise<Category> {
+    return await apiService.patch<Category>(API_ENDPOINTS.CATEGORY_BY_ID(id), data);
+  },
+
+  async deleteCategory(id: string): Promise<void> {
+    await apiService.delete(API_ENDPOINTS.CATEGORY_BY_ID(id));
+  },
+
+  async getModules(params?: {
+    ordering?: string;
+    page?: number;
+    search?: string;
+  }): Promise<Module[]> {
     const data = await apiService.get(API_ENDPOINTS.COURSE_MODULES, { params });
     return extractResults<Module>(data);
   },
 
-  async getModule(id: number): Promise<Module> {
-    return await apiService.get<Module>(`${API_ENDPOINTS.COURSE_MODULES}${id}/`);
+  async getModule(id: string): Promise<Module> {
+    return await apiService.get<Module>(API_ENDPOINTS.MODULE_BY_ID(id));
   },
 
-  async enrollInModule(moduleId: number): Promise<void> {
-    await apiService.post(`${API_ENDPOINTS.COURSE_MODULES}${moduleId}/enroll/`, {});
+  async createModule(data: Partial<Module>): Promise<Module> {
+    return await apiService.post<Module>(API_ENDPOINTS.COURSE_MODULES, data);
   },
 
-  async getLessons(moduleId?: number): Promise<Lesson[]> {
-    const params = moduleId ? { module: moduleId } : undefined;
+  async updateModule(id: string, data: Partial<Module>): Promise<Module> {
+    return await apiService.patch<Module>(API_ENDPOINTS.MODULE_BY_ID(id), data);
+  },
+
+  async deleteModule(id: string): Promise<void> {
+    await apiService.delete(API_ENDPOINTS.MODULE_BY_ID(id));
+  },
+
+  async getModuleAccessStatus(moduleId: string): Promise<{ has_access: boolean }> {
+    return await apiService.get(API_ENDPOINTS.MODULE_ACCESS_STATUS(moduleId));
+  },
+
+  async enrollInModule(moduleId: string): Promise<Module> {
+    return await apiService.post<Module>(API_ENDPOINTS.MODULE_ENROLL(moduleId), {});
+  },
+
+  async createStripeSession(moduleId: string): Promise<{ url: string }> {
+    return await apiService.post(API_ENDPOINTS.MODULE_CREATE_STRIPE_SESSION(moduleId), {});
+  },
+
+  async getLessons(params?: {
+    ordering?: string;
+    page?: number;
+    search?: string;
+  }): Promise<Lesson[]> {
     const data = await apiService.get(API_ENDPOINTS.COURSE_LESSONS, { params });
     return extractResults<Lesson>(data);
   },
 
-  async getLesson(id: number): Promise<Lesson> {
-    return await apiService.get<Lesson>(`${API_ENDPOINTS.COURSE_LESSONS}${id}/`);
+  async getLesson(id: string): Promise<Lesson> {
+    return await apiService.get<Lesson>(API_ENDPOINTS.LESSON_BY_ID(id));
   },
 
-  async checkLessonAccess(lessonId: number): Promise<{ has_access: boolean }> {
-    return await apiService.get(`${API_ENDPOINTS.COURSE_LESSONS}${lessonId}/check_access/`);
+  async createLesson(data: Partial<Lesson>): Promise<Lesson> {
+    return await apiService.post<Lesson>(API_ENDPOINTS.COURSE_LESSONS, data);
+  },
+
+  async updateLesson(id: string, data: Partial<Lesson>): Promise<Lesson> {
+    return await apiService.patch<Lesson>(API_ENDPOINTS.LESSON_BY_ID(id), data);
+  },
+
+  async deleteLesson(id: string): Promise<void> {
+    await apiService.delete(API_ENDPOINTS.LESSON_BY_ID(id));
+  },
+
+  async checkLessonAccess(lessonId: string): Promise<Lesson> {
+    return await apiService.get<Lesson>(API_ENDPOINTS.LESSON_CHECK_ACCESS(lessonId));
   },
 };

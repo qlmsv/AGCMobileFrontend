@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL, API_ENDPOINTS } from '../config/api';
+import { logger } from '../utils/logger';
 
 const STORAGE_KEYS = {
   ACCESS_TOKEN: 'access_token',
@@ -28,9 +29,9 @@ class ApiService {
         const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log('🔑 Using access token for:', config.url);
+          logger.debug('🔑 Using access token for:', config.url);
         } else {
-          console.log('⚠️ No access token available for:', config.url);
+          logger.debug('⚠️ No access token available for:', config.url);
         }
         return config;
       },
@@ -44,13 +45,13 @@ class ApiService {
         const originalRequest = error.config;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
-          console.log('🔄 Got 401, attempting token refresh for:', originalRequest.url);
+          logger.debug('🔄 Got 401, attempting token refresh for:', originalRequest.url);
           originalRequest._retry = true;
 
           try {
             const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
             if (refreshToken) {
-              console.log('🔄 Refreshing token...');
+              logger.debug('🔄 Refreshing token...');
               const response = await axios.post(
                 `${API_BASE_URL}${API_ENDPOINTS.AUTH_REFRESH}`,
                 { refresh: refreshToken },
@@ -64,18 +65,18 @@ class ApiService {
 
               const { access } = response.data;
               await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access);
-              console.log('✅ Token refreshed successfully');
+              logger.debug('✅ Token refreshed successfully');
 
               originalRequest.headers.Authorization = `Bearer ${access}`;
               return this.client(originalRequest);
             } else {
-              console.log('❌ No refresh token available');
+              logger.debug('❌ No refresh token available');
             }
           } catch (refreshError: any) {
             if (refreshError.response?.status === 401) {
-              console.log('ℹ️ Refresh token expired, clearing session.');
+              logger.info('ℹ️ Refresh token expired, clearing session.');
             } else {
-              console.error('❌ Token refresh failed:', refreshError);
+              logger.error('❌ Token refresh failed:', refreshError);
             }
             await this.clearTokens();
             return Promise.reject(refreshError);

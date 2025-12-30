@@ -15,6 +15,7 @@ import { Chat } from '../../types';
 import { chatService } from '../../services/chatService';
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
 import { logApiError } from '../../utils/errorUtils';
+import { logger } from '../../utils/logger';
 
 export const ChatsScreen: React.FC = () => {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -29,12 +30,12 @@ export const ChatsScreen: React.FC = () => {
 
   const loadChats = async () => {
     try {
-      console.log('📥 Loading chats...');
+      logger.debug('📥 Loading chats...');
       const chatsData = await chatService.getChats();
-      console.log('✅ Chats loaded:', chatsData.length);
+      logger.debug('✅ Chats loaded:', chatsData.length);
       setChats(chatsData);
     } catch (error) {
-      console.error('❌ Failed to load chats:', error);
+      logger.error('❌ Failed to load chats:', error);
       logApiError('Failed to load chats', error);
       setChats([]);
     } finally {
@@ -79,22 +80,22 @@ export const ChatsScreen: React.FC = () => {
       const searchLower = query.trim().toLowerCase();
       const matchesQuery =
         !searchLower ||
-        chat.name?.toLowerCase().includes(searchLower) ||
-        chat.last_message?.content?.toLowerCase().includes(searchLower);
+        chat.display_title?.toLowerCase().includes(searchLower) ||
+        chat.last_message?.toLowerCase().includes(searchLower);
 
       return matchesSegment && matchesQuery;
     });
   }, [chats, segment, query]);
 
   const renderChat = ({ item }: { item: Chat }) => {
-    const unreadCount = item.unread_count ?? 0;
+    const unreadCount = Number(item.unread_count) || 0;
     const hasUnreadMessages = unreadCount > 0;
 
     return (
       <TouchableOpacity
         style={styles.chatCard}
         activeOpacity={0.8}
-        onPress={() => console.log('Open chat:', item.id)}
+        onPress={() => logger.debug('TODO: Open chat:', item.id)}
       >
         <View style={styles.avatarContainer}>
           {item.avatar ? (
@@ -118,10 +119,10 @@ export const ChatsScreen: React.FC = () => {
         <View style={styles.chatContent}>
           <View style={styles.chatHeader}>
             <Text style={styles.chatName} numberOfLines={1}>
-              {item.name || 'Chat'}
+              {item.display_title || item.title || 'Chat'}
             </Text>
-            {item.last_message && (
-              <Text style={styles.chatTime}>{formatTime(item.last_message.created_at)}</Text>
+            {item.created_at && (
+              <Text style={styles.chatTime}>{formatTime(item.created_at)}</Text>
             )}
           </View>
 
@@ -130,7 +131,7 @@ export const ChatsScreen: React.FC = () => {
               style={[styles.lastMessage, hasUnreadMessages ? styles.lastMessageUnread : undefined]}
               numberOfLines={1}
             >
-              {item.last_message?.content || 'No messages yet'}
+              {item.last_message || 'No messages yet'}
             </Text>
             {item.type === 'group' && (
               <Ionicons name="people-outline" size={14} color={colors.text.tertiary} style={styles.groupIcon} />
@@ -172,7 +173,7 @@ export const ChatsScreen: React.FC = () => {
                 <Text style={styles.title}>Chats</Text>
                 <Text style={styles.subtitle}>Stay connected with your classes</Text>
               </View>
-              <TouchableOpacity style={styles.circleButton} onPress={() => console.log('Add person')}>
+              <TouchableOpacity style={styles.circleButton} onPress={() => logger.debug('TODO: Add person')}>
                 <Ionicons name="person-add-outline" size={20} color={colors.text.primary} />
               </TouchableOpacity>
             </View>
@@ -205,7 +206,7 @@ export const ChatsScreen: React.FC = () => {
         }
       />
 
-      <TouchableOpacity style={styles.fab} onPress={() => console.log('Create new chat')}>
+      <TouchableOpacity style={styles.fab} onPress={() => logger.debug('TODO: Create new chat')}>
         <Ionicons name="create-outline" size={24} color={colors.neutral.white} />
       </TouchableOpacity>
     </View>

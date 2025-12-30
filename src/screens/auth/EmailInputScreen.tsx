@@ -14,7 +14,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../contexts/AuthContext';
-import { colors, spacing, borderRadius, textStyles } from '../../theme';
+import { colors } from '../../theme/colors';
+import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
+import { typography } from '../../theme/typography';
 import { RootStackParamList } from '../../navigation/types';
 import { getUserFriendlyError } from '../../utils/errorHandler';
 import { validateEmail } from '../../utils/validation';
@@ -200,42 +202,32 @@ const styles = StyleSheet.create({
   },
   form: {
     width: '100%',
-    gap: 24, // gap: 24px in "sign in + input"
+    gap: 24,
   },
   socialButtons: {
-    gap: 17,
+    gap: 16,
   },
   socialButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 1000,
-    backgroundColor: colors.neutral[800], // #262626
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.neutral[900],
     gap: 8,
   },
   socialText: {
-    fontFamily: 'Rubik',
+    fontFamily: 'Inter',
     fontSize: 16,
-    fontWeight: '500',
-    lineHeight: 24,
+    fontWeight: '600',
     color: colors.neutral.white,
   },
   divider: {
-    fontFamily: 'Rubik',
+    fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '400',
-    lineHeight: 20,
-    color: colors.neutral[900], // #171717
+    color: colors.neutral[700],
     textAlign: 'center',
-    marginVertical: 10,  // Adjust for visual spacing if gap isn't supported in all views, but container has gap: 24. 
-    // Wait, "sign in + input" has gap 24. This includes social, OR, input. 
-    // Social -> [17px gap] -> social buttons. 
-    // The "sign in + input" flex container has gap 24.
-    // So "social-media" -> 24px -> "or" -> ? No, "or" is separate? 
-    // "sign in + input" has children: "social-media", "or", "Input filed".
-    // So gap between them is 24px.
   },
   inputContainer: {
     gap: 8,
@@ -246,51 +238,41 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   label: {
-    fontFamily: 'Rubik',
+    fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '500',
-    lineHeight: 16,
-    color: colors.neutral[900], // #171717
+    color: colors.text.primary,
   },
   required: {
-    fontFamily: 'Rubik',
+    fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '400',
-    lineHeight: 16,
-    color: '#DC2626',
+    color: colors.error,
   },
   input: {
-    height: 48, // approximate for padding 12 + text
-    borderRadius: 1000,
+    height: 44,
+    borderRadius: 22,
     paddingHorizontal: 16,
-    paddingVertical: 12,
     fontSize: 14,
     fontWeight: '400',
-    color: colors.neutral[900],
-    backgroundColor: colors.background.default,
-    shadowColor: 'rgba(207, 207, 207, 0.5)',
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
+    color: colors.text.primary,
+    backgroundColor: colors.neutral.white,
+    ...shadows.sm,
   },
   button: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    backgroundColor: colors.accent.peach, // #FFB999
-    borderRadius: 1000,
+    height: 48,
+    backgroundColor: colors.primary.main,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
   },
   buttonDisabled: {
-    opacity: 0.7,
+    backgroundColor: colors.primary.light,
   },
   buttonText: {
-    fontFamily: 'Rubik',
+    fontFamily: 'Inter',
     fontSize: 16,
-    fontWeight: '500',
-    lineHeight: 24,
+    fontWeight: '600',
     color: colors.neutral.white,
   },
 });

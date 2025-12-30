@@ -8,6 +8,7 @@ import { CoursesScreen } from '../screens/main/CoursesScreen';
 import { ChatsScreen } from '../screens/main/ChatsScreen';
 import { ProfileScreen } from '../screens/main/ProfileScreen';
 import { MainTabParamList } from './types';
+import { colors } from '../theme/colors';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -76,7 +77,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
                     <Ionicons
                       name={getIcon(route.name, true)}
                       size={24}
-                      color="#FE7333"
+                      color={colors.primary.main}
                     />
                     <Text style={styles.tabLabelActive}>{label}</Text>
                   </View>
@@ -87,7 +88,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
                 <Ionicons
                   name={getIcon(route.name, false)}
                   size={24}
-                  color="#A3A3A3"
+                  color={colors.neutral[500]}
                 />
               )}
             </TouchableOpacity>
@@ -116,12 +117,12 @@ export default MainTabNavigator;
 
 const styles = StyleSheet.create({
   tabBarContainer: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: 'rgba(194, 194, 194, 0.10)',
+    backgroundColor: colors.neutral.white,
+    shadowColor: 'rgba(0, 0, 0, 0.05)',
     shadowOpacity: 1,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: -6 },
-    elevation: 20,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 8,
   },
   tabBar: {
     flexDirection: 'row',
@@ -144,21 +145,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     paddingHorizontal: 20,
-    backgroundColor: '#FFEDE4',
-    borderRadius: 60,
+    backgroundColor: colors.brand[50],
+    borderRadius: 24,
     gap: 6,
   },
   tabLabelActive: {
-    fontFamily: 'Rubik',
+    fontFamily: 'Inter',
     fontSize: 12,
     fontWeight: '500',
-    color: '#FD4F01',
+    color: colors.primary.main,
     lineHeight: 16,
   },
   activeDot: {
     width: 6,
     height: 6,
-    backgroundColor: '#FE7333',
+    backgroundColor: colors.primary.main,
     borderRadius: 9999,
     marginTop: 4,
   },
