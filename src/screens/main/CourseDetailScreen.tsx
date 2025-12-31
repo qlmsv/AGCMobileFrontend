@@ -59,8 +59,14 @@ export const CourseDetailScreen: React.FC = () => {
         } catch (error: any) {
             logger.error('Enrollment error:', error);
             const errorMessage = error.message || 'Could not enroll';
+            const errorData = error.response?.data?.data; // Check API response structure if available
+            const errorCode = errorData?.code;
 
-            if (errorMessage.includes('payment') || errorMessage.includes('purchase')) {
+            // Handle "Already Enrolled" case
+            if (errorCode === 'already_enrolled' || errorMessage.includes('already enrolled') || errorMessage.includes('already_enrolled')) {
+                Alert.alert('Info', 'You are already enrolled in this course.');
+                fetchCourseDetails(); // Refresh to update UI
+            } else if (errorMessage.includes('payment') || errorMessage.includes('purchase') || errorMessage.includes('pay') || errorCode === 'payment_required') {
                 // Find the first paid module to initiate session
                 // We assume paying for one module (or the main one) covers the course or flow
                 // This is a simplification based on the available API
@@ -170,6 +176,11 @@ export const CourseDetailScreen: React.FC = () => {
                                 <Text style={styles.freeText}>FREE</Text>
                             </View>
                         )}
+                        {course.is_enrolled && (
+                            <View style={[styles.freePill, { backgroundColor: colors.success + '20' }]}>
+                                <Text style={[styles.freeText, { color: colors.success }]}>ENROLLED</Text>
+                            </View>
+                        )}
                     </View>
 
                     <Text style={styles.title}>{course.title}</Text>
@@ -208,14 +219,20 @@ export const CourseDetailScreen: React.FC = () => {
                     </Text>
                 </View>
                 <TouchableOpacity
-                    style={[styles.enrollButton, isEnrolling && styles.disabledButton]}
+                    style={[
+                        styles.enrollButton,
+                        (isEnrolling || course.is_enrolled) && styles.disabledButton,
+                        course.is_enrolled && { backgroundColor: colors.success }
+                    ]}
                     onPress={handleEnroll}
-                    disabled={isEnrolling}
+                    disabled={isEnrolling || course.is_enrolled}
                 >
                     {isEnrolling ? (
                         <ActivityIndicator color={colors.text.inverse} />
                     ) : (
-                        <Text style={styles.enrollButtonText}>Enroll Now</Text>
+                        <Text style={styles.enrollButtonText}>
+                            {course.is_enrolled ? 'Already Enrolled' : 'Enroll Now'}
+                        </Text>
                     )}
                 </TouchableOpacity>
             </View>
