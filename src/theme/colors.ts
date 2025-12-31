@@ -1,99 +1,73 @@
-// Design system colors - Pixel-perfect match with Figma
+// Design system colors - Pixel-perfect match with Figma V2 (Orange #FF5A05)
 export const colors = {
   // Primary (Orange)
   primary: {
-    main: '#FF7A00',      // Primary 500 - Main accent
-    dark: '#EB3A00',      // Primary 600 - Hover/Active
-    light: '#FF983D',     // Primary 400 - Disabled/Secondary
+    main: '#FF5A05',      // New Primary - Figma V2
+    dark: '#E04F04',      // Hover/Active
+    light: '#FF8B53',     // Secondary/Disabled
   },
 
   // Brand extended
   brand: {
-    50: '#FFF5EB',
-    400: '#FF983D',
-    main: '#FF7A00',
-    600: '#EB3A00',
+    50: '#FFF2EB',
+    100: '#FFE5D6',
+    400: '#FF8B53',
+    main: '#FF5A05',
+    600: '#E04F04',
   },
 
   // Neutrals (from Figma Foundation/Colors)
   neutral: {
     white: '#FFFFFF',
     50: '#FAFAFA',
-    100: '#F2F2F7',        // Search bar background, secondary bg
-    200: '#E2E2E9',        // Borders, dividers
+    100: '#F5F5F5',        // Screen background / Section bg
+    200: '#E2E2E2',        // Borders, Dividers, Input borders
     300: '#D4D4D4',
-    400: '#A8A8A8',
-    500: '#6C6C89',        // Placeholders, inactive icons
-    600: '#5C5C5C',
-    700: '#3F3F50',        // Secondary text
-    800: '#2A2A2A',
-    900: '#121217',        // Primary text, headings
+    400: '#A3A3A3',
+    500: '#737373',        // Secondary text
+    600: '#525252',
+    700: '#404040',
+    800: '#262626',
+    900: '#222222',        // Primary text
     black: '#000000',
   },
 
   // Semantic colors
   background: {
     default: '#FFFFFF',
-    base: '#F8F8F8',       // Surface - screen backgrounds
-    secondary: '#F2F2F7',  // Neutral 100
+    base: '#F8F8F8',       // Main background
+    secondary: '#F5F5F5',  // Section background
     tertiary: '#FAFAFA',
     card: '#FFFFFF',
   },
 
-  accent: {
-    peach: '#FFB999',
-    peachSoft: '#FFE1D2',
-    charcoal: '#1F1F1F',
-  },
-
   text: {
-    primary: '#121217',    // Neutral 900
-    secondary: '#3F3F50',  // Neutral 700
-    tertiary: '#6C6C89',   // Neutral 500
-    disabled: '#A8A8A8',
+    primary: '#222222',    // Neutral 900
+    secondary: '#666666',  // Neutral 500-600 range
+    tertiary: '#A3A3A3',   // Neutral 400
+    disabled: '#D4D4D4',
     inverse: '#FFFFFF',
-    placeholder: '#6C6C89',
-    link: '#FF7A00',
-    buttonLink: '#FF7A00',
+    placeholder: '#A3A3A3',
+    link: '#FF5A05',
   },
 
   border: {
-    light: '#F2F2F7',
-    default: '#E2E2E9',    // Neutral 200
-    dark: '#A8A8A8',
+    light: '#F5F5F5',
+    default: '#E2E2E2',    // Input borders, dividers
+    dark: '#A3A3A3',
   },
 
-  // Badge colors
-  badge: {
-    brand: {
-      background: '#FFF5EB',
-      text: '#EB3A00',
-    },
-  },
-
-  // Status colors (from Figma)
-  success: '#2DCA72',
-  error: '#F3164E',
-  warning: '#FFC233',
-  info: '#007AFF',
+  // Status colors
+  success: '#22C55E',    // Green
+  error: '#EF4444',      // Red
+  warning: '#F59E0B',    // Amber
+  info: '#3B82F6',       // Blue
 
   // Overlay colors
   overlay: {
-    dark: 'rgba(0, 0, 0, 0.3)',
+    dark: 'rgba(0, 0, 0, 0.4)',
     medium: 'rgba(0, 0, 0, 0.5)',
-    light: 'rgba(255, 255, 255, 0.3)',
-  },
-
-  // Feedback/Alert colors
-  feedback: {
-    errorLight: '#FFEEF2',
-    errorDark: '#F3164E',
-    successLight: '#E6F9EF',
-    successDark: '#2DCA72',
-    warningLight: '#FFF8E6',
-    warningDark: '#FFC233',
-    infoLight: '#E6F2FF',
-    infoDark: '#007AFF',
+    light: 'rgba(255, 255, 255, 0.5)',
   },
 } as const;
 

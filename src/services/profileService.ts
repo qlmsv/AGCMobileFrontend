@@ -1,17 +1,7 @@
 import apiService from './api';
 import { API_ENDPOINTS } from '../config/api';
 import { Profile } from '../types';
-
-// Helper to extract data from paginated responses
-const extractResults = <T>(data: any): T[] => {
-  if (Array.isArray(data)) {
-    return data;
-  }
-  if (data && typeof data === 'object' && 'results' in data && Array.isArray(data.results)) {
-    return data.results;
-  }
-  return [];
-};
+import { extractResults } from '../utils/extractResults';
 
 export const profileService = {
   async getProfiles(params?: {

@@ -1,27 +1,27 @@
+import { NavigatorScreenParams } from '@react-navigation/native';
+
 export type RootStackParamList = {
-  EmailInput: undefined;
-  VerifyCode: { email: string };
-  CompleteRegistration: { email: string };
-  Main: undefined;
-  CourseDetail: { courseId: string | number };
-  CreateCourse: undefined;
-  CreateCourseModules: undefined;
-  CreateModuleDetail: { moduleId: number; title: string };
+    Splash: undefined;
+    Auth: undefined;
+    Main: NavigatorScreenParams<MainTabParamList>;
+    CourseDetail: { courseId: string };
+    LessonDetail: { lessonId: string };
+    ChatDetail: { chatId: string };
+    Settings: undefined;
+    EditProfile: undefined;
+    Payment: { url: string };
 };
 
 export type AuthStackParamList = {
-  EmailInput: undefined;
-  VerifyCode: { email: string };
-  CompleteRegistration: { email: string };
-};
-
-export type AppStackParamList = {
-  Main: undefined;
+    Welcome: undefined;
+    EmailInput: undefined;
+    Verification: { email: string };
+    Information: { email: string };
 };
 
 export type MainTabParamList = {
-  Home: undefined;
-  Courses: undefined;
-  Chats: undefined;
-  Profile: undefined;
+    Home: undefined;
+    Courses: { initialSearch?: string } | undefined;
+    Chats: undefined;
+    Profile: undefined;
 };

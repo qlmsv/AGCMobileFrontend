@@ -72,6 +72,8 @@ export interface Course {
   status?: 'draft' | 'published' | 'archived';
   cover: string | null;
   thumbnail?: string | null;
+  rating?: number;
+  lessons_count?: number;
   meta?: any;
   category: Category;
   category_id?: string;
@@ -116,6 +118,9 @@ export interface Lesson {
   created_at: string;
   updated_at: string;
   has_access: string | boolean;
+  video_url?: string | null;
+  duration?: string;
+  content?: string;
 }
 
 export interface CourseStudent {

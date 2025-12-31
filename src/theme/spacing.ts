@@ -1,28 +1,26 @@
-// Spacing system - Pixel-perfect match with Figma Foundation/Spacing
-// Based on 4px grid system
+// Spacing system - Pixel-perfect match with Figma V2
+// Base grid: 4px
 
 export const spacing = {
-  xs: 4,      // XS
-  sm: 8,      // S
-  md: 12,     // M
-  base: 16,   // L - Standard horizontal padding
-  lg: 20,     // XL
-  xl: 24,     // 2XL - Section spacing
-  xxl: 32,    // 3XL
-  xxxl: 40,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  base: 16,   // Standard padding
+  lg: 20,
+  xl: 24,
+  xxl: 32,
   huge: 48,
 } as const;
 
-// Border radius values (from Figma)
+// Border radius values (updated from Figma V2)
 export const borderRadius = {
   xs: 4,
-  sm: 8,
-  md: 12,     // Course cards
-  lg: 16,
+  sm: 8,      // Inputs, small cards
+  md: 12,     // Buttons, Cards, Modals
+  lg: 16,     // Larger cards
   xl: 20,
-  xxl: 22,    // Search bar (44px height / 2)
-  huge: 24,   // Buttons capsule (48px height / 2)
-  round: 1000,
+  xxl: 24,
+  round: 9999,
 } as const;
 
 // Common spacing patterns
@@ -38,15 +36,14 @@ export const layout = {
     md: spacing.md,   // 12px
     lg: spacing.base, // 16px
   },
-  // Component sizes (from Figma)
+  // Component sizes
   input: {
-    height: 44,        // Search bar height
-    heightLarge: 48,   // Primary button height
+    height: 48,
+    borderRadius: 8,
   },
   button: {
-    height: 48,        // Primary buttons
-    minWidth: 100,
-    borderRadius: 24,  // Capsule shape (height / 2)
+    height: 48,
+    borderRadius: 12,  // Rounded rect, not capsule
   },
   iconButton: {
     width: 40,
@@ -61,41 +58,37 @@ export const layout = {
   card: {
     borderRadius: 12,
   },
-  searchBar: {
-    height: 44,
-    borderRadius: 22,
-  },
 } as const;
 
-// Shadow styles (from Figma)
+// Shadow styles (Figma V2 style - soft shadows)
 export const shadows = {
   sm: {
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
   md: {
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 4,
   },
   lg: {
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.12,
     shadowRadius: 24,
     elevation: 8,
   },
   card: {
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
 } as const;
 

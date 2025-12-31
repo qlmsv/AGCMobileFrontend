@@ -1,52 +1,46 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { ActivityIndicator, View } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
-import { EmailInputScreen } from '../screens/auth/EmailInputScreen';
-import { VerifyCodeScreen } from '../screens/auth/VerifyCodeScreen';
-import { CompleteRegistrationScreen } from '../screens/auth/CompleteRegistrationScreen';
+import { AuthNavigator } from './AuthNavigator';
+import { MainTabNavigator } from './MainTabNavigator';
 import { CourseDetailScreen } from '../screens/main/CourseDetailScreen';
-import { CreateCourseScreen } from '../screens/main/CreateCourseScreen';
-import { CreateCourseModulesScreen } from '../screens/main/CreateCourseModulesScreen';
-import { CreateModuleDetailScreen } from '../screens/main/CreateModuleDetailScreen';
-import MainTabNavigator from './MainTabNavigator';
+import { LessonDetailScreen } from '../screens/main/LessonDetailScreen';
+import { ChatDetailScreen } from '../screens/main/ChatDetailScreen';
+import { SettingsScreen } from '../screens/main/SettingsScreen';
+import { EditProfileScreen } from '../screens/main/EditProfileScreen';
+import { PaymentScreen } from '../screens/main/PaymentScreen';
+import { useAuth } from '../contexts/AuthContext';
+import { View, ActivityIndicator } from 'react-native';
 import { RootStackParamList } from './types';
+import { colors } from '../theme';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-const RootNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+export const RootNavigator = () => {
+    const { user, isLoading } = useAuth();
 
-  if (isLoading) {
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={colors.primary.main} />
+            </View>
+        );
+    }
+
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {user ? (
+                <>
+                    <Stack.Screen name="Main" component={MainTabNavigator} />
+                    <Stack.Screen name="CourseDetail" component={CourseDetailScreen} />
+                    <Stack.Screen name="LessonDetail" component={LessonDetailScreen} />
+                    <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+                    <Stack.Screen name="Settings" component={SettingsScreen} />
+                    <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+                    <Stack.Screen name="Payment" component={PaymentScreen} />
+                </>
+            ) : (
+                <Stack.Screen name="Auth" component={AuthNavigator} />
+            )}
+        </Stack.Navigator>
     );
-  }
-
-  return (
-    <NavigationContainer key={isAuthenticated ? 'app' : 'auth'}>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <>
-            <Stack.Screen name="Main" component={MainTabNavigator} />
-            <Stack.Screen name="CourseDetail" component={CourseDetailScreen} />
-            <Stack.Screen name="CreateCourse" component={CreateCourseScreen} />
-            <Stack.Screen name="CreateCourseModules" component={CreateCourseModulesScreen} />
-            <Stack.Screen name="CreateModuleDetail" component={CreateModuleDetailScreen} />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="EmailInput" component={EmailInputScreen} />
-            <Stack.Screen name="VerifyCode" component={VerifyCodeScreen} />
-            <Stack.Screen name="CompleteRegistration" component={CompleteRegistrationScreen} />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
 };
-
-export default RootNavigator;

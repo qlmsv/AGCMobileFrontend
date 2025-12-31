@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -14,38 +14,40 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../navigation/types';
 import { colors, spacing, borderRadius, textStyles, layout } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { validateEmail } from '../../utils/validation';
 import { logger } from '../../utils/logger';
 
-type NavigationProp = StackNavigationProp<AuthStackParamList, 'EmailInput'>;
+type NavigationProp = StackNavigationProp<AuthStackParamList, 'Verification'>;
+type RouteProps = RouteProp<AuthStackParamList, 'Verification'>;
 
 interface Props {
     navigation: NavigationProp;
+    route: RouteProps;
 }
 
-export const EmailInputScreen: React.FC<Props> = ({ navigation }) => {
-    const [email, setEmail] = useState('');
+export const VerificationScreen: React.FC<Props> = ({ navigation, route }) => {
+    const { email } = route.params;
+    const [code, setCode] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { sendCode } = useAuth();
+    const { verifyCode } = useAuth();
 
-    const handleContinue = async () => {
-        const { isValid, error } = validateEmail(email);
-        if (!isValid) {
-            Alert.alert('Invalid Email', error);
+    const handleVerify = async () => {
+        if (code.length < 4) {
+            Alert.alert('Invalid Code', 'Please enter the full code');
             return;
         }
 
         setIsLoading(true);
         try {
-            await sendCode(email);
-            navigation.navigate('Verification', { email });
+            await verifyCode(email, code);
+            // Navigation is handled by AuthContext state change (user becomes authenticated)
         } catch (error: any) {
-            logger.error('Failed to send verification code:', error);
-            Alert.alert('Error', error.message || 'Failed to send verification code. Please check your internet connection.');
+            logger.error('Verification error:', error);
+            Alert.alert('Error', error.message || 'Invalid code. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -53,52 +55,43 @@ export const EmailInputScreen: React.FC<Props> = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.keyboardAvoid}
-            >
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardAvoid}>
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <View style={styles.content}>
-                        {/* Header */}
                         <View style={styles.header}>
-                            <TouchableOpacity
-                                onPress={() => navigation.goBack()}
-                                style={styles.backButton}
-                            >
+                            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                                 <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
                             </TouchableOpacity>
-                            <Text style={styles.title}>What's your email?</Text>
+                            <Text style={styles.title}>Confirm your email</Text>
                             <Text style={styles.subtitle}>
-                                We'll check if you have an account or help you create one.
+                                We sent a code to <Text style={styles.emailHighlight}>{email}</Text>
                             </Text>
                         </View>
 
-                        {/* Form */}
                         <View style={styles.form}>
-                            <Text style={styles.label}>Email Address</Text>
+                            <Text style={styles.label}>Verification Code</Text>
                             <TextInput
                                 style={styles.input}
-                                placeholder="example@email.com"
+                                placeholder="0000"
                                 placeholderTextColor={colors.text.tertiary}
-                                value={email}
-                                onChangeText={setEmail}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                                autoCorrect={false}
+                                value={code}
+                                onChangeText={setCode}
+                                keyboardType="number-pad"
+                                maxLength={6}
+                                autoFocus
                             />
                         </View>
 
-                        {/* Footer */}
                         <View style={styles.footer}>
                             <TouchableOpacity
                                 style={[styles.button, isLoading && styles.buttonDisabled]}
-                                onPress={handleContinue}
+                                onPress={handleVerify}
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
                                     <ActivityIndicator color={colors.text.inverse} />
                                 ) : (
-                                    <Text style={styles.buttonText}>Continue</Text>
+                                    <Text style={styles.buttonText}>Verify</Text>
                                 )}
                             </TouchableOpacity>
                         </View>
@@ -141,6 +134,11 @@ const styles = StyleSheet.create({
         ...textStyles.body,
         color: colors.text.secondary,
     },
+    emailHighlight: {
+        ...textStyles.body,
+        fontWeight: '600',
+        color: colors.text.primary,
+    },
     form: {
         flex: 1,
     },
@@ -152,21 +150,23 @@ const styles = StyleSheet.create({
     input: {
         height: layout.input.height,
         borderWidth: 1,
-        borderColor: colors.border.default, // #E2E2E2
-        borderRadius: layout.input.borderRadius, // 8px
+        borderColor: colors.border.default,
+        borderRadius: layout.input.borderRadius,
         paddingHorizontal: spacing.base,
-        fontSize: 16,
+        fontSize: 24,
         fontFamily: 'Inter',
+        letterSpacing: 4,
         color: colors.text.primary,
         backgroundColor: colors.background.default,
+        textAlign: 'center',
     },
     footer: {
         marginBottom: spacing.xl,
     },
     button: {
         height: layout.button.height,
-        backgroundColor: colors.primary.main, // #FF5A05
-        borderRadius: borderRadius.md, // 12px
+        backgroundColor: colors.primary.main,
+        borderRadius: borderRadius.md,
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: colors.primary.main,

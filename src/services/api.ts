@@ -29,9 +29,9 @@ class ApiService {
         const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          logger.debug('🔑 Using access token for:', config.url);
+          logger.debug('🔑 Using access token', { url: config.url });
         } else {
-          logger.debug('⚠️ No access token available for:', config.url);
+          logger.info('⚠️ No access token available', { url: config.url });
         }
         return config;
       },
@@ -45,7 +45,7 @@ class ApiService {
         const originalRequest = error.config;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
-          logger.debug('🔄 Got 401, attempting token refresh for:', originalRequest.url);
+          logger.info('🔄 Got 401, attempting token refresh', { url: originalRequest.url });
           originalRequest._retry = true;
 
           try {
@@ -83,9 +83,31 @@ class ApiService {
           }
         }
 
+        this.handleError(error);
         return Promise.reject(error);
       }
     );
+  }
+
+  private handleError(error: any) {
+    if (error.response) {
+      // Server responded with a status code outside the 2xx range
+      logger.error('🌐 API Error Response', {
+        status: error.response.status,
+        data: error.response.data,
+        url: error.config?.url,
+      });
+    } else if (error.request) {
+      // Request was made but no response received
+      logger.error('📡 API No Response', {
+        url: error.config?.url,
+      });
+    } else {
+      // Something happened in setting up the request
+      logger.error('⚙️ API Request Setup Error', {
+        message: error.message,
+      });
+    }
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {

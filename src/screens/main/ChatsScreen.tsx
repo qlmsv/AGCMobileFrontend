@@ -1,403 +1,192 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  ActivityIndicator,
-  RefreshControl,
-  TextInput,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Chat } from '../../types';
-import { chatService } from '../../services/chatService';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Image, ActivityIndicator, RefreshControl } from 'react-native';
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
-import { logApiError } from '../../utils/errorUtils';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../navigation/types';
+import { chatService } from '../../services/chatService';
+import { ChatList } from '../../types';
+import { EmptyState } from '../../components';
 import { logger } from '../../utils/logger';
 
+type NavigationProp = StackNavigationProp<RootStackParamList>;
+
 export const ChatsScreen: React.FC = () => {
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [query, setQuery] = useState('');
-  const [segment, setSegment] = useState<'all' | 'group' | 'personal'>('all');
+    const navigation = useNavigation<NavigationProp>();
+    const [chats, setChats] = useState<ChatList[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadChats();
-  }, []);
+    const fetchChats = async () => {
+        try {
+            const data = await chatService.getChats({ ordering: '-created_at' });
+            setChats(data);
+        } catch (error) {
+            logger.error('Error fetching chats:', error);
+        } finally {
+            setIsLoading(false);
+            setIsRefreshing(false);
+        }
+    };
 
-  const loadChats = async () => {
-    try {
-      logger.debug('📥 Loading chats...');
-      const chatsData = await chatService.getChats();
-      logger.debug('✅ Chats loaded:', chatsData.length);
-      setChats(chatsData);
-    } catch (error) {
-      logger.error('❌ Failed to load chats:', error);
-      logApiError('Failed to load chats', error);
-      setChats([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const onRefresh = () => {
+        setIsRefreshing(true);
+        fetchChats();
+    };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadChats();
-    setRefreshing(false);
-  };
+    useFocusEffect(
+        useCallback(() => {
+            fetchChats();
+        }, [])
+    );
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (days === 0) {
-      return date.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } else if (days === 1) {
-      return 'Yesterday';
-    } else if (days < 7) {
-      return date.toLocaleDateString('en-US', { weekday: 'short' });
-    } else {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      });
-    }
-  };
-
-  const filteredChats = useMemo(() => {
-    return chats.filter((chat) => {
-      const matchesSegment =
-        segment === 'all' || (segment === 'group' && chat.type === 'group') || (segment === 'personal' && chat.type === 'dm');
-
-      const searchLower = query.trim().toLowerCase();
-      const matchesQuery =
-        !searchLower ||
-        chat.display_title?.toLowerCase().includes(searchLower) ||
-        chat.last_message?.toLowerCase().includes(searchLower);
-
-      return matchesSegment && matchesQuery;
-    });
-  }, [chats, segment, query]);
-
-  const renderChat = ({ item }: { item: Chat }) => {
-    const unreadCount = Number(item.unread_count) || 0;
-    const hasUnreadMessages = unreadCount > 0;
+    const renderChatItem = ({ item }: { item: ChatList }) => (
+        <TouchableOpacity
+            style={styles.chatItem}
+            onPress={() => navigation.navigate('ChatDetail', { chatId: item.id })}
+        >
+            <Image
+                source={{ uri: item.display_avatar || 'https://via.placeholder.com/50' }}
+                style={styles.avatar}
+            />
+            <View style={styles.chatInfo}>
+                <View style={styles.chatHeader}>
+                    <Text style={styles.chatTitle} numberOfLines={1}>{item.display_title || 'Chat'}</Text>
+                    {/* Time would go here if available in list model */}
+                    {/* <Text style={styles.timeText}>12:30</Text> */}
+                </View>
+                <View style={styles.chatFooter}>
+                    <Text style={styles.lastMessage} numberOfLines={1}>
+                        {item.last_message ? 'Latest message...' : 'No messages yet'}
+                    </Text>
+                    {parseInt(item.unread_count) > 0 && (
+                        <View style={styles.unreadBadge}>
+                            <Text style={styles.unreadText}>{item.unread_count}</Text>
+                        </View>
+                    )}
+                </View>
+            </View>
+        </TouchableOpacity>
+    );
 
     return (
-      <TouchableOpacity
-        style={styles.chatCard}
-        activeOpacity={0.8}
-        onPress={() => logger.debug('TODO: Open chat:', item.id)}
-      >
-        <View style={styles.avatarContainer}>
-          {item.avatar ? (
-            <Image source={{ uri: item.avatar }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Ionicons
-                name={item.type === 'group' ? 'people' : 'person'}
-                size={24}
-                color={colors.neutral.white}
-              />
+        <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.title}>Messages</Text>
             </View>
-          )}
-          {hasUnreadMessages && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
-            </View>
-          )}
-        </View>
 
-        <View style={styles.chatContent}>
-          <View style={styles.chatHeader}>
-            <Text style={styles.chatName} numberOfLines={1}>
-              {item.display_title || item.title || 'Chat'}
-            </Text>
-            {item.created_at && (
-              <Text style={styles.chatTime}>{formatTime(item.created_at)}</Text>
+            {isLoading && chats.length === 0 ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={colors.primary.main} />
+                </View>
+            ) : (
+                <FlatList
+                    data={chats}
+                    renderItem={renderChatItem}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.listContent}
+                    refreshControl={
+                        <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.primary.main} />
+                    }
+                    ListEmptyComponent={
+                        <EmptyState
+                            title="No Messages"
+                            message="You haven't started any chats yet."
+                            icon="chatbubble-ellipses-outline"
+                        />
+                    }
+                />
             )}
-          </View>
-
-          <View style={styles.chatFooter}>
-            <Text
-              style={[styles.lastMessage, hasUnreadMessages ? styles.lastMessageUnread : undefined]}
-              numberOfLines={1}
-            >
-              {item.last_message || 'No messages yet'}
-            </Text>
-            {item.type === 'group' && (
-              <Ionicons name="people-outline" size={14} color={colors.text.tertiary} style={styles.groupIcon} />
-            )}
-          </View>
-        </View>
-      </TouchableOpacity>
+        </SafeAreaView>
     );
-  };
-
-  if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.info} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={filteredChats}
-        renderItem={renderChat}
-        keyExtractor={(item) => String(item.id)}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="chatbubbles-outline" size={64} color={colors.neutral[300]} />
-            <Text style={styles.emptyText}>No chats yet</Text>
-            <Text style={styles.emptySubtext}>Start a conversation to see it here</Text>
-          </View>
-        }
-        ListHeaderComponent={
-          <View style={styles.headerSection}>
-            <View style={styles.navRow}>
-              <View style={styles.circleButton} />
-              <View>
-                <Text style={styles.title}>Chats</Text>
-                <Text style={styles.subtitle}>Stay connected with your classes</Text>
-              </View>
-              <TouchableOpacity style={styles.circleButton} onPress={() => logger.debug('TODO: Add person')}>
-                <Ionicons name="person-add-outline" size={20} color={colors.text.primary} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.searchBar}>
-              <Ionicons name="search-outline" size={18} color={colors.text.tertiary} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search..."
-                placeholderTextColor={colors.text.tertiary}
-                value={query}
-                onChangeText={setQuery}
-              />
-            </View>
-
-            <View style={styles.segmentRow}>
-              {(['all', 'group', 'personal'] as const).map((value) => (
-                <TouchableOpacity
-                  key={value}
-                  style={[styles.segmentPill, segment === value && styles.segmentPillActive]}
-                  onPress={() => setSegment(value)}
-                >
-                  <Text style={[styles.segmentLabel, segment === value && styles.segmentLabelActive]}>
-                    {value === 'all' ? 'All' : value === 'group' ? 'Group' : 'Personal'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        }
-      />
-
-      <TouchableOpacity style={styles.fab} onPress={() => logger.debug('TODO: Create new chat')}>
-        <Ionicons name="create-outline" size={24} color={colors.neutral.white} />
-      </TouchableOpacity>
-    </View>
-  );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.secondary,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerSection: {
-    padding: spacing.base,
-    gap: spacing.base,
-  },
-  navRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  circleButton: {
-    width: 44,
-    height: 44,
-    borderRadius: borderRadius.round,
-    backgroundColor: colors.background.default,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  title: {
-    ...textStyles.h2,
-    textAlign: 'center',
-  },
-  subtitle: {
-    ...textStyles.caption,
-    textAlign: 'center',
-    color: colors.text.tertiary,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.background.default,
-    borderRadius: borderRadius.round,
-    paddingHorizontal: spacing.base,
-    paddingVertical: spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    ...textStyles.body,
-    color: colors.text.primary,
-  },
-  segmentRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  segmentPill: {
-    flex: 1,
-    borderRadius: borderRadius.round,
-    backgroundColor: colors.background.default,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-  },
-  segmentPillActive: {
-    backgroundColor: colors.text.primary,
-  },
-  segmentLabel: {
-    ...textStyles.bodyMedium,
-    color: colors.text.secondary,
-  },
-  segmentLabelActive: {
-    color: colors.neutral.white,
-  },
-  listContent: {
-    paddingHorizontal: spacing.base,
-    paddingBottom: spacing.huge,
-  },
-  chatCard: {
-    flexDirection: 'row',
-    padding: spacing.base,
-    marginBottom: spacing.base,
-    backgroundColor: colors.background.default,
-    borderRadius: borderRadius.lg,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginRight: spacing.md,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.round,
-  },
-  avatarPlaceholder: {
-    backgroundColor: colors.primary.main,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  unreadBadge: {
-    position: 'absolute',
-    top: -spacing.xs,
-    right: -spacing.xs,
-    backgroundColor: colors.error,
-    borderRadius: borderRadius.md,
-    minWidth: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xs,
-  },
-  unreadText: {
-    color: colors.neutral.white,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  chatContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  chatHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  chatName: {
-    ...textStyles.bodySemiBold,
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  chatTime: {
-    ...textStyles.caption,
-    color: colors.text.tertiary,
-  },
-  chatFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  lastMessage: {
-    ...textStyles.body,
-    color: colors.text.tertiary,
-    flex: 1,
-  },
-  lastMessageUnread: {
-    color: colors.text.primary,
-    fontWeight: '600',
-  },
-  groupIcon: {
-    marginLeft: spacing.xs,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.huge,
-    paddingHorizontal: spacing.xxl,
-  },
-  emptyText: {
-    ...textStyles.h2,
-    marginTop: spacing.base,
-  },
-  emptySubtext: {
-    ...textStyles.body,
-    color: colors.text.tertiary,
-    marginTop: spacing.sm,
-    textAlign: 'center',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: spacing.xl,
-    right: spacing.xl,
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.round,
-    backgroundColor: colors.primary.main,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-  },
+    container: {
+        flex: 1,
+        backgroundColor: colors.background.default,
+    },
+    header: {
+        padding: spacing.base,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border.light,
+        backgroundColor: colors.background.default,
+    },
+    title: {
+        ...textStyles.h2,
+        color: colors.text.primary,
+    },
+    listContent: {
+        paddingVertical: spacing.sm,
+    },
+    chatItem: {
+        flexDirection: 'row',
+        padding: spacing.base,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border.light,
+        alignItems: 'center',
+    },
+    avatar: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: colors.neutral[200],
+    },
+    chatInfo: {
+        flex: 1,
+        marginLeft: spacing.base,
+        justifyContent: 'center',
+    },
+    chatHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 4,
+    },
+    chatTitle: {
+        ...textStyles.h4,
+        color: colors.text.primary,
+        flex: 1,
+    },
+    timeText: {
+        ...textStyles.caption,
+        color: colors.text.tertiary,
+    },
+    chatFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    lastMessage: {
+        ...textStyles.body,
+        color: colors.text.secondary,
+        flex: 1,
+        marginRight: spacing.sm,
+    },
+    unreadBadge: {
+        backgroundColor: colors.primary.main,
+        borderRadius: 10,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        minWidth: 20,
+        alignItems: 'center',
+    },
+    unreadText: {
+        fontSize: 10,
+        color: colors.text.inverse,
+        fontWeight: 'bold',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    emptyContainer: {
+        padding: spacing.xl,
+        alignItems: 'center',
+        marginTop: 50,
+    },
+    emptyText: {
+        ...textStyles.body,
+        color: colors.text.tertiary,
+    },
 });

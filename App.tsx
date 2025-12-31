@@ -1,51 +1,64 @@
-import React, { useState } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
 import {
-  Rubik_400Regular,
-  Rubik_500Medium,
-  Rubik_600SemiBold,
-  Rubik_700Bold,
-} from '@expo-google-fonts/rubik';
-import { Montserrat_500Medium } from '@expo-google-fonts/montserrat';
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
+import { NavigationContainer } from '@react-navigation/native';
 import { AuthProvider } from './src/contexts/AuthContext';
-import RootNavigator from './src/navigation/RootNavigator';
-import { SplashScreen as SplashScreenComponent } from './src/screens/Splash/SplashScreen';
+import { RootNavigator } from './src/navigation/RootNavigator';
+import { notificationService } from './src/services/notificationService';
 
+// Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync().catch(() => {
-  // It's safe to ignore the error, splash will auto-hide on failure
+  /* reloading the app might trigger some race conditions, ignore them */
 });
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    'Rubik-Regular': Rubik_400Regular,
-    'Rubik-Medium': Rubik_500Medium,
-    'Rubik-SemiBold': Rubik_600SemiBold,
-    'Rubik-Bold': Rubik_700Bold,
-    'Montserrat-Medium': Montserrat_500Medium,
+    'Inter-Regular': Inter_400Regular,
+    'Inter-Medium': Inter_500Medium,
+    'Inter-SemiBold': Inter_600SemiBold,
+    'Inter-Bold': Inter_700Bold,
+    // Alias for code that uses 'Inter' directly if configured that way
+    'Inter': Inter_400Regular,
   });
 
-  const [isSplashFinished, setIsSplashFinished] = useState(false);
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
 
-  // We move the hideAsync call to the Splash component itself to ensure smooth transition
+  useEffect(() => {
+    // Only register if fonts are loaded to ensure we are ready
+    if (fontsLoaded) {
+      notificationService.registerForPushNotificationsAsync().then(token => {
+        if (token) {
+          notificationService.sendTokenToBackend(token);
+        }
+      });
+    }
+  }, [fontsLoaded]);
 
   if (!fontsLoaded) {
     return null;
   }
 
-  if (!isSplashFinished) {
-    return <SplashScreenComponent onFinish={() => setIsSplashFinished(true)} />;
-  }
-
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
         <AuthProvider>
-          <RootNavigator />
-          <StatusBar style="dark" />
+          <NavigationContainer>
+            <RootNavigator />
+            <StatusBar style="dark" />
+          </NavigationContainer>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

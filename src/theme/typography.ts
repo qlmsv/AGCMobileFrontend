@@ -59,6 +59,13 @@ export const textStyles = {
     fontWeight: typography.weights.medium,
     lineHeight: typography.sizes.lg * typography.lineHeights.normal,
   },
+  // H4: 16px, SemiBold
+  h4: {
+    fontFamily: typography.fonts.primary,
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.semiBold,
+    lineHeight: typography.sizes.md * typography.lineHeights.tight,
+  },
   // Body Large: 16px, Regular
   bodyLarge: {
     fontFamily: typography.fonts.primary,
