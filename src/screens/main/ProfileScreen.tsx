@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, RefreshControl, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, RefreshControl, Alert, Linking } from 'react-native';
 import { colors, spacing, borderRadius, textStyles, layout } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -137,6 +137,45 @@ export const ProfileScreen: React.FC = () => {
 
                 {/* Menu */}
                 <View style={styles.menuSection}>
+                    {/* Teacher-only menu items */}
+                    {user?.role === 'teacher' && (
+                        <>
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={() => navigation.navigate('Students')}
+                            >
+                                <View style={styles.menuLeft}>
+                                    <View style={[styles.iconBox, { backgroundColor: colors.primary.light }]}>
+                                        <Ionicons name="people-outline" size={20} color={colors.primary.main} />
+                                    </View>
+                                    <Text style={styles.menuText}>My Students</Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={() => {
+                                    const url = 'https://apexglobal.app/create-course';
+                                    Alert.alert(
+                                        'Create Course',
+                                        'Course creation is available in the web app. Would you like to open it?',
+                                        [
+                                            { text: 'Cancel', style: 'cancel' },
+                                            { text: 'Open Web', onPress: () => Linking.openURL(url) }
+                                        ]
+                                    );
+                                }}
+                            >
+                                <View style={styles.menuLeft}>
+                                    <View style={[styles.iconBox, { backgroundColor: colors.success + '20' }]}>
+                                        <Ionicons name="add-circle-outline" size={20} color={colors.success} />
+                                    </View>
+                                    <Text style={styles.menuText}>Create Course</Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
+                            </TouchableOpacity>
+                        </>
+                    )}
                     <TouchableOpacity
                         style={styles.menuItem}
                         onPress={() => navigation.navigate('Settings')}

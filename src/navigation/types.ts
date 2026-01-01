@@ -10,6 +10,7 @@ export type RootStackParamList = {
     Settings: undefined;
     EditProfile: undefined;
     Payment: { url: string };
+    Students: undefined;
 };
 
 export type AuthStackParamList = {
