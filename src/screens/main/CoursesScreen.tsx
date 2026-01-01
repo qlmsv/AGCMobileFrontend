@@ -9,8 +9,10 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { EmptyState, CourseCard } from '../../components';
 import { logger } from '../../utils/logger';
+import { useAuth } from '../../contexts/AuthContext';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
+type TabType = 'all' | 'created' | 'enrolled';
 
 const SearchHeader = React.memo(({
     searchQuery,
@@ -64,26 +66,50 @@ const SearchHeader = React.memo(({
 
 export const CoursesScreen: React.FC = () => {
     const navigation = useNavigation<NavigationProp>();
+    const { user } = useAuth();
     const [courses, setCourses] = useState<Course[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<TabType>('all');
+
+    const isTeacher = user?.role === 'teacher';
 
     const fetchData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const [coursesData, categoriesData] = await Promise.all([
-                courseService.getCourses({
+            let coursesData: Course[] = [];
+
+            if (activeTab === 'all') {
+                coursesData = await courseService.getCourses({
                     search: searchQuery,
                     category: selectedCategory || undefined,
                     ordering: '-created_at'
-                }),
-                categories.length === 0 ? courseService.getCategories() : Promise.resolve(categories)
-            ]);
+                });
+            } else if (activeTab === 'created' && user?.id) {
+                coursesData = await courseService.getCourses({
+                    author: user.id,
+                    search: searchQuery,
+                    ordering: '-created_at'
+                });
+            } else if (activeTab === 'enrolled') {
+                coursesData = await courseService.getMyCourses();
+                // Apply local search filter for enrolled courses
+                if (searchQuery) {
+                    const query = searchQuery.toLowerCase();
+                    coursesData = coursesData.filter(c =>
+                        c.title.toLowerCase().includes(query) ||
+                        c.description?.toLowerCase().includes(query)
+                    );
+                }
+            }
 
             setCourses(coursesData);
+
+            // Fetch categories only once
             if (categories.length === 0) {
+                const categoriesData = await courseService.getCategories();
                 setCategories(categoriesData);
             }
         } catch (error) {
@@ -91,7 +117,7 @@ export const CoursesScreen: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [searchQuery, selectedCategory]);
+    }, [searchQuery, selectedCategory, activeTab, user?.id]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -108,11 +134,37 @@ export const CoursesScreen: React.FC = () => {
         />
     );
 
+    const renderTabs = () => {
+        const tabs: { key: TabType; label: string; show: boolean }[] = [
+            { key: 'all', label: 'All', show: true },
+            { key: 'created', label: 'Created', show: isTeacher },
+            { key: 'enrolled', label: 'Enrolled', show: true },
+        ];
+
+        return (
+            <View style={styles.tabsContainer}>
+                {tabs.filter(t => t.show).map(tab => (
+                    <TouchableOpacity
+                        key={tab.key}
+                        style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+                        onPress={() => setActiveTab(tab.key)}
+                    >
+                        <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+                            {tab.label}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        );
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Explore Courses</Text>
+                <Text style={styles.title}>Courses</Text>
             </View>
+
+            {renderTabs()}
 
             {isLoading && courses.length === 0 ? (
                 <View style={styles.loadingContainer}>
@@ -125,20 +177,33 @@ export const CoursesScreen: React.FC = () => {
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.listContent}
                     ListHeaderComponent={
-                        <SearchHeader
-                            searchQuery={searchQuery}
-                            setSearchQuery={setSearchQuery}
-                            categories={categories}
-                            selectedCategory={selectedCategory}
-                            setSelectedCategory={setSelectedCategory}
-                        />
+                        activeTab === 'all' ? (
+                            <SearchHeader
+                                searchQuery={searchQuery}
+                                setSearchQuery={setSearchQuery}
+                                categories={categories}
+                                selectedCategory={selectedCategory}
+                                setSelectedCategory={setSelectedCategory}
+                            />
+                        ) : (
+                            <View style={styles.simpleSearchContainer}>
+                                <Ionicons name="search" size={20} color={colors.text.tertiary} />
+                                <TextInput
+                                    style={styles.searchInput}
+                                    placeholder={`Search ${activeTab} courses...`}
+                                    placeholderTextColor={colors.text.tertiary}
+                                    value={searchQuery}
+                                    onChangeText={setSearchQuery}
+                                />
+                            </View>
+                        )
                     }
                     ListEmptyComponent={
                         !isLoading ? (
                             <EmptyState
-                                title="No Courses Found"
-                                message="Try adjusting your search or category filters."
-                                icon="search-outline"
+                                title={activeTab === 'created' ? 'No Courses Created' : activeTab === 'enrolled' ? 'No Enrolled Courses' : 'No Courses Found'}
+                                message={activeTab === 'created' ? 'Create your first course to get started.' : activeTab === 'enrolled' ? 'Enroll in a course to start learning.' : 'Try adjusting your search or category filters.'}
+                                icon={activeTab === 'created' ? 'add-circle-outline' : activeTab === 'enrolled' ? 'book-outline' : 'search-outline'}
                             />
                         ) : null
                     }
@@ -276,5 +341,41 @@ const styles = StyleSheet.create({
     emptyText: {
         ...textStyles.body,
         color: colors.text.tertiary,
+    },
+    tabsContainer: {
+        flexDirection: 'row',
+        paddingHorizontal: spacing.base,
+        paddingVertical: spacing.sm,
+        gap: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border.light,
+    },
+    tab: {
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+    },
+    tabActive: {
+        borderBottomWidth: 2,
+        borderBottomColor: colors.primary.main,
+    },
+    tabText: {
+        ...textStyles.body,
+        color: colors.text.tertiary,
+        fontWeight: '500',
+    },
+    tabTextActive: {
+        color: colors.primary.main,
+        fontWeight: '600',
+    },
+    simpleSearchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.neutral[100],
+        marginHorizontal: spacing.base,
+        marginVertical: spacing.md,
+        paddingHorizontal: spacing.md,
+        height: 48,
+        borderRadius: borderRadius.lg,
+        gap: spacing.sm,
     },
 });
