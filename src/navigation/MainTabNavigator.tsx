@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../screens/main/HomeScreen';
 import { CoursesScreen } from '../screens/main/CoursesScreen';
+import { ScheduleScreen } from '../screens/main/ScheduleScreen';
 import { ChatsScreen } from '../screens/main/ChatsScreen';
 import { ProfileScreen } from '../screens/main/ProfileScreen';
 import { MainTabParamList } from './types';
@@ -35,6 +36,8 @@ export const MainTabNavigator = () => {
                         iconName = focused ? 'home' : 'home-outline';
                     } else if (route.name === 'Courses') {
                         iconName = focused ? 'book' : 'book-outline';
+                    } else if (route.name === 'Schedule') {
+                        iconName = focused ? 'calendar' : 'calendar-outline';
                     } else if (route.name === 'Chats') {
                         iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
                     } else if (route.name === 'Profile') {
@@ -47,6 +50,7 @@ export const MainTabNavigator = () => {
         >
             <Tab.Screen name="Home" component={HomeScreen} />
             <Tab.Screen name="Courses" component={CoursesScreen} />
+            <Tab.Screen name="Schedule" component={ScheduleScreen} />
             <Tab.Screen name="Chats" component={ChatsScreen} />
             <Tab.Screen name="Profile" component={ProfileScreen} />
         </Tab.Navigator>
