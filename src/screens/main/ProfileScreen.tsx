@@ -154,17 +154,7 @@ export const ProfileScreen: React.FC = () => {
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.menuItem}
-                                onPress={() => {
-                                    const url = 'https://apexglobal.app/create-course';
-                                    Alert.alert(
-                                        'Create Course',
-                                        'Course creation is available in the web app. Would you like to open it?',
-                                        [
-                                            { text: 'Cancel', style: 'cancel' },
-                                            { text: 'Open Web', onPress: () => Linking.openURL(url) }
-                                        ]
-                                    );
-                                }}
+                                onPress={() => navigation.navigate('CreateCourse')}
                             >
                                 <View style={styles.menuLeft}>
                                     <View style={[styles.iconBox, { backgroundColor: colors.success + '20' }]}>

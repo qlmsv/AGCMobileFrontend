@@ -9,6 +9,7 @@ import { SettingsScreen } from '../screens/main/SettingsScreen';
 import { EditProfileScreen } from '../screens/main/EditProfileScreen';
 import { PaymentScreen } from '../screens/main/PaymentScreen';
 import { StudentsScreen } from '../screens/teacher/StudentsScreen';
+import { CreateCourseScreen } from '../screens/teacher/CreateCourseScreen';
 import { useAuth } from '../contexts/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 import { RootStackParamList } from './types';
@@ -39,6 +40,7 @@ export const RootNavigator = () => {
                     <Stack.Screen name="EditProfile" component={EditProfileScreen} />
                     <Stack.Screen name="Payment" component={PaymentScreen} />
                     <Stack.Screen name="Students" component={StudentsScreen} />
+                    <Stack.Screen name="CreateCourse" component={CreateCourseScreen} />
                 </>
             ) : (
                 <Stack.Screen name="Auth" component={AuthNavigator} />

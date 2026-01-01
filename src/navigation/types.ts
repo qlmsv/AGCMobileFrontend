@@ -11,6 +11,7 @@ export type RootStackParamList = {
     EditProfile: undefined;
     Payment: { url: string };
     Students: undefined;
+    CreateCourse: undefined;
 };
 
 export type AuthStackParamList = {
