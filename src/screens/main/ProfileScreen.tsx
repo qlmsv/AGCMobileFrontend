@@ -22,8 +22,13 @@ export const ProfileScreen: React.FC = () => {
 
     const fetchMyCourses = async () => {
         try {
-            const data = await courseService.getMyCourses();
-            setMyCourses(data);
+            if (user?.role === 'teacher') {
+                const data = await courseService.getCourses({ author: user.id });
+                setMyCourses(data);
+            } else {
+                const data = await courseService.getMyCourses();
+                setMyCourses(data);
+            }
         } catch (error) {
             logger.error('Failed to fetch my courses', error);
         }
@@ -33,11 +38,11 @@ export const ProfileScreen: React.FC = () => {
         setIsRefreshing(true);
         await fetchMyCourses();
         setIsRefreshing(false);
-    }, []);
+    }, [user?.role]); // Add user.role dependency
 
     useEffect(() => {
         fetchMyCourses();
-    }, []);
+    }, [user?.role]); // Add user.role dependency
 
     const renderCourseItem = (course: Course) => (
         <TouchableOpacity
@@ -51,10 +56,15 @@ export const ProfileScreen: React.FC = () => {
             />
             <View style={styles.courseInfo}>
                 <Text style={styles.courseTitle} numberOfLines={1}>{course.title}</Text>
-                <View style={styles.progressBarBackground}>
-                    <View style={[styles.progressBarFill, { width: '45%' }]} />
-                </View>
-                <Text style={styles.progressText}>45% Complete</Text>
+                {/* Only show progress for students */}
+                {user?.role !== 'teacher' && (
+                    <>
+                        <View style={styles.progressBarBackground}>
+                            <View style={[styles.progressBarFill, { width: '45%' }]} />
+                        </View>
+                        <Text style={styles.progressText}>45% Complete</Text>
+                    </>
+                )}
             </View>
         </TouchableOpacity>
     );
@@ -82,18 +92,19 @@ export const ProfileScreen: React.FC = () => {
                         {profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}` : profile?.phone_number || user?.email}
                     </Text>
                     <Text style={styles.email}>{user?.email}</Text>
+                    {user?.role === 'teacher' && <View style={{ marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: colors.primary.main, borderRadius: 4 }}><Text style={{ color: 'white', fontSize: 12 }}>Teacher</Text></View>}
                 </View>
 
-                {/* Dashboard Stats (Optional Placeholder) */}
+                {/* Dashboard Stats */}
                 <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
                         <Text style={styles.statValue}>{myCourses.length}</Text>
-                        <Text style={styles.statLabel}>Courses</Text>
+                        <Text style={styles.statLabel}>{user?.role === 'teacher' ? 'Created' : 'Courses'}</Text>
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
                         <Text style={styles.statValue}>0</Text>
-                        <Text style={styles.statLabel}>Completed</Text>
+                        <Text style={styles.statLabel}>{user?.role === 'teacher' ? 'Students' : 'Completed'}</Text>
                     </View>
                     <View style={styles.statDivider} />
                     <View style={styles.statItem}>
@@ -104,9 +115,9 @@ export const ProfileScreen: React.FC = () => {
 
                 {/* My Courses Section */}
                 <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>My Learning</Text>
+                    <Text style={styles.sectionTitle}>{user?.role === 'teacher' ? 'My Courses' : 'My Learning'}</Text>
                     <TouchableOpacity onPress={() => navigation.navigate('Main', { screen: 'Courses' })}>
-                        <Text style={styles.seeAll}>Find More</Text>
+                        <Text style={styles.seeAll}>{user?.role === 'teacher' ? 'Create New' : 'Find More'}</Text>
                     </TouchableOpacity>
                 </View>
 

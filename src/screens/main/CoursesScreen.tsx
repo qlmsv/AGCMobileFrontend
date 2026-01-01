@@ -12,6 +12,56 @@ import { logger } from '../../utils/logger';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
+const SearchHeader = React.memo(({
+    searchQuery,
+    setSearchQuery,
+    categories,
+    selectedCategory,
+    setSelectedCategory
+}: {
+    searchQuery: string;
+    setSearchQuery: (text: string) => void;
+    categories: Category[];
+    selectedCategory: string | null;
+    setSelectedCategory: (id: string | null) => void;
+}) => (
+    <View style={styles.listHeader}>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color={colors.text.tertiary} />
+            <TextInput
+                style={styles.searchInput}
+                placeholder="Search courses..."
+                placeholderTextColor={colors.text.tertiary}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+            />
+        </View>
+
+        {/* Categories Filter */}
+        <FlatList
+            horizontal
+            data={[{ id: 'all', name: 'All' } as Category, ...categories]}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesList}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => {
+                const isSelected = item.id === 'all' ? selectedCategory === null : selectedCategory === item.id;
+                return (
+                    <TouchableOpacity
+                        style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
+                        onPress={() => setSelectedCategory(item.id === 'all' ? null : item.id)}
+                    >
+                        <Text style={[styles.categoryText, isSelected && styles.categoryTextSelected]}>
+                            {item.name}
+                        </Text>
+                    </TouchableOpacity>
+                );
+            }}
+        />
+    </View>
+));
+
 export const CoursesScreen: React.FC = () => {
     const navigation = useNavigation<NavigationProp>();
     const [courses, setCourses] = useState<Course[]>([]);
@@ -58,44 +108,6 @@ export const CoursesScreen: React.FC = () => {
         />
     );
 
-    const renderHeader = () => (
-        <View style={styles.listHeader}>
-            {/* Search Bar */}
-            <View style={styles.searchContainer}>
-                <Ionicons name="search" size={20} color={colors.text.tertiary} />
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search courses..."
-                    placeholderTextColor={colors.text.tertiary}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                />
-            </View>
-
-            {/* Categories Filter */}
-            <FlatList
-                horizontal
-                data={[{ id: 'all', name: 'All' } as Category, ...categories]}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.categoriesList}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => {
-                    const isSelected = item.id === 'all' ? selectedCategory === null : selectedCategory === item.id;
-                    return (
-                        <TouchableOpacity
-                            style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
-                            onPress={() => setSelectedCategory(item.id === 'all' ? null : item.id)}
-                        >
-                            <Text style={[styles.categoryText, isSelected && styles.categoryTextSelected]}>
-                                {item.name}
-                            </Text>
-                        </TouchableOpacity>
-                    );
-                }}
-            />
-        </View>
-    );
-
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
@@ -112,7 +124,15 @@ export const CoursesScreen: React.FC = () => {
                     renderItem={renderCourseItem}
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.listContent}
-                    ListHeaderComponent={renderHeader}
+                    ListHeaderComponent={
+                        <SearchHeader
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            categories={categories}
+                            selectedCategory={selectedCategory}
+                            setSelectedCategory={setSelectedCategory}
+                        />
+                    }
                     ListEmptyComponent={
                         !isLoading ? (
                             <EmptyState

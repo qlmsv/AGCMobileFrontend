@@ -45,7 +45,15 @@ export const EmailInputScreen: React.FC<Props> = ({ navigation }) => {
             navigation.navigate('Verification', { email });
         } catch (error: any) {
             logger.error('Failed to send verification code:', error);
-            Alert.alert('Error', error.message || 'Failed to send verification code. Please check your internet connection.');
+
+            if (error.response?.status === 429) {
+                Alert.alert(
+                    'Limit Reached',
+                    'You have requested too many codes. Please wait 60 seconds before trying again.'
+                );
+            } else {
+                Alert.alert('Error', error.message || 'Failed to send verification code. Please check your internet connection.');
+            }
         } finally {
             setIsLoading(false);
         }
