@@ -22,6 +22,8 @@ import { courseService } from '../../services/courseService';
 import { Category } from '../../types';
 import { logger } from '../../utils/logger';
 import * as ImagePicker from 'expo-image-picker';
+import apiService from '../../services/api';
+import { API_ENDPOINTS } from '../../config/api';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -39,7 +41,7 @@ export const CreateCourseScreen: React.FC = () => {
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
     const [price, setPrice] = useState('');
     const [isFree, setIsFree] = useState(true);
-    const [language, setLanguage] = useState('ru');
+    const [language, setLanguage] = useState('en');
     const [coverImage, setCoverImage] = useState<string | null>(null);
 
     useEffect(() => {
@@ -70,11 +72,11 @@ export const CreateCourseScreen: React.FC = () => {
 
     const validateDetails = (): boolean => {
         if (!title.trim()) {
-            Alert.alert('Ошибка', 'Введите название курса');
+            Alert.alert('Error', 'Please enter a course title');
             return false;
         }
         if (!selectedCategoryId) {
-            Alert.alert('Ошибка', 'Выберите категорию');
+            Alert.alert('Error', 'Please select a category');
             return false;
         }
         return true;
@@ -100,6 +102,38 @@ export const CreateCourseScreen: React.FC = () => {
         }
     };
 
+    const uploadCoverImage = async (courseId: string): Promise<string | null> => {
+        if (!coverImage) return null;
+
+        try {
+            const formData = new FormData();
+            const filename = coverImage.split('/').pop() || 'cover.jpg';
+            const match = /\.(\w+)$/.exec(filename);
+            const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+            formData.append('cover', {
+                uri: coverImage,
+                name: filename,
+                type,
+            } as any);
+
+            const response = await apiService.patch<any>(
+                API_ENDPOINTS.COURSE_BY_ID(courseId),
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            );
+
+            return response.cover;
+        } catch (error) {
+            logger.error('Failed to upload cover image', error);
+            return null;
+        }
+    };
+
     const handleCreateCourse = async () => {
         setIsLoading(true);
         try {
@@ -118,13 +152,16 @@ export const CreateCourseScreen: React.FC = () => {
 
             logger.info('Creating course with data:', JSON.stringify(courseData));
 
-            // Note: Cover upload would need FormData handling
-            // For now we create without cover
             const newCourse = await courseService.createCourse(courseData);
 
+            // Upload cover image if selected
+            if (coverImage) {
+                await uploadCoverImage(newCourse.id);
+            }
+
             Alert.alert(
-                'Успешно!',
-                'Курс создан как черновик. Добавьте модули и уроки.',
+                'Success!',
+                'Course created as draft. You can now add modules and lessons.',
                 [
                     {
                         text: 'OK',
@@ -139,8 +176,8 @@ export const CreateCourseScreen: React.FC = () => {
             const errorMessage = error.response?.data?.detail ||
                 error.response?.data?.message ||
                 JSON.stringify(error.response?.data) ||
-                'Не удалось создать курс';
-            Alert.alert('Ошибка', errorMessage);
+                'Failed to create course';
+            Alert.alert('Error', errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -168,7 +205,7 @@ export const CreateCourseScreen: React.FC = () => {
                         )}
                     </View>
                     <Text style={[styles.stepLabel, currentStep === step && styles.stepLabelActive]}>
-                        {step === 'details' ? 'Детали' : step === 'cover' ? 'Обложка' : 'Итог'}
+                        {step === 'details' ? 'Details' : step === 'cover' ? 'Cover' : 'Summary'}
                     </Text>
                 </View>
             ))}
@@ -177,19 +214,19 @@ export const CreateCourseScreen: React.FC = () => {
 
     const renderDetailsStep = () => (
         <View style={styles.stepContent}>
-            <Text style={styles.label}>Название курса *</Text>
+            <Text style={styles.label}>Course Title *</Text>
             <TextInput
                 style={styles.input}
-                placeholder="Введите название"
+                placeholder="Enter course title"
                 placeholderTextColor={colors.text.tertiary}
                 value={title}
                 onChangeText={setTitle}
             />
 
-            <Text style={styles.label}>Описание</Text>
+            <Text style={styles.label}>Description</Text>
             <TextInput
                 style={[styles.input, styles.textArea]}
-                placeholder="Опишите ваш курс"
+                placeholder="Describe your course"
                 placeholderTextColor={colors.text.tertiary}
                 value={description}
                 onChangeText={setDescription}
@@ -197,7 +234,7 @@ export const CreateCourseScreen: React.FC = () => {
                 numberOfLines={4}
             />
 
-            <Text style={styles.label}>Категория *</Text>
+            <Text style={styles.label}>Category *</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryList}>
                 {categories.map((cat) => (
                     <TouchableOpacity
@@ -220,11 +257,11 @@ export const CreateCourseScreen: React.FC = () => {
                 ))}
             </ScrollView>
 
-            <Text style={styles.label}>Язык</Text>
+            <Text style={styles.label}>Language</Text>
             <View style={styles.languageButtons}>
                 {[
-                    { code: 'ru', label: 'Русский' },
                     { code: 'en', label: 'English' },
+                    { code: 'ru', label: 'Русский' },
                 ].map((lang) => (
                     <TouchableOpacity
                         key={lang.code}
@@ -243,14 +280,14 @@ export const CreateCourseScreen: React.FC = () => {
                 ))}
             </View>
 
-            <Text style={styles.label}>Цена</Text>
+            <Text style={styles.label}>Pricing</Text>
             <View style={styles.priceRow}>
                 <TouchableOpacity
                     style={[styles.freeToggle, isFree && styles.freeToggleActive]}
                     onPress={() => setIsFree(true)}
                 >
                     <Text style={[styles.freeToggleText, isFree && styles.freeToggleTextActive]}>
-                        Бесплатно
+                        Free
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -258,14 +295,14 @@ export const CreateCourseScreen: React.FC = () => {
                     onPress={() => setIsFree(false)}
                 >
                     <Text style={[styles.freeToggleText, !isFree && styles.freeToggleTextActive]}>
-                        Платный
+                        Paid
                     </Text>
                 </TouchableOpacity>
             </View>
             {!isFree && (
                 <TextInput
                     style={styles.input}
-                    placeholder="Введите цену (например: 99.00)"
+                    placeholder="Enter price (e.g., 99.00)"
                     placeholderTextColor={colors.text.tertiary}
                     value={price}
                     onChangeText={setPrice}
@@ -277,58 +314,58 @@ export const CreateCourseScreen: React.FC = () => {
 
     const renderCoverStep = () => (
         <View style={styles.stepContent}>
-            <Text style={styles.label}>Обложка курса</Text>
+            <Text style={styles.label}>Course Cover Image</Text>
             <TouchableOpacity style={styles.coverPicker} onPress={pickImage}>
                 {coverImage ? (
                     <Image source={{ uri: coverImage }} style={styles.coverImage} />
                 ) : (
                     <View style={styles.coverPlaceholder}>
                         <Ionicons name="image-outline" size={48} color={colors.text.tertiary} />
-                        <Text style={styles.coverPlaceholderText}>Нажмите, чтобы выбрать</Text>
-                        <Text style={styles.coverHint}>Рекомендуемый размер: 1920x1080</Text>
+                        <Text style={styles.coverPlaceholderText}>Tap to select image</Text>
+                        <Text style={styles.coverHint}>Recommended size: 1920x1080</Text>
                     </View>
                 )}
             </TouchableOpacity>
-            <Text style={styles.hint}>Обложку можно добавить позже</Text>
+            <Text style={styles.hint}>You can add a cover image later</Text>
         </View>
     );
 
     const renderSummaryStep = () => (
         <View style={styles.stepContent}>
-            <Text style={styles.sectionTitle}>Проверьте данные</Text>
+            <Text style={styles.sectionTitle}>Review Your Course</Text>
 
             <View style={styles.summaryCard}>
                 {coverImage && (
                     <Image source={{ uri: coverImage }} style={styles.summaryCover} />
                 )}
                 <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Название:</Text>
+                    <Text style={styles.summaryLabel}>Title:</Text>
                     <Text style={styles.summaryValue}>{title}</Text>
                 </View>
                 <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Категория:</Text>
+                    <Text style={styles.summaryLabel}>Category:</Text>
                     <Text style={styles.summaryValue}>
                         {categories.find((c) => c.id === selectedCategoryId)?.name || '-'}
                     </Text>
                 </View>
                 <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Язык:</Text>
-                    <Text style={styles.summaryValue}>{language === 'ru' ? 'Русский' : 'English'}</Text>
+                    <Text style={styles.summaryLabel}>Language:</Text>
+                    <Text style={styles.summaryValue}>{language === 'en' ? 'English' : 'Русский'}</Text>
                 </View>
                 <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Цена:</Text>
-                    <Text style={styles.summaryValue}>{isFree ? 'Бесплатно' : `${price || '0'} ₽`}</Text>
+                    <Text style={styles.summaryLabel}>Price:</Text>
+                    <Text style={styles.summaryValue}>{isFree ? 'Free' : `$${price || '0'}`}</Text>
                 </View>
                 {description && (
                     <View style={styles.summaryDescRow}>
-                        <Text style={styles.summaryLabel}>Описание:</Text>
+                        <Text style={styles.summaryLabel}>Description:</Text>
                         <Text style={styles.summaryDesc}>{description}</Text>
                     </View>
                 )}
             </View>
 
             <Text style={styles.hint}>
-                Курс будет создан как черновик. После создания вы сможете добавить модули и уроки.
+                Course will be created as a draft. After creation, you can add modules and lessons.
             </Text>
         </View>
     );
@@ -344,7 +381,7 @@ export const CreateCourseScreen: React.FC = () => {
                     <TouchableOpacity onPress={handleBack} style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Создание курса</Text>
+                    <Text style={styles.headerTitle}>Create Course</Text>
                     <View style={styles.backButton} />
                 </View>
 
@@ -371,12 +408,12 @@ export const CreateCourseScreen: React.FC = () => {
                             {isLoading ? (
                                 <ActivityIndicator color={colors.text.inverse} />
                             ) : (
-                                <Text style={styles.primaryButtonText}>Создать курс</Text>
+                                <Text style={styles.primaryButtonText}>Create Course</Text>
                             )}
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={handleNext}>
-                            <Text style={styles.primaryButtonText}>Далее</Text>
+                            <Text style={styles.primaryButtonText}>Next</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -397,12 +434,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: spacing.base,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
         borderBottomWidth: 1,
-        borderBottomColor: colors.border.light,
+        borderBottomColor: colors.neutral[200],
     },
     backButton: {
         width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     headerTitle: {
         ...textStyles.h3,
@@ -417,15 +458,15 @@ const styles = StyleSheet.create({
     },
     stepItem: {
         alignItems: 'center',
+        gap: spacing.xs,
     },
     stepCircle: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
         backgroundColor: colors.neutral[200],
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: spacing.xs,
     },
     stepCircleActive: {
         backgroundColor: colors.primary.main,
@@ -435,7 +476,7 @@ const styles = StyleSheet.create({
     },
     stepNumber: {
         ...textStyles.caption,
-        color: colors.text.tertiary,
+        color: colors.text.secondary,
         fontWeight: '600',
     },
     stepLabel: {
@@ -450,30 +491,26 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        padding: spacing.base,
-        paddingBottom: spacing.xxl,
+        padding: spacing.md,
     },
     stepContent: {
-        flex: 1,
+        gap: spacing.md,
     },
     label: {
-        ...textStyles.bodyLarge,
-        color: colors.text.primary,
+        ...textStyles.body,
         fontWeight: '600',
-        marginBottom: spacing.sm,
-        marginTop: spacing.md,
+        color: colors.text.primary,
+        marginBottom: spacing.xs,
     },
     input: {
         backgroundColor: colors.neutral[100],
         borderRadius: borderRadius.md,
         padding: spacing.md,
-        fontSize: 16,
+        ...textStyles.body,
         color: colors.text.primary,
-        borderWidth: 1,
-        borderColor: colors.border.default,
     },
     textArea: {
-        height: 100,
+        minHeight: 100,
         textAlignVertical: 'top',
     },
     categoryList: {
@@ -485,16 +522,13 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutral[100],
         borderRadius: borderRadius.round,
         marginRight: spacing.sm,
-        borderWidth: 1,
-        borderColor: colors.border.default,
     },
     categoryChipSelected: {
         backgroundColor: colors.primary.main,
-        borderColor: colors.primary.main,
     },
     categoryChipText: {
         ...textStyles.body,
-        color: colors.text.primary,
+        color: colors.text.secondary,
     },
     categoryChipTextSelected: {
         color: colors.text.inverse,
@@ -505,24 +539,20 @@ const styles = StyleSheet.create({
     },
     langButton: {
         flex: 1,
-        paddingVertical: spacing.md,
-        backgroundColor: colors.neutral[100],
+        paddingVertical: spacing.sm,
         borderRadius: borderRadius.md,
+        backgroundColor: colors.neutral[100],
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: colors.border.default,
     },
     langButtonActive: {
         backgroundColor: colors.primary.main,
-        borderColor: colors.primary.main,
     },
     langButtonText: {
         ...textStyles.body,
-        color: colors.text.primary,
+        color: colors.text.secondary,
     },
     langButtonTextActive: {
         color: colors.text.inverse,
-        fontWeight: '600',
     },
     priceRow: {
         flexDirection: 'row',
@@ -531,33 +561,26 @@ const styles = StyleSheet.create({
     },
     freeToggle: {
         flex: 1,
-        paddingVertical: spacing.md,
-        backgroundColor: colors.neutral[100],
+        paddingVertical: spacing.sm,
         borderRadius: borderRadius.md,
+        backgroundColor: colors.neutral[100],
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: colors.border.default,
     },
     freeToggleActive: {
         backgroundColor: colors.primary.main,
-        borderColor: colors.primary.main,
     },
     freeToggleText: {
         ...textStyles.body,
-        color: colors.text.primary,
+        color: colors.text.secondary,
     },
     freeToggleTextActive: {
         color: colors.text.inverse,
-        fontWeight: '600',
     },
     coverPicker: {
         aspectRatio: 16 / 9,
         backgroundColor: colors.neutral[100],
         borderRadius: borderRadius.lg,
         overflow: 'hidden',
-        borderWidth: 2,
-        borderColor: colors.border.default,
-        borderStyle: 'dashed',
     },
     coverImage: {
         width: '100%',
@@ -567,21 +590,19 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        gap: spacing.sm,
     },
     coverPlaceholderText: {
         ...textStyles.body,
         color: colors.text.tertiary,
-        marginTop: spacing.sm,
     },
     coverHint: {
         ...textStyles.caption,
         color: colors.text.tertiary,
-        marginTop: spacing.xs,
     },
     hint: {
         ...textStyles.caption,
         color: colors.text.tertiary,
-        marginTop: spacing.md,
         textAlign: 'center',
     },
     sectionTitle: {
@@ -590,47 +611,42 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     summaryCard: {
-        backgroundColor: colors.neutral[50],
+        backgroundColor: colors.neutral[100],
         borderRadius: borderRadius.lg,
         padding: spacing.md,
-        borderWidth: 1,
-        borderColor: colors.border.light,
+        gap: spacing.sm,
     },
     summaryCover: {
         width: '100%',
         aspectRatio: 16 / 9,
         borderRadius: borderRadius.md,
-        marginBottom: spacing.md,
+        marginBottom: spacing.sm,
     },
     summaryRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingVertical: spacing.sm,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border.light,
     },
     summaryLabel: {
         ...textStyles.body,
-        color: colors.text.tertiary,
+        color: colors.text.secondary,
     },
     summaryValue: {
         ...textStyles.body,
         color: colors.text.primary,
-        fontWeight: '500',
+        fontWeight: '600',
     },
     summaryDescRow: {
-        paddingVertical: spacing.sm,
+        marginTop: spacing.sm,
     },
     summaryDesc: {
         ...textStyles.body,
-        color: colors.text.secondary,
+        color: colors.text.primary,
         marginTop: spacing.xs,
     },
     bottomButtons: {
-        padding: spacing.base,
+        padding: spacing.md,
         borderTopWidth: 1,
-        borderTopColor: colors.border.light,
-        backgroundColor: colors.background.default,
+        borderTopColor: colors.neutral[200],
     },
     button: {
         paddingVertical: spacing.md,
@@ -641,7 +657,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.primary.main,
     },
     primaryButtonText: {
-        ...textStyles.bodyLarge,
+        ...textStyles.body,
         color: colors.text.inverse,
         fontWeight: '600',
     },
