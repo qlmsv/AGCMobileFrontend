@@ -116,6 +116,8 @@ export const CreateCourseScreen: React.FC = () => {
                 courseData.price = price;
             }
 
+            logger.info('Creating course with data:', JSON.stringify(courseData));
+
             // Note: Cover upload would need FormData handling
             // For now we create without cover
             const newCourse = await courseService.createCourse(courseData);
@@ -132,7 +134,13 @@ export const CreateCourseScreen: React.FC = () => {
             );
         } catch (error: any) {
             logger.error('Failed to create course', error);
-            Alert.alert('Ошибка', error.response?.data?.detail || 'Не удалось создать курс');
+            logger.error('Error response:', JSON.stringify(error.response?.data));
+            logger.error('Error status:', error.response?.status);
+            const errorMessage = error.response?.data?.detail ||
+                error.response?.data?.message ||
+                JSON.stringify(error.response?.data) ||
+                'Не удалось создать курс';
+            Alert.alert('Ошибка', errorMessage);
         } finally {
             setIsLoading(false);
         }

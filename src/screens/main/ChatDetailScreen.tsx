@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { colors, spacing, borderRadius, textStyles, layout } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -60,13 +60,18 @@ export const ChatDetailScreen: React.FC = () => {
             setMessages(prev => [tempMessage, ...prev]);
             setMessage('');
 
+            logger.info('Sending message to chat:', chatId, 'content:', tempMessage.content);
             const newMessage = await chatService.sendMessage(chatId, tempMessage.content);
+            logger.info('Message sent successfully:', newMessage);
             // Replace temp message with real one
             setMessages(prev => prev.map(m => m.id === tempId ? newMessage : m));
-        } catch (error) {
+        } catch (error: any) {
             logger.error('Error sending message:', error);
+            logger.error('Error response:', JSON.stringify(error.response?.data));
+            logger.error('Error status:', error.response?.status);
             // Rollback optimistic update on error
             setMessages(prev => prev.filter(m => m.id !== tempId));
+            Alert.alert('Ошибка', error.response?.data?.detail || 'Не удалось отправить сообщение');
         } finally {
             setIsSending(false);
         }
