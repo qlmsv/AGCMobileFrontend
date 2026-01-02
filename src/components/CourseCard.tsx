@@ -27,7 +27,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             activeOpacity={0.7}
         >
             <Image
-                source={{ uri: course.cover || 'https://via.placeholder.com/150' }}
+                source={{ uri: course.cover || undefined }}
                 style={[
                     styles.image,
                     isHorizontal ? styles.imageHorizontal : styles.imageVertical

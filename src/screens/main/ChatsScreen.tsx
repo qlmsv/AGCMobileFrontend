@@ -46,7 +46,7 @@ export const ChatsScreen: React.FC = () => {
             onPress={() => navigation.navigate('ChatDetail', { chatId: item.id })}
         >
             <Image
-                source={{ uri: item.display_avatar || 'https://via.placeholder.com/50' }}
+                source={{ uri: item.display_avatar || undefined }}
                 style={styles.avatar}
             />
             <View style={styles.chatInfo}>

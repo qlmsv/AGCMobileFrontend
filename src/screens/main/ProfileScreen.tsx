@@ -51,7 +51,7 @@ export const ProfileScreen: React.FC = () => {
             onPress={() => navigation.navigate('CourseDetail', { courseId: course.id })}
         >
             <Image
-                source={{ uri: course.cover || 'https://via.placeholder.com/150' }}
+                source={{ uri: course.cover || undefined }}
                 style={styles.courseImage}
             />
             <View style={styles.courseInfo}>

@@ -164,7 +164,7 @@ export const CourseDetailScreen: React.FC = () => {
 
             <ScrollView contentContainerStyle={styles.content}>
                 <Image
-                    source={{ uri: course.cover || 'https://via.placeholder.com/300' }}
+                    source={{ uri: course.cover || undefined }}
                     style={styles.courseImage}
                 />
 
