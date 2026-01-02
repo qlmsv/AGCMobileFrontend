@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
-import { colors, spacing, textStyles, borderRadius, layout } from '../../theme';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Switch } from 'react-native';
+import { colors, spacing, textStyles, borderRadius } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -12,6 +12,9 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 export const SettingsScreen: React.FC = () => {
     const navigation = useNavigation<NavigationProp>();
     const { logout } = useAuth();
+
+    const [pushEnabled, setPushEnabled] = useState(true);
+    const [emailEnabled, setEmailEnabled] = useState(true);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -39,11 +42,21 @@ export const SettingsScreen: React.FC = () => {
                     <Text style={styles.sectionTitle}>Notifications</Text>
                     <View style={styles.item}>
                         <Text style={styles.itemText}>Push Notifications</Text>
-                        <Ionicons name="toggle" size={24} color={colors.primary.main} />
+                        <Switch
+                            value={pushEnabled}
+                            onValueChange={setPushEnabled}
+                            trackColor={{ false: colors.neutral[300], true: colors.primary.light }}
+                            thumbColor={pushEnabled ? colors.primary.main : colors.neutral[400]}
+                        />
                     </View>
                     <View style={styles.item}>
                         <Text style={styles.itemText}>Email Updates</Text>
-                        <Ionicons name="toggle" size={24} color={colors.primary.main} />
+                        <Switch
+                            value={emailEnabled}
+                            onValueChange={setEmailEnabled}
+                            trackColor={{ false: colors.neutral[300], true: colors.primary.light }}
+                            thumbColor={emailEnabled ? colors.primary.main : colors.neutral[400]}
+                        />
                     </View>
                 </View>
 
@@ -58,6 +71,11 @@ export const SettingsScreen: React.FC = () => {
                         <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
                     </TouchableOpacity>
                 </View>
+
+                <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+                    <Ionicons name="log-out-outline" size={20} color={colors.error} />
+                    <Text style={styles.logoutText}>Log Out</Text>
+                </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
     );
@@ -98,14 +116,28 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: spacing.md,
-        paddingHorizontal: spacing.sm,
-        backgroundColor: colors.background.default,
-        marginBottom: 1,
-        borderRadius: borderRadius.sm,
+        padding: spacing.md,
+        backgroundColor: colors.background.card,
+        borderRadius: borderRadius.md,
+        marginBottom: spacing.xs,
     },
     itemText: {
-        ...textStyles.bodyLarge,
+        ...textStyles.body,
         color: colors.text.primary,
+    },
+    logoutButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: spacing.md,
+        backgroundColor: colors.error + '10',
+        borderRadius: borderRadius.md,
+        marginTop: spacing.lg,
+        gap: spacing.sm,
+    },
+    logoutText: {
+        ...textStyles.body,
+        color: colors.error,
+        fontWeight: '600',
     },
 });
