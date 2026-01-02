@@ -8,6 +8,7 @@ import { Course, Module } from '../../types';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { logger } from '../../utils/logger';
+import { useAuth } from '../../contexts/AuthContext';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -15,6 +16,7 @@ export const CourseDetailScreen: React.FC = () => {
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<any>();
     const courseId = route.params?.courseId;
+    const { user } = useAuth();
 
     const [course, setCourse] = useState<Course | null>(null);
     const [modules, setModules] = useState<Module[]>([]);
@@ -206,6 +208,20 @@ export const CourseDetailScreen: React.FC = () => {
                         modules.map((m, i) => renderModule(m, i))
                     ) : (
                         <Text style={styles.emptyText}>No modules available yet.</Text>
+                    )}
+
+                    {/* Add Module button for course author */}
+                    {course.author === user?.id && (
+                        <TouchableOpacity
+                            style={styles.addModuleButton}
+                            onPress={() => navigation.navigate('AddModule', {
+                                courseId: course.id,
+                                modulesCount: modules.length
+                            })}
+                        >
+                            <Ionicons name="add-circle-outline" size={20} color={colors.primary.main} />
+                            <Text style={styles.addModuleText}>Add Module</Text>
+                        </TouchableOpacity>
                     )}
                 </View>
 
@@ -400,5 +416,23 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: colors.border.light,
         alignItems: 'center',
+    },
+    addModuleButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: spacing.md,
+        marginTop: spacing.md,
+        backgroundColor: colors.primary.main + '10',
+        borderRadius: borderRadius.md,
+        borderWidth: 1,
+        borderColor: colors.primary.main,
+        borderStyle: 'dashed',
+        gap: spacing.sm,
+    },
+    addModuleText: {
+        ...textStyles.body,
+        color: colors.primary.main,
+        fontWeight: '600',
     },
 });

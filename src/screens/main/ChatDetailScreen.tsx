@@ -32,7 +32,7 @@ export const ChatDetailScreen: React.FC = () => {
                 chatService.getMessages(chatId)
             ]);
             setChat(chatData);
-            setMessages(messagesData.reverse()); // Messages usually come newest first, we reverse for inverted list or standard bottom-up
+            setMessages(messagesData); // Keep original order - with inverted FlatList, first item shows at bottom
         } catch (error) {
             logger.error('Error fetching chat details:', error);
         } finally {

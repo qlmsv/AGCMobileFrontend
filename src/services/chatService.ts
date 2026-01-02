@@ -63,6 +63,11 @@ export const chatService = {
     const data = await apiService.get(API_ENDPOINTS.CHAT_MESSAGES(chatId), { params });
     const rawMessages = extractResults<any>(data);
 
+    // Debug: log first message to see structure
+    if (rawMessages.length > 0) {
+      console.log('[ChatService] Raw message sample:', JSON.stringify(rawMessages[0]));
+    }
+
     // Map server fields to client Message type
     return rawMessages.map((msg: any) => ({
       id: msg.id,
@@ -84,7 +89,7 @@ export const chatService = {
   async sendMessage(chatId: string, content: string, attachments?: string[]): Promise<Message> {
     const response = await apiService.post<any>(
       API_ENDPOINTS.CHAT_MESSAGES(chatId),
-      { content, attachments }
+      { text: content, attachments }  // Backend expects 'text' not 'content'
     );
 
     // Server returns { message: {...}, last_message: {...} }

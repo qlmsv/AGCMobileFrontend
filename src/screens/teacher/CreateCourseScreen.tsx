@@ -261,7 +261,6 @@ export const CreateCourseScreen: React.FC = () => {
             <View style={styles.languageButtons}>
                 {[
                     { code: 'en', label: 'English' },
-                    { code: 'ru', label: 'Русский' },
                 ].map((lang) => (
                     <TouchableOpacity
                         key={lang.code}
@@ -350,7 +349,7 @@ export const CreateCourseScreen: React.FC = () => {
                 </View>
                 <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Language:</Text>
-                    <Text style={styles.summaryValue}>{language === 'en' ? 'English' : 'Русский'}</Text>
+                    <Text style={styles.summaryValue}>English</Text>
                 </View>
                 <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Price:</Text>
