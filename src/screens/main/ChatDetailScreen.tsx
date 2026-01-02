@@ -130,7 +130,7 @@ export const ChatDetailScreen: React.FC = () => {
                     ref={flatListRef}
                     data={messages}
                     renderItem={renderMessageItem}
-                    keyExtractor={(item) => item.id.toString()}
+                    keyExtractor={(item, index) => item.id?.toString() || `msg-${index}`}
                     inverted // Show newest at bottom
                     contentContainerStyle={styles.listContent}
                     ListEmptyComponent={

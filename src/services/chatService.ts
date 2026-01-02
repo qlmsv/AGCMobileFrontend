@@ -61,14 +61,50 @@ export const chatService = {
 
   async getMessages(chatId: string, params?: { limit?: number; offset?: number }): Promise<Message[]> {
     const data = await apiService.get(API_ENDPOINTS.CHAT_MESSAGES(chatId), { params });
-    return extractResults<Message>(data);
+    const rawMessages = extractResults<any>(data);
+
+    // Map server fields to client Message type
+    return rawMessages.map((msg: any) => ({
+      id: msg.id,
+      chat: msg.chat || chatId,
+      sender: msg.author_id || msg.author || msg.sender,
+      sender_profile: msg.author_name ? {
+        first_name: msg.author_name,
+        last_name: null,
+        avatar: msg.author_avatar
+      } as any : msg.sender_profile,
+      content: msg.text || msg.content || '',
+      attachments: msg.attachments || [],
+      created_at: msg.created_at,
+      updated_at: msg.edited_at || msg.created_at || msg.updated_at,
+      is_read: msg.is_read ?? false
+    }));
   },
 
   async sendMessage(chatId: string, content: string, attachments?: string[]): Promise<Message> {
-    return await apiService.post<Message>(
+    const response = await apiService.post<any>(
       API_ENDPOINTS.CHAT_MESSAGES(chatId),
       { content, attachments }
     );
+
+    // Server returns { message: {...}, last_message: {...} }
+    // Message has 'text' field instead of 'content'
+    const messageData = response.message || response;
+    return {
+      id: messageData.id,
+      chat: messageData.chat || chatId,
+      sender: messageData.author_id || messageData.author || messageData.sender,
+      sender_profile: messageData.author_name ? {
+        first_name: messageData.author_name,
+        last_name: null,
+        avatar: messageData.author_avatar
+      } as any : undefined,
+      content: messageData.text || messageData.content || content,
+      attachments: messageData.attachments || [],
+      created_at: messageData.created_at,
+      updated_at: messageData.edited_at || messageData.created_at,
+      is_read: false
+    };
   },
 
   async editMessage(messageId: number, content: string): Promise<void> {

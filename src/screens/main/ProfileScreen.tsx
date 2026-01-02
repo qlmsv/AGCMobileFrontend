@@ -154,7 +154,15 @@ export const ProfileScreen: React.FC = () => {
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.menuItem}
-                                onPress={() => navigation.navigate('CreateCourse')}
+                                onPress={() => {
+                                    logger.info('CreateCourse button pressed!');
+                                    try {
+                                        navigation.navigate('CreateCourse');
+                                    } catch (error) {
+                                        logger.error('Navigation error:', error);
+                                        Alert.alert('Error', 'Failed to navigate to Create Course');
+                                    }
+                                }}
                             >
                                 <View style={styles.menuLeft}>
                                     <View style={[styles.iconBox, { backgroundColor: colors.success + '20' }]}>
