@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Image } from 'react-native';
 import { colors, spacing, borderRadius, textStyles, layout } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -74,6 +74,9 @@ export const CoursesScreen: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<TabType>('all');
 
+    // Use ref to track if categories have been loaded to avoid dependency issues
+    const categoriesLoadedRef = useRef(false);
+
     const isTeacher = user?.role === 'teacher';
 
     const fetchData = useCallback(async () => {
@@ -107,10 +110,11 @@ export const CoursesScreen: React.FC = () => {
 
             setCourses(coursesData);
 
-            // Fetch categories only once
-            if (categories.length === 0) {
+            // Fetch categories only once using ref
+            if (!categoriesLoadedRef.current) {
                 const categoriesData = await courseService.getCategories();
                 setCategories(categoriesData);
+                categoriesLoadedRef.current = true;
             }
         } catch (error) {
             logger.error('Error fetching courses:', error);

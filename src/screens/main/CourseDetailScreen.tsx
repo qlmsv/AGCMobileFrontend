@@ -188,7 +188,7 @@ export const CourseDetailScreen: React.FC = () => {
                     <View style={styles.metaRow}>
                         <View style={styles.metaItem}>
                             <Ionicons name="star" size={16} color="#FFC107" />
-                            <Text style={styles.metaText}> 5.0 (Reviews)</Text>
+                            <Text style={styles.metaText}> {course.rating?.toFixed(1) || 'N/A'} (Reviews)</Text>
                         </View>
                         <View style={styles.metaItem}>
                             <Ionicons name="time-outline" size={16} color={colors.text.tertiary} />

@@ -1,21 +1,55 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text, ActivityIndicator, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { colors, spacing, textStyles } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
+import { logger } from '../../utils/logger';
 
 export const PaymentScreen: React.FC = () => {
     const navigation = useNavigation();
     const route = useRoute<any>();
     const { url } = route.params;
     const [isLoading, setIsLoading] = useState(true);
+    const [hasHandledResult, setHasHandledResult] = useState(false);
 
     const handleNavigationStateChange = (navState: any) => {
-        // Detect success or cancel URLs if your backend redirects there
-        // For example:
-        // if (navState.url.includes('success')) handleSuccess();
-        // if (navState.url.includes('cancel')) handleCancel();
+        // Prevent handling the same result multiple times
+        if (hasHandledResult) return;
+
+        const currentUrl = navState.url?.toLowerCase() || '';
+
+        // Detect Stripe success redirect
+        if (currentUrl.includes('success') || currentUrl.includes('payment_success') || currentUrl.includes('checkout/success')) {
+            setHasHandledResult(true);
+            logger.info('Payment successful, URL:', currentUrl);
+            Alert.alert(
+                'Payment Successful!',
+                'Your enrollment has been completed. You can now access the course.',
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => navigation.goBack()
+                    }
+                ]
+            );
+        }
+
+        // Detect Stripe cancel redirect
+        if (currentUrl.includes('cancel') || currentUrl.includes('payment_cancel') || currentUrl.includes('checkout/cancel')) {
+            setHasHandledResult(true);
+            logger.info('Payment cancelled, URL:', currentUrl);
+            Alert.alert(
+                'Payment Cancelled',
+                'Your payment was not completed. You can try again later.',
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => navigation.goBack()
+                    }
+                ]
+            );
+        }
     };
 
     return (
@@ -44,6 +78,7 @@ export const PaymentScreen: React.FC = () => {
         </SafeAreaView>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: {
