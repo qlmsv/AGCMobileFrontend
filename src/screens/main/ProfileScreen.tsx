@@ -116,7 +116,10 @@ export const ProfileScreen: React.FC = () => {
                 {/* My Courses Section */}
                 <View style={styles.sectionHeader}>
                     <Text style={styles.sectionTitle}>{user?.role === 'teacher' ? 'My Courses' : 'My Learning'}</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('Main', { screen: 'Courses' })}>
+                    <TouchableOpacity onPress={() => user?.role === 'teacher'
+                        ? navigation.navigate('CreateCourse')
+                        : navigation.navigate('Main', { screen: 'Courses' })
+                    }>
                         <Text style={styles.seeAll}>{user?.role === 'teacher' ? 'Create New' : 'Find More'}</Text>
                     </TouchableOpacity>
                 </View>
