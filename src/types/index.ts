@@ -148,7 +148,12 @@ export interface Chat {
   created_at: string;
   messages_counter: number;
   unread_count: string;
-  last_message: string;
+  last_message: {
+    id: number;
+    text: string;
+    author_id: string;
+    created_at: string;
+  } | null;
 }
 
 export interface ChatList extends Chat {
@@ -232,11 +237,11 @@ export interface Banner {
 }
 
 export interface CalendarEvent {
-  id: number;
+  id: string;
   title: string;
-  description?: string;
-  start_time: string;
-  end_time: string;
-  type: string;
-  related_course?: number;
+  course_title?: string;
+  module_title?: string;
+  starts_at: string;
+  ends_at: string;
+  zoom_link?: string | null;
 }

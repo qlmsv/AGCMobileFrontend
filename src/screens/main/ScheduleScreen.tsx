@@ -12,8 +12,9 @@ import {
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { courseService } from '../../services/courseService';
-import { Course } from '../../types';
+import apiService from '../../services/api';
+import { API_ENDPOINTS } from '../../config/api';
+import { CalendarEvent } from '../../types';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -30,37 +31,39 @@ export const ScheduleScreen: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [isLoading, setIsLoading] = useState(false);
-    const [courses, setCourses] = useState<Course[]>([]);
+    const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const isTeacher = user?.role === 'teacher';
-
-    const fetchCourses = useCallback(async () => {
+    const fetchSchedule = useCallback(async () => {
         setIsLoading(true);
         try {
-            if (isTeacher && user?.id) {
-                const data = await courseService.getCourses({ author: user.id });
-                setCourses(data);
-            } else {
-                const data = await courseService.getMyCourses();
-                setCourses(data);
-            }
+            const response = await apiService.get<CalendarEvent[]>(API_ENDPOINTS.CALENDAR);
+            logger.info('Calendar API response:', JSON.stringify(response).slice(0, 500));
+
+            // Handle different response formats
+            const eventsData = Array.isArray(response)
+                ? response
+                : (response as any)?.results || (response as any)?.events || [];
+
+            setEvents(eventsData);
+            logger.info('Loaded calendar events:', eventsData.length);
         } catch (error) {
-            logger.error('Failed to fetch courses for schedule', error);
+            logger.error('Failed to fetch calendar', error);
+            setEvents([]);
         } finally {
             setIsLoading(false);
         }
-    }, [isTeacher, user?.id]);
+    }, []);
 
     useEffect(() => {
-        fetchCourses();
-    }, [fetchCourses]);
+        fetchSchedule();
+    }, [fetchSchedule]);
 
     const onRefresh = useCallback(async () => {
         setIsRefreshing(true);
-        await fetchCourses();
+        await fetchSchedule();
         setIsRefreshing(false);
-    }, [fetchCourses]);
+    }, [fetchSchedule]);
 
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();
@@ -83,6 +86,11 @@ export const ScheduleScreen: React.FC = () => {
         // Add the days of the month
         for (let i = 1; i <= daysInMonth; i++) {
             days.push(i);
+        }
+
+        // Add empty cells at the end to complete the last week
+        while (days.length % 7 !== 0) {
+            days.push(null);
         }
 
         return days;
@@ -180,9 +188,33 @@ export const ScheduleScreen: React.FC = () => {
     };
 
     const renderScheduleForDay = () => {
-        // For now, show courses as schedule items (future: actual lesson schedule from API)
         const dayName = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
         const dateStr = selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+        // Use local date for comparison (YYYY-MM-DD format)
+        const selectedYear = selectedDate.getFullYear();
+        const selectedMonth = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const selectedDay = String(selectedDate.getDate()).padStart(2, '0');
+        const selectedDateString = `${selectedYear}-${selectedMonth}-${selectedDay}`;
+
+        // Filter events for the selected date
+        const dayEvents = events.filter(event => {
+            try {
+                const eventDate = new Date(event.starts_at);
+                const eventYear = eventDate.getFullYear();
+                const eventMonth = String(eventDate.getMonth() + 1).padStart(2, '0');
+                const eventDay = String(eventDate.getDate()).padStart(2, '0');
+                const eventDateString = `${eventYear}-${eventMonth}-${eventDay}`;
+                return eventDateString === selectedDateString;
+            } catch {
+                return false;
+            }
+        });
+
+        // Sort by starts_at
+        dayEvents.sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
+
+        logger.debug('Selected date:', selectedDateString, 'Events for day:', dayEvents.length);
 
         return (
             <View style={styles.scheduleSection}>
@@ -190,28 +222,36 @@ export const ScheduleScreen: React.FC = () => {
 
                 {isLoading ? (
                     <ActivityIndicator color={colors.primary.main} style={{ marginTop: spacing.lg }} />
-                ) : courses.length === 0 ? (
+                ) : dayEvents.length === 0 ? (
                     <View style={styles.emptySchedule}>
                         <Ionicons name="calendar-outline" size={48} color={colors.text.tertiary} />
-                        <Text style={styles.emptyText}>
-                            {isTeacher ? 'No courses created yet' : 'No enrolled courses'}
-                        </Text>
+                        <Text style={styles.emptyText}>No lessons scheduled for this day</Text>
                     </View>
                 ) : (
                     <View style={styles.coursesList}>
-                        {courses.slice(0, 3).map((course) => (
+                        {dayEvents.map((event) => (
                             <TouchableOpacity
-                                key={course.id}
+                                key={event.id}
                                 style={styles.courseItem}
-                                onPress={() => navigation.navigate('CourseDetail', { courseId: course.id })}
+                                onPress={() => {
+                                    // Open zoom link if available
+                                    if (event.zoom_link) {
+                                        logger.info('Opening zoom link:', event.zoom_link);
+                                    }
+                                }}
                             >
                                 <View style={styles.courseTime}>
-                                    <Text style={styles.timeText}>All Day</Text>
+                                    <Text style={styles.timeText}>
+                                        {new Date(event.starts_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                    </Text>
+                                    <Text style={[styles.timeText, { color: colors.text.tertiary }]}>
+                                        {new Date(event.ends_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                    </Text>
                                 </View>
                                 <View style={styles.courseDetails}>
-                                    <Text style={styles.courseTitle} numberOfLines={1}>{course.title}</Text>
-                                    <Text style={styles.courseModules}>
-                                        {course.modules?.length || 0} modules
+                                    <Text style={styles.courseTitle} numberOfLines={1}>{event.title}</Text>
+                                    <Text style={styles.courseModules} numberOfLines={1}>
+                                        {event.course_title || ''}{event.module_title ? ` • ${event.module_title}` : ''}
                                     </Text>
                                 </View>
                                 <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />

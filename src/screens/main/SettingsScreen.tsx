@@ -32,10 +32,6 @@ export const SettingsScreen: React.FC = () => {
                         <Text style={styles.itemText}>Edit Profile</Text>
                         <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.item}>
-                        <Text style={styles.itemText}>Change Password</Text>
-                        <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
-                    </TouchableOpacity>
                 </View>
 
                 <View style={styles.section}>

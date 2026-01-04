@@ -22,20 +22,55 @@ import { courseService } from '../../services/courseService';
 import { Category } from '../../types';
 import { logger } from '../../utils/logger';
 import * as ImagePicker from 'expo-image-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import apiService from '../../services/api';
 import { API_ENDPOINTS } from '../../config/api';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-type Step = 'details' | 'cover' | 'summary';
+type Step = 'main' | 'modules' | 'lessons' | 'summary';
+
+interface TempLesson {
+    tempId: string;
+    title: string;
+    description: string;
+    duration_minutes: number;
+    start_date: Date;
+    start_time: string;
+}
+
+interface TempModule {
+    tempId: string;
+    title: string;
+    description: string;
+    price: string;
+    lessons: TempLesson[];
+}
+
+const DURATION_OPTIONS = [
+    { value: '1 month', label: '1 month' },
+    { value: '2 month', label: '2 month' },
+    { value: '3 month', label: '3 month' },
+    { value: '4 month', label: '4 month' },
+    { value: '5 month', label: '5 month' },
+    { value: '6 month', label: '6 month' },
+    { value: '7 month', label: '7 month' },
+    { value: '8 month', label: '8 month' },
+    { value: '9 month', label: '9 month' },
+    { value: '10 month', label: '10 month' },
+    { value: '11 month', label: '11 month' },
+    { value: '12 month', label: '12 month' },
+];
+
+const generateTempId = () => Math.random().toString(36).substr(2, 9);
 
 export const CreateCourseScreen: React.FC = () => {
     const navigation = useNavigation<NavigationProp>();
-    const [currentStep, setCurrentStep] = useState<Step>('details');
+    const [currentStep, setCurrentStep] = useState<Step>('main');
     const [isLoading, setIsLoading] = useState(false);
     const [categories, setCategories] = useState<Category[]>([]);
 
-    // Form state
+    // Form state - Main Info
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -43,6 +78,14 @@ export const CreateCourseScreen: React.FC = () => {
     const [isFree, setIsFree] = useState(true);
     const [language, setLanguage] = useState('en');
     const [coverImage, setCoverImage] = useState<string | null>(null);
+    const [duration, setDuration] = useState('');
+    const [startDate, setStartDate] = useState<Date>(new Date());
+    const [hasCertificate, setHasCertificate] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+
+    // Modules & Lessons
+    const [modules, setModules] = useState<TempModule[]>([]);
+    const [selectedModuleIndex, setSelectedModuleIndex] = useState<number>(0);
 
     useEffect(() => {
         loadCategories();
@@ -70,7 +113,66 @@ export const CreateCourseScreen: React.FC = () => {
         }
     };
 
-    const validateDetails = (): boolean => {
+    // Module management
+    const addModule = () => {
+        setModules([...modules, {
+            tempId: generateTempId(),
+            title: '',
+            description: '',
+            price: '0',
+            lessons: [],
+        }]);
+    };
+
+    const updateModule = (index: number, field: 'title' | 'description' | 'price', value: string) => {
+        const updated = [...modules];
+        updated[index][field] = value;
+        setModules(updated);
+    };
+
+    const removeModule = (index: number) => {
+        const updated = modules.filter((_, i) => i !== index);
+        setModules(updated);
+        if (selectedModuleIndex >= updated.length) {
+            setSelectedModuleIndex(Math.max(0, updated.length - 1));
+        }
+    };
+
+    const removeAllModules = () => {
+        Alert.alert('Remove All', 'Are you sure you want to remove all modules?', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Remove', style: 'destructive', onPress: () => setModules([]) },
+        ]);
+    };
+
+    // Lesson management
+    const addLesson = (moduleIndex: number) => {
+        const updated = [...modules];
+        updated[moduleIndex].lessons.push({
+            tempId: generateTempId(),
+            title: '',
+            description: '',
+            duration_minutes: 0,
+            start_date: new Date(),
+            start_time: '12:00',
+        });
+        setModules(updated);
+    };
+
+    const updateLesson = (moduleIndex: number, lessonIndex: number, field: keyof TempLesson, value: string | number) => {
+        const updated = [...modules];
+        (updated[moduleIndex].lessons[lessonIndex] as any)[field] = value;
+        setModules(updated);
+    };
+
+    const removeLesson = (moduleIndex: number, lessonIndex: number) => {
+        const updated = [...modules];
+        updated[moduleIndex].lessons = updated[moduleIndex].lessons.filter((_, i) => i !== lessonIndex);
+        setModules(updated);
+    };
+
+    // Validation
+    const validateMain = (): boolean => {
         if (!title.trim()) {
             Alert.alert('Error', 'Please enter a course title');
             return false;
@@ -79,54 +181,71 @@ export const CreateCourseScreen: React.FC = () => {
             Alert.alert('Error', 'Please select a category');
             return false;
         }
+        if (!duration) {
+            Alert.alert('Error', 'Please select course duration');
+            return false;
+        }
+        return true;
+    };
+
+    const validateModules = (): boolean => {
+        if (modules.length === 0) {
+            Alert.alert('Error', 'Please add at least one module');
+            return false;
+        }
+        for (let i = 0; i < modules.length; i++) {
+            if (!modules[i].title.trim()) {
+                Alert.alert('Error', `Module ${i + 1} needs a title`);
+                return false;
+            }
+        }
+        return true;
+    };
+
+    const validateLessons = (): boolean => {
+        for (let i = 0; i < modules.length; i++) {
+            if (modules[i].lessons.length === 0) {
+                Alert.alert('Error', `Module "${modules[i].title}" needs at least one lesson`);
+                return false;
+            }
+            for (let j = 0; j < modules[i].lessons.length; j++) {
+                if (!modules[i].lessons[j].title.trim()) {
+                    Alert.alert('Error', `Lesson ${j + 1} in "${modules[i].title}" needs a title`);
+                    return false;
+                }
+            }
+        }
         return true;
     };
 
     const handleNext = () => {
-        if (currentStep === 'details') {
-            if (validateDetails()) {
-                setCurrentStep('cover');
-            }
-        } else if (currentStep === 'cover') {
-            setCurrentStep('summary');
+        if (currentStep === 'main') {
+            if (validateMain()) setCurrentStep('modules');
+        } else if (currentStep === 'modules') {
+            if (validateModules()) setCurrentStep('lessons');
+        } else if (currentStep === 'lessons') {
+            if (validateLessons()) setCurrentStep('summary');
         }
     };
 
     const handleBack = () => {
-        if (currentStep === 'cover') {
-            setCurrentStep('details');
-        } else if (currentStep === 'summary') {
-            setCurrentStep('cover');
-        } else {
-            navigation.goBack();
-        }
+        if (currentStep === 'modules') setCurrentStep('main');
+        else if (currentStep === 'lessons') setCurrentStep('modules');
+        else if (currentStep === 'summary') setCurrentStep('lessons');
+        else navigation.goBack();
     };
 
     const uploadCoverImage = async (courseId: string): Promise<string | null> => {
         if (!coverImage) return null;
-
         try {
             const formData = new FormData();
             const filename = coverImage.split('/').pop() || 'cover.jpg';
             const match = /\.(\w+)$/.exec(filename);
             const type = match ? `image/${match[1]}` : 'image/jpeg';
-
-            formData.append('cover', {
-                uri: coverImage,
-                name: filename,
-                type,
-            } as any);
-
-            const response = await apiService.patch<any>(
-                API_ENDPOINTS.COURSE_BY_ID(courseId),
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                }
-            );
-
+            formData.append('cover', { uri: coverImage, name: filename, type } as any);
+            const response = await apiService.patch<any>(API_ENDPOINTS.COURSE_BY_ID(courseId), formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
             return response.cover;
         } catch (error) {
             logger.error('Failed to upload cover image', error);
@@ -137,6 +256,7 @@ export const CreateCourseScreen: React.FC = () => {
     const handleCreateCourse = async () => {
         setIsLoading(true);
         try {
+            // 1. Create course
             const courseData: any = {
                 title: title.trim(),
                 description: description.trim(),
@@ -144,75 +264,107 @@ export const CreateCourseScreen: React.FC = () => {
                 language,
                 is_free: isFree,
                 status: 'draft',
+                duration,
+                start_date: startDate.toISOString().split('T')[0],
+                certificate: hasCertificate,
             };
+            if (!isFree && price) courseData.price = price;
 
-            if (!isFree && price) {
-                courseData.price = price;
-            }
-
-            logger.info('Creating course with data:', JSON.stringify(courseData));
-
+            logger.info('Creating course:', JSON.stringify(courseData));
             const newCourse = await courseService.createCourse(courseData);
+            logger.info('Course created:', newCourse.id);
 
-            // Upload cover image if selected
-            if (coverImage) {
-                await uploadCoverImage(newCourse.id);
+            // Upload cover
+            if (coverImage) await uploadCoverImage(newCourse.id);
+
+            // 2. Create modules
+            for (let i = 0; i < modules.length; i++) {
+                const mod = modules[i];
+                logger.info(`Creating module ${i + 1}:`, mod.title);
+                const moduleRes = await apiService.post<any>(API_ENDPOINTS.COURSE_MODULES, {
+                    course: newCourse.id,
+                    title: mod.title.trim(),
+                    description: mod.description.trim(),
+                    position: i + 1,
+                    price: mod.price || '0',
+                });
+                logger.info('Module created:', moduleRes.id);
+
+                // 3. Create lessons for this module
+                for (let j = 0; j < mod.lessons.length; j++) {
+                    const lesson = mod.lessons[j];
+                    logger.info(`Creating lesson ${j + 1}:`, lesson.title);
+
+                    // Combine date and time for start_time
+                    const lessonDate = lesson.start_date;
+                    const [hours, minutes] = lesson.start_time.split(':').map(Number);
+                    lessonDate.setHours(hours || 12, minutes || 0, 0, 0);
+
+                    await apiService.post(API_ENDPOINTS.COURSE_LESSONS, {
+                        module: moduleRes.id,
+                        title: lesson.title.trim(),
+                        description: lesson.description.trim(),
+                        duration_minutes: lesson.duration_minutes || 0,
+                        position: j + 1,
+                        start_time: lessonDate.toISOString(),
+                    });
+                }
             }
 
-            Alert.alert(
-                'Success!',
-                'Course created as draft. You can now add modules and lessons.',
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => navigation.navigate('CourseDetail', { courseId: newCourse.id }),
-                    },
-                ]
-            );
+            Alert.alert('Success!', 'Course created with all modules and lessons!', [
+                { text: 'OK', onPress: () => navigation.navigate('CourseDetail', { courseId: newCourse.id }) },
+            ]);
         } catch (error: any) {
             logger.error('Failed to create course', error);
-            logger.error('Error response:', JSON.stringify(error.response?.data));
-            logger.error('Error status:', error.response?.status);
             const errorMessage = error.response?.data?.detail ||
-                error.response?.data?.message ||
-                JSON.stringify(error.response?.data) ||
-                'Failed to create course';
+                JSON.stringify(error.response?.data) || 'Failed to create course';
             Alert.alert('Error', errorMessage);
         } finally {
             setIsLoading(false);
         }
     };
 
+    const STEPS: Step[] = ['main', 'modules', 'lessons', 'summary'];
+    const STEP_LABELS = {
+        main: 'Main Info',
+        modules: 'Modules',
+        lessons: 'Lessons',
+        summary: 'Summary',
+    };
+
+    const getStepIndex = (step: Step) => STEPS.indexOf(step);
+
     const renderStepIndicator = () => (
         <View style={styles.stepIndicator}>
-            {(['details', 'cover', 'summary'] as Step[]).map((step, index) => (
-                <View key={step} style={styles.stepItem}>
-                    <View
-                        style={[
+            {STEPS.map((step, index) => {
+                const currentIndex = getStepIndex(currentStep);
+                const isActive = step === currentStep;
+                const isCompleted = index < currentIndex;
+                return (
+                    <View key={step} style={styles.stepItem}>
+                        <View style={[
                             styles.stepCircle,
-                            currentStep === step && styles.stepCircleActive,
-                            (currentStep === 'cover' && step === 'details') ||
-                                (currentStep === 'summary' && step !== 'summary')
-                                ? styles.stepCircleCompleted
-                                : null,
-                        ]}
-                    >
-                        {(currentStep === 'cover' && step === 'details') ||
-                            (currentStep === 'summary' && step !== 'summary') ? (
-                            <Ionicons name="checkmark" size={14} color={colors.text.inverse} />
-                        ) : (
-                            <Text style={styles.stepNumber}>{index + 1}</Text>
-                        )}
+                            isActive && styles.stepCircleActive,
+                            isCompleted && styles.stepCircleCompleted,
+                        ]}>
+                            {isCompleted ? (
+                                <Ionicons name="checkmark" size={14} color={colors.text.inverse} />
+                            ) : (
+                                <Text style={[styles.stepNumber, isActive && styles.stepNumberActive]}>
+                                    {index + 1}
+                                </Text>
+                            )}
+                        </View>
+                        <Text style={[styles.stepLabel, isActive && styles.stepLabelActive]}>
+                            {STEP_LABELS[step]}
+                        </Text>
                     </View>
-                    <Text style={[styles.stepLabel, currentStep === step && styles.stepLabelActive]}>
-                        {step === 'details' ? 'Details' : step === 'cover' ? 'Cover' : 'Summary'}
-                    </Text>
-                </View>
-            ))}
+                );
+            })}
         </View>
     );
 
-    const renderDetailsStep = () => (
+    const renderMainStep = () => (
         <View style={styles.stepContent}>
             <Text style={styles.label}>Course Title *</Text>
             <TextInput
@@ -239,81 +391,92 @@ export const CreateCourseScreen: React.FC = () => {
                 {categories.map((cat) => (
                     <TouchableOpacity
                         key={cat.id}
-                        style={[
-                            styles.categoryChip,
-                            selectedCategoryId === cat.id && styles.categoryChipSelected,
-                        ]}
+                        style={[styles.categoryChip, selectedCategoryId === cat.id && styles.categoryChipSelected]}
                         onPress={() => setSelectedCategoryId(cat.id)}
                     >
-                        <Text
-                            style={[
-                                styles.categoryChipText,
-                                selectedCategoryId === cat.id && styles.categoryChipTextSelected,
-                            ]}
-                        >
+                        <Text style={[styles.categoryChipText, selectedCategoryId === cat.id && styles.categoryChipTextSelected]}>
                             {cat.name}
                         </Text>
                     </TouchableOpacity>
                 ))}
             </ScrollView>
 
-            <Text style={styles.label}>Language</Text>
-            <View style={styles.languageButtons}>
-                {[
-                    { code: 'en', label: 'English' },
-                ].map((lang) => (
+            <Text style={styles.label}>Duration *</Text>
+            <View style={styles.optionRow}>
+                {DURATION_OPTIONS.map((opt) => (
                     <TouchableOpacity
-                        key={lang.code}
-                        style={[styles.langButton, language === lang.code && styles.langButtonActive]}
-                        onPress={() => setLanguage(lang.code)}
+                        key={opt.value}
+                        style={[styles.optionButton, duration === opt.value && styles.optionButtonActive]}
+                        onPress={() => setDuration(opt.value)}
                     >
-                        <Text
-                            style={[
-                                styles.langButtonText,
-                                language === lang.code && styles.langButtonTextActive,
-                            ]}
-                        >
-                            {lang.label}
+                        <Text style={[styles.optionText, duration === opt.value && styles.optionTextActive]}>
+                            {opt.label}
                         </Text>
                     </TouchableOpacity>
                 ))}
             </View>
 
-            <Text style={styles.label}>Pricing</Text>
-            <View style={styles.priceRow}>
-                <TouchableOpacity
-                    style={[styles.freeToggle, isFree && styles.freeToggleActive]}
-                    onPress={() => setIsFree(true)}
-                >
-                    <Text style={[styles.freeToggleText, isFree && styles.freeToggleTextActive]}>
-                        Free
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.freeToggle, !isFree && styles.freeToggleActive]}
-                    onPress={() => setIsFree(false)}
-                >
-                    <Text style={[styles.freeToggleText, !isFree && styles.freeToggleTextActive]}>
-                        Paid
-                    </Text>
-                </TouchableOpacity>
-            </View>
-            {!isFree && (
-                <TextInput
-                    style={styles.input}
-                    placeholder="Enter price (e.g., 99.00)"
-                    placeholderTextColor={colors.text.tertiary}
-                    value={price}
-                    onChangeText={setPrice}
-                    keyboardType="decimal-pad"
+            <Text style={styles.label}>Starting Date *</Text>
+            <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+                <Ionicons name="calendar-outline" size={20} color={colors.text.secondary} />
+                <Text style={styles.dateButtonText}>
+                    {startDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                </Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+                <DateTimePicker
+                    value={startDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(_, date) => {
+                        setShowDatePicker(Platform.OS === 'ios');
+                        if (date) setStartDate(date);
+                    }}
+                    minimumDate={new Date()}
                 />
             )}
-        </View>
-    );
 
-    const renderCoverStep = () => (
-        <View style={styles.stepContent}>
-            <Text style={styles.label}>Course Cover Image</Text>
+            <View style={styles.toggleRow}>
+                <View style={styles.toggleInfo}>
+                    <Ionicons name="ribbon-outline" size={24} color={colors.text.secondary} />
+                    <Text style={styles.toggleLabel}>Certificate of completion</Text>
+                </View>
+                <TouchableOpacity
+                    style={[styles.toggle, hasCertificate && styles.toggleActive]}
+                    onPress={() => setHasCertificate(!hasCertificate)}
+                >
+                    <View style={[styles.toggleKnob, hasCertificate && styles.toggleKnobActive]} />
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.toggleRow}>
+                <View style={styles.toggleInfo}>
+                    <Ionicons name="gift-outline" size={24} color={colors.text.secondary} />
+                    <Text style={styles.toggleLabel}>Free course</Text>
+                </View>
+                <TouchableOpacity
+                    style={[styles.toggle, isFree && styles.toggleActive]}
+                    onPress={() => setIsFree(!isFree)}
+                >
+                    <View style={[styles.toggleKnob, isFree && styles.toggleKnobActive]} />
+                </TouchableOpacity>
+            </View>
+
+            {!isFree && (
+                <>
+                    <Text style={styles.label}>Price</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Enter price (e.g., 99.00)"
+                        placeholderTextColor={colors.text.tertiary}
+                        value={price}
+                        onChangeText={setPrice}
+                        keyboardType="decimal-pad"
+                    />
+                </>
+            )}
+
+            <Text style={styles.label}>Cover Image</Text>
             <TouchableOpacity style={styles.coverPicker} onPress={pickImage}>
                 {coverImage ? (
                     <Image source={{ uri: coverImage }} style={styles.coverImage} />
@@ -321,11 +484,149 @@ export const CreateCourseScreen: React.FC = () => {
                     <View style={styles.coverPlaceholder}>
                         <Ionicons name="image-outline" size={48} color={colors.text.tertiary} />
                         <Text style={styles.coverPlaceholderText}>Tap to select image</Text>
-                        <Text style={styles.coverHint}>Recommended size: 1920x1080</Text>
                     </View>
                 )}
             </TouchableOpacity>
-            <Text style={styles.hint}>You can add a cover image later</Text>
+        </View>
+    );
+
+    const renderModulesStep = () => (
+        <View style={styles.stepContent}>
+            <Text style={styles.sectionTitle}>Module details</Text>
+            <Text style={styles.sectionSubtitle}>
+                Structure your course into modules to guide learners step by step.
+            </Text>
+
+            {modules.map((mod, index) => (
+                <View key={mod.tempId} style={styles.moduleCard}>
+                    <View style={styles.moduleHeader}>
+                        <Text style={styles.moduleNumber}>Module {index + 1}</Text>
+                        <TouchableOpacity onPress={() => removeModule(index)}>
+                            <Ionicons name="trash-outline" size={20} color={colors.error} />
+                        </TouchableOpacity>
+                    </View>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Module title"
+                        placeholderTextColor={colors.text.tertiary}
+                        value={mod.title}
+                        onChangeText={(val) => updateModule(index, 'title', val)}
+                    />
+                    <TextInput
+                        style={[styles.input, styles.textAreaSmall]}
+                        placeholder="Description (optional)"
+                        placeholderTextColor={colors.text.tertiary}
+                        value={mod.description}
+                        onChangeText={(val) => updateModule(index, 'description', val)}
+                        multiline
+                    />
+                    <View style={styles.priceRow}>
+                        <Text style={styles.priceLabel}>Price</Text>
+                        <TextInput
+                            style={styles.priceInput}
+                            placeholder="0"
+                            placeholderTextColor={colors.text.tertiary}
+                            value={mod.price}
+                            onChangeText={(val) => updateModule(index, 'price', val)}
+                            keyboardType="decimal-pad"
+                        />
+                    </View>
+                </View>
+            ))}
+
+            <TouchableOpacity style={styles.addButton} onPress={addModule}>
+                <Ionicons name="add" size={20} color={colors.text.primary} />
+                <Text style={styles.addButtonText}>Add module</Text>
+            </TouchableOpacity>
+
+            {modules.length > 0 && (
+                <TouchableOpacity style={styles.removeAllButton} onPress={removeAllModules}>
+                    <Ionicons name="remove" size={20} color={colors.text.inverse} />
+                    <Text style={styles.removeAllText}>Remove all</Text>
+                </TouchableOpacity>
+            )}
+        </View>
+    );
+
+    const renderLessonsStep = () => (
+        <View style={styles.stepContent}>
+            <Text style={styles.sectionTitle}>Lessons</Text>
+            <Text style={styles.sectionSubtitle}>
+                Create engaging lessons within each module.
+            </Text>
+
+            {modules.length > 1 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.moduleTabsContainer}>
+                    {modules.map((mod, index) => (
+                        <TouchableOpacity
+                            key={mod.tempId}
+                            style={[styles.moduleTab, selectedModuleIndex === index && styles.moduleTabActive]}
+                            onPress={() => setSelectedModuleIndex(index)}
+                        >
+                            <Text style={[styles.moduleTabText, selectedModuleIndex === index && styles.moduleTabTextActive]}>
+                                {mod.title || `Module ${index + 1}`}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            )}
+
+            {modules.length > 0 && (
+                <View style={styles.lessonSection}>
+                    <Text style={styles.lessonModuleTitle}>{modules[selectedModuleIndex]?.title || 'Module'}</Text>
+
+                    {modules[selectedModuleIndex]?.lessons.map((lesson, lessonIndex) => (
+                        <View key={lesson.tempId} style={styles.lessonCard}>
+                            <View style={styles.lessonHeader}>
+                                <Text style={styles.lessonNumber}>Lesson {lessonIndex + 1} *</Text>
+                                <TouchableOpacity onPress={() => removeLesson(selectedModuleIndex, lessonIndex)}>
+                                    <Ionicons name="close-circle" size={20} color={colors.error} />
+                                </TouchableOpacity>
+                            </View>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Name of the lesson"
+                                placeholderTextColor={colors.text.tertiary}
+                                value={lesson.title}
+                                onChangeText={(val) => updateLesson(selectedModuleIndex, lessonIndex, 'title', val)}
+                            />
+                            <View style={styles.dateTimeRow}>
+                                <View style={styles.dateField}>
+                                    <Text style={styles.fieldLabel}>Date</Text>
+                                    <Text style={styles.dateText}>
+                                        {lesson.start_date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                    </Text>
+                                </View>
+                                <View style={styles.timeField}>
+                                    <Text style={styles.fieldLabel}>Time</Text>
+                                    <TextInput
+                                        style={styles.timeInput}
+                                        placeholder="12:00"
+                                        placeholderTextColor={colors.text.tertiary}
+                                        value={lesson.start_time}
+                                        onChangeText={(val) => updateLesson(selectedModuleIndex, lessonIndex, 'start_time', val)}
+                                    />
+                                </View>
+                            </View>
+                            <TextInput
+                                style={[styles.input, styles.textAreaSmall]}
+                                placeholder="Description"
+                                placeholderTextColor={colors.text.tertiary}
+                                value={lesson.description}
+                                onChangeText={(val) => updateLesson(selectedModuleIndex, lessonIndex, 'description', val)}
+                                multiline
+                                maxLength={250}
+                            />
+                            <Text style={styles.charCount}>{lesson.description.length}/250</Text>
+                        </View>
+                    ))}
+
+                    <TouchableOpacity style={styles.addButton} onPress={() => addLesson(selectedModuleIndex)}>
+                        <Ionicons name="add" size={20} color={colors.text.primary} />
+                        <Text style={styles.addButtonText}>Add lesson</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
         </View>
     );
 
@@ -334,9 +635,8 @@ export const CreateCourseScreen: React.FC = () => {
             <Text style={styles.sectionTitle}>Review Your Course</Text>
 
             <View style={styles.summaryCard}>
-                {coverImage && (
-                    <Image source={{ uri: coverImage }} style={styles.summaryCover} />
-                )}
+                {coverImage && <Image source={{ uri: coverImage }} style={styles.summaryCover} />}
+
                 <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Title:</Text>
                     <Text style={styles.summaryValue}>{title}</Text>
@@ -348,34 +648,51 @@ export const CreateCourseScreen: React.FC = () => {
                     </Text>
                 </View>
                 <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Language:</Text>
-                    <Text style={styles.summaryValue}>English</Text>
+                    <Text style={styles.summaryLabel}>Duration:</Text>
+                    <Text style={styles.summaryValue}>{duration}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Start Date:</Text>
+                    <Text style={styles.summaryValue}>
+                        {startDate.toLocaleDateString('en-GB')}
+                    </Text>
+                </View>
+                <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Certificate:</Text>
+                    <Text style={styles.summaryValue}>{hasCertificate ? 'Yes' : 'No'}</Text>
                 </View>
                 <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Price:</Text>
                     <Text style={styles.summaryValue}>{isFree ? 'Free' : `$${price || '0'}`}</Text>
                 </View>
-                {description && (
-                    <View style={styles.summaryDescRow}>
-                        <Text style={styles.summaryLabel}>Description:</Text>
-                        <Text style={styles.summaryDesc}>{description}</Text>
-                    </View>
-                )}
+                <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Modules:</Text>
+                    <Text style={styles.summaryValue}>{modules.length}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Total Lessons:</Text>
+                    <Text style={styles.summaryValue}>
+                        {modules.reduce((sum, m) => sum + m.lessons.length, 0)}
+                    </Text>
+                </View>
             </View>
 
-            <Text style={styles.hint}>
-                Course will be created as a draft. After creation, you can add modules and lessons.
-            </Text>
+            {modules.map((mod, i) => (
+                <View key={mod.tempId} style={styles.summaryModuleCard}>
+                    <Text style={styles.summaryModuleTitle}>{mod.title}</Text>
+                    {mod.lessons.map((lesson, j) => (
+                        <Text key={lesson.tempId} style={styles.summaryLessonItem}>
+                            • {lesson.title}
+                        </Text>
+                    ))}
+                </View>
+            ))}
         </View>
     );
 
     return (
         <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.keyboardView}
-            >
-                {/* Header */}
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleBack} style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
@@ -386,17 +703,13 @@ export const CreateCourseScreen: React.FC = () => {
 
                 {renderStepIndicator()}
 
-                <ScrollView
-                    style={styles.scrollView}
-                    contentContainerStyle={styles.scrollContent}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    {currentStep === 'details' && renderDetailsStep()}
-                    {currentStep === 'cover' && renderCoverStep()}
+                <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+                    {currentStep === 'main' && renderMainStep()}
+                    {currentStep === 'modules' && renderModulesStep()}
+                    {currentStep === 'lessons' && renderLessonsStep()}
                     {currentStep === 'summary' && renderSummaryStep()}
                 </ScrollView>
 
-                {/* Bottom Buttons */}
                 <View style={styles.bottomButtons}>
                     {currentStep === 'summary' ? (
                         <TouchableOpacity
@@ -412,7 +725,7 @@ export const CreateCourseScreen: React.FC = () => {
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={handleNext}>
-                            <Text style={styles.primaryButtonText}>Next</Text>
+                            <Text style={styles.primaryButtonText}>Continue</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -422,13 +735,8 @@ export const CreateCourseScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.background.default,
-    },
-    keyboardView: {
-        flex: 1,
-    },
+    container: { flex: 1, backgroundColor: colors.background.default },
+    keyboardView: { flex: 1 },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -438,229 +746,87 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: colors.neutral[200],
     },
-    backButton: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerTitle: {
-        ...textStyles.h3,
-        color: colors.text.primary,
-    },
-    stepIndicator: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: spacing.md,
-        gap: spacing.xl,
-    },
-    stepItem: {
-        alignItems: 'center',
-        gap: spacing.xs,
-    },
-    stepCircle: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: colors.neutral[200],
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    stepCircleActive: {
-        backgroundColor: colors.primary.main,
-    },
-    stepCircleCompleted: {
-        backgroundColor: colors.success,
-    },
-    stepNumber: {
-        ...textStyles.caption,
-        color: colors.text.secondary,
-        fontWeight: '600',
-    },
-    stepLabel: {
-        ...textStyles.caption,
-        color: colors.text.tertiary,
-    },
-    stepLabelActive: {
-        color: colors.primary.main,
-        fontWeight: '600',
-    },
-    scrollView: {
-        flex: 1,
-    },
-    scrollContent: {
-        padding: spacing.md,
-    },
-    stepContent: {
-        gap: spacing.md,
-    },
-    label: {
-        ...textStyles.body,
-        fontWeight: '600',
-        color: colors.text.primary,
-        marginBottom: spacing.xs,
-    },
-    input: {
-        backgroundColor: colors.neutral[100],
-        borderRadius: borderRadius.md,
-        padding: spacing.md,
-        ...textStyles.body,
-        color: colors.text.primary,
-    },
-    textArea: {
-        minHeight: 100,
-        textAlignVertical: 'top',
-    },
-    categoryList: {
-        marginBottom: spacing.sm,
-    },
-    categoryChip: {
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
-        backgroundColor: colors.neutral[100],
-        borderRadius: borderRadius.round,
-        marginRight: spacing.sm,
-    },
-    categoryChipSelected: {
-        backgroundColor: colors.primary.main,
-    },
-    categoryChipText: {
-        ...textStyles.body,
-        color: colors.text.secondary,
-    },
-    categoryChipTextSelected: {
-        color: colors.text.inverse,
-    },
-    languageButtons: {
-        flexDirection: 'row',
-        gap: spacing.sm,
-    },
-    langButton: {
-        flex: 1,
-        paddingVertical: spacing.sm,
-        borderRadius: borderRadius.md,
-        backgroundColor: colors.neutral[100],
-        alignItems: 'center',
-    },
-    langButtonActive: {
-        backgroundColor: colors.primary.main,
-    },
-    langButtonText: {
-        ...textStyles.body,
-        color: colors.text.secondary,
-    },
-    langButtonTextActive: {
-        color: colors.text.inverse,
-    },
-    priceRow: {
-        flexDirection: 'row',
-        gap: spacing.sm,
-        marginBottom: spacing.sm,
-    },
-    freeToggle: {
-        flex: 1,
-        paddingVertical: spacing.sm,
-        borderRadius: borderRadius.md,
-        backgroundColor: colors.neutral[100],
-        alignItems: 'center',
-    },
-    freeToggleActive: {
-        backgroundColor: colors.primary.main,
-    },
-    freeToggleText: {
-        ...textStyles.body,
-        color: colors.text.secondary,
-    },
-    freeToggleTextActive: {
-        color: colors.text.inverse,
-    },
-    coverPicker: {
-        aspectRatio: 16 / 9,
-        backgroundColor: colors.neutral[100],
-        borderRadius: borderRadius.lg,
-        overflow: 'hidden',
-    },
-    coverImage: {
-        width: '100%',
-        height: '100%',
-    },
-    coverPlaceholder: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: spacing.sm,
-    },
-    coverPlaceholderText: {
-        ...textStyles.body,
-        color: colors.text.tertiary,
-    },
-    coverHint: {
-        ...textStyles.caption,
-        color: colors.text.tertiary,
-    },
-    hint: {
-        ...textStyles.caption,
-        color: colors.text.tertiary,
-        textAlign: 'center',
-    },
-    sectionTitle: {
-        ...textStyles.h3,
-        color: colors.text.primary,
-        marginBottom: spacing.md,
-    },
-    summaryCard: {
-        backgroundColor: colors.neutral[100],
-        borderRadius: borderRadius.lg,
-        padding: spacing.md,
-        gap: spacing.sm,
-    },
-    summaryCover: {
-        width: '100%',
-        aspectRatio: 16 / 9,
-        borderRadius: borderRadius.md,
-        marginBottom: spacing.sm,
-    },
-    summaryRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    summaryLabel: {
-        ...textStyles.body,
-        color: colors.text.secondary,
-    },
-    summaryValue: {
-        ...textStyles.body,
-        color: colors.text.primary,
-        fontWeight: '600',
-    },
-    summaryDescRow: {
-        marginTop: spacing.sm,
-    },
-    summaryDesc: {
-        ...textStyles.body,
-        color: colors.text.primary,
-        marginTop: spacing.xs,
-    },
-    bottomButtons: {
-        padding: spacing.md,
-        borderTopWidth: 1,
-        borderTopColor: colors.neutral[200],
-    },
-    button: {
-        paddingVertical: spacing.md,
-        borderRadius: borderRadius.md,
-        alignItems: 'center',
-    },
-    primaryButton: {
-        backgroundColor: colors.primary.main,
-    },
-    primaryButtonText: {
-        ...textStyles.body,
-        color: colors.text.inverse,
-        fontWeight: '600',
-    },
-    disabledButton: {
-        opacity: 0.6,
-    },
+    backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+    headerTitle: { ...textStyles.h3, color: colors.text.primary },
+    stepIndicator: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: spacing.md, gap: spacing.lg },
+    stepItem: { alignItems: 'center', gap: spacing.xs },
+    stepCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.neutral[200], justifyContent: 'center', alignItems: 'center' },
+    stepCircleActive: { backgroundColor: colors.primary.main },
+    stepCircleCompleted: { backgroundColor: colors.success },
+    stepNumber: { ...textStyles.caption, color: colors.text.secondary, fontWeight: '600' },
+    stepNumberActive: { color: colors.text.inverse },
+    stepLabel: { ...textStyles.caption, color: colors.text.tertiary },
+    stepLabelActive: { color: colors.primary.main, fontWeight: '600' },
+    scrollView: { flex: 1 },
+    scrollContent: { padding: spacing.md, paddingBottom: spacing.xxl },
+    stepContent: { gap: spacing.md },
+    label: { ...textStyles.body, fontWeight: '600', color: colors.text.primary, marginBottom: spacing.xs },
+    input: { backgroundColor: colors.neutral[100], borderRadius: borderRadius.md, padding: spacing.md, ...textStyles.body, color: colors.text.primary },
+    textArea: { minHeight: 100, textAlignVertical: 'top' },
+    textAreaSmall: { minHeight: 60, textAlignVertical: 'top' },
+    categoryList: { marginBottom: spacing.sm },
+    categoryChip: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.neutral[100], borderRadius: borderRadius.round, marginRight: spacing.sm },
+    categoryChipSelected: { backgroundColor: colors.primary.main },
+    categoryChipText: { ...textStyles.body, color: colors.text.secondary },
+    categoryChipTextSelected: { color: colors.text.inverse },
+    optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    optionButton: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: borderRadius.md, backgroundColor: colors.neutral[100] },
+    optionButtonActive: { backgroundColor: colors.primary.main },
+    optionText: { ...textStyles.body, color: colors.text.secondary },
+    optionTextActive: { color: colors.text.inverse },
+    dateButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, backgroundColor: colors.neutral[100], borderRadius: borderRadius.md },
+    dateButtonText: { ...textStyles.body, color: colors.text.primary },
+    toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.sm },
+    toggleInfo: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    toggleLabel: { ...textStyles.body, color: colors.text.primary },
+    toggle: { width: 50, height: 28, borderRadius: 14, backgroundColor: colors.neutral[300], padding: 2, justifyContent: 'center' },
+    toggleActive: { backgroundColor: colors.primary.main },
+    toggleKnob: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.background.default },
+    toggleKnobActive: { alignSelf: 'flex-end' },
+    coverPicker: { aspectRatio: 16 / 9, backgroundColor: colors.neutral[100], borderRadius: borderRadius.lg, overflow: 'hidden' },
+    coverImage: { width: '100%', height: '100%' },
+    coverPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.sm },
+    coverPlaceholderText: { ...textStyles.body, color: colors.text.tertiary },
+    sectionTitle: { ...textStyles.h3, color: colors.text.primary },
+    sectionSubtitle: { ...textStyles.body, color: colors.text.secondary, marginBottom: spacing.md },
+    moduleCard: { backgroundColor: colors.neutral[100], borderRadius: borderRadius.lg, padding: spacing.md, gap: spacing.sm },
+    moduleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+    moduleNumber: { ...textStyles.body, fontWeight: '600', color: colors.text.primary },
+    addButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.md, borderWidth: 1, borderColor: colors.neutral[300], borderRadius: borderRadius.md, borderStyle: 'dashed' },
+    addButtonText: { ...textStyles.body, color: colors.text.primary },
+    removeAllButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.md, backgroundColor: colors.neutral[800], borderRadius: borderRadius.md },
+    removeAllText: { ...textStyles.body, color: colors.text.inverse },
+    moduleTabsContainer: { marginBottom: spacing.md },
+    moduleTab: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md, marginRight: spacing.sm, borderRadius: borderRadius.md, backgroundColor: colors.neutral[100] },
+    moduleTabActive: { backgroundColor: colors.primary.main },
+    moduleTabText: { ...textStyles.body, color: colors.text.secondary },
+    moduleTabTextActive: { color: colors.text.inverse },
+    lessonSection: { gap: spacing.md },
+    lessonModuleTitle: { ...textStyles.h4, color: colors.text.primary },
+    lessonCard: { backgroundColor: colors.neutral[100], borderRadius: borderRadius.md, padding: spacing.md, gap: spacing.sm },
+    lessonHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    lessonNumber: { ...textStyles.caption, fontWeight: '600', color: colors.text.secondary },
+    summaryCard: { backgroundColor: colors.neutral[100], borderRadius: borderRadius.lg, padding: spacing.md, gap: spacing.sm },
+    summaryCover: { width: '100%', aspectRatio: 16 / 9, borderRadius: borderRadius.md, marginBottom: spacing.sm },
+    summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
+    summaryLabel: { ...textStyles.body, color: colors.text.secondary },
+    summaryValue: { ...textStyles.body, color: colors.text.primary, fontWeight: '600' },
+    summaryModuleCard: { backgroundColor: colors.neutral[50], borderRadius: borderRadius.md, padding: spacing.md, marginTop: spacing.sm },
+    summaryModuleTitle: { ...textStyles.body, fontWeight: '600', color: colors.text.primary, marginBottom: spacing.xs },
+    summaryLessonItem: { ...textStyles.caption, color: colors.text.secondary, marginLeft: spacing.sm },
+    bottomButtons: { padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.neutral[200] },
+    button: { paddingVertical: spacing.md, borderRadius: borderRadius.md, alignItems: 'center' },
+    primaryButton: { backgroundColor: colors.primary.main },
+    primaryButtonText: { ...textStyles.body, color: colors.text.inverse, fontWeight: '600' },
+    disabledButton: { opacity: 0.6 },
+    priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm },
+    priceLabel: { ...textStyles.body, color: colors.text.primary },
+    priceInput: { width: 100, backgroundColor: colors.background.default, borderRadius: borderRadius.md, padding: spacing.sm, textAlign: 'center', ...textStyles.body, color: colors.text.primary, borderWidth: 1, borderColor: colors.neutral[300] },
+    dateTimeRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xs },
+    dateField: { flex: 1 },
+    timeField: { flex: 1 },
+    fieldLabel: { ...textStyles.caption, color: colors.text.secondary, marginBottom: spacing.xs },
+    dateText: { backgroundColor: colors.background.default, borderRadius: borderRadius.md, padding: spacing.md, ...textStyles.body, color: colors.text.primary, borderWidth: 1, borderColor: colors.neutral[300] },
+    timeInput: { backgroundColor: colors.background.default, borderRadius: borderRadius.md, padding: spacing.md, ...textStyles.body, color: colors.text.primary, borderWidth: 1, borderColor: colors.neutral[300] },
+    charCount: { ...textStyles.caption, color: colors.text.tertiary, textAlign: 'right' },
 });

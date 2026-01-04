@@ -1,21 +1,31 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Image, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, Image, ActivityIndicator, RefreshControl, TextInput, Modal, Alert, ScrollView } from 'react-native';
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { chatService } from '../../services/chatService';
-import { ChatList } from '../../types';
+import { courseService } from '../../services/courseService';
+import { ChatList, Course } from '../../types';
 import { EmptyState } from '../../components';
 import { logger } from '../../utils/logger';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
+type TabType = 'all' | 'group' | 'personal';
 
 export const ChatsScreen: React.FC = () => {
     const navigation = useNavigation<NavigationProp>();
     const [chats, setChats] = useState<ChatList[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [activeTab, setActiveTab] = useState<TabType>('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+    const [groupName, setGroupName] = useState('');
+    const [isCreating, setIsCreating] = useState(false);
 
     const fetchChats = async () => {
         try {
@@ -26,6 +36,15 @@ export const ChatsScreen: React.FC = () => {
         } finally {
             setIsLoading(false);
             setIsRefreshing(false);
+        }
+    };
+
+    const fetchCourses = async () => {
+        try {
+            const data = await courseService.getMyCourses();
+            setCourses(data);
+        } catch (error) {
+            logger.error('Error fetching courses:', error);
         }
     };
 
@@ -40,33 +59,189 @@ export const ChatsScreen: React.FC = () => {
         }, [])
     );
 
+    // Filter chats based on tab and search
+    const filteredChats = chats.filter(chat => {
+        // Tab filter
+        if (activeTab === 'group' && chat.type !== 'group') return false;
+        if (activeTab === 'personal' && chat.type !== 'dm') return false;
+
+        // Search filter
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            return chat.display_title?.toLowerCase().includes(query);
+        }
+        return true;
+    });
+
+    const handleCreateChat = () => {
+        Alert.alert('Create Chat', 'Select a user to start a personal chat with.', [
+            { text: 'Cancel', style: 'cancel' },
+        ]);
+        // TODO: Navigate to user selection screen
+    };
+
+    const handleOpenCreateGroup = async () => {
+        await fetchCourses();
+        setShowCreateGroupModal(true);
+    };
+
+    const handleCreateGroupChat = async () => {
+        if (!selectedCourseId) {
+            Alert.alert('Error', 'Please select a course');
+            return;
+        }
+        if (!groupName.trim()) {
+            Alert.alert('Error', 'Please enter a group name');
+            return;
+        }
+
+        setIsCreating(true);
+        try {
+            const newChat = await chatService.createChat({
+                type: 'group',
+                title: groupName.trim(),
+                course: selectedCourseId,
+            });
+            setShowCreateGroupModal(false);
+            setGroupName('');
+            setSelectedCourseId('');
+            navigation.navigate('ChatDetail', { chatId: newChat.id });
+        } catch (error: any) {
+            logger.error('Failed to create group chat:', error);
+            Alert.alert('Error', error.response?.data?.detail || 'Failed to create group chat');
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
     const renderChatItem = ({ item }: { item: ChatList }) => (
         <TouchableOpacity
             style={styles.chatItem}
             onPress={() => navigation.navigate('ChatDetail', { chatId: item.id })}
         >
-            <Image
-                source={{ uri: item.display_avatar || undefined }}
-                style={styles.avatar}
-            />
+            {item.display_avatar ? (
+                <Image source={{ uri: item.display_avatar }} style={styles.avatar} />
+            ) : (
+                <View style={styles.avatarPlaceholder}>
+                    <Ionicons name={item.type === 'group' ? 'people' : 'person'} size={28} color={colors.text.tertiary} />
+                </View>
+            )}
             <View style={styles.chatInfo}>
                 <View style={styles.chatHeader}>
                     <Text style={styles.chatTitle} numberOfLines={1}>{item.display_title || 'Chat'}</Text>
-                    {/* Time would go here if available in list model */}
-                    {/* <Text style={styles.timeText}>12:30</Text> */}
+                    {item.last_message?.created_at && (
+                        <Text style={styles.timeText}>
+                            {new Date(item.last_message.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })}
+                        </Text>
+                    )}
                 </View>
                 <View style={styles.chatFooter}>
                     <Text style={styles.lastMessage} numberOfLines={1}>
-                        {item.last_message ? 'Latest message...' : 'No messages yet'}
+                        {item.last_message?.text || 'No messages yet'}
                     </Text>
-                    {parseInt(item.unread_count) > 0 && (
-                        <View style={styles.unreadBadge}>
-                            <Text style={styles.unreadText}>{item.unread_count}</Text>
-                        </View>
-                    )}
                 </View>
             </View>
         </TouchableOpacity>
+    );
+
+    const renderTabs = () => (
+        <View style={styles.tabsContainer}>
+            {(['all', 'group', 'personal'] as TabType[]).map((tab) => (
+                <TouchableOpacity
+                    key={tab}
+                    style={[styles.tab, activeTab === tab && styles.activeTab]}
+                    onPress={() => setActiveTab(tab)}
+                >
+                    <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </Text>
+                </TouchableOpacity>
+            ))}
+        </View>
+    );
+
+    const renderSearch = () => (
+        <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color={colors.text.tertiary} />
+            <TextInput
+                style={styles.searchInput}
+                placeholder="search..."
+                placeholderTextColor={colors.text.tertiary}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+            />
+        </View>
+    );
+
+    const renderCreateButtons = () => (
+        <View style={styles.createButtonsContainer}>
+            {activeTab !== 'group' && (
+                <TouchableOpacity style={styles.createButton} onPress={handleCreateChat}>
+                    <Ionicons name="add" size={20} color={colors.text.primary} />
+                    <Text style={styles.createButtonText}>Create chat</Text>
+                </TouchableOpacity>
+            )}
+            {activeTab !== 'personal' && (
+                <TouchableOpacity style={styles.createGroupButton} onPress={handleOpenCreateGroup}>
+                    <Ionicons name="add" size={20} color={colors.text.inverse} />
+                    <Text style={styles.createGroupButtonText}>Create group chat</Text>
+                </TouchableOpacity>
+            )}
+        </View>
+    );
+
+    const renderCreateGroupModal = () => (
+        <Modal visible={showCreateGroupModal} transparent animationType="fade">
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>Create group chat</Text>
+
+                    <Text style={styles.modalLabel}>Choose course *</Text>
+                    <ScrollView style={styles.courseList} horizontal showsHorizontalScrollIndicator={false}>
+                        {courses.map(course => (
+                            <TouchableOpacity
+                                key={course.id}
+                                style={[styles.courseChip, selectedCourseId === course.id && styles.courseChipSelected]}
+                                onPress={() => setSelectedCourseId(course.id)}
+                            >
+                                <Text style={[styles.courseChipText, selectedCourseId === course.id && styles.courseChipTextSelected]}>
+                                    {course.title}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+
+                    <Text style={styles.modalLabel}>Name of the chat *</Text>
+                    <TextInput
+                        style={styles.modalInput}
+                        placeholder="Enter chat name"
+                        placeholderTextColor={colors.text.tertiary}
+                        value={groupName}
+                        onChangeText={setGroupName}
+                    />
+
+                    <View style={styles.modalButtons}>
+                        <TouchableOpacity
+                            style={styles.cancelButton}
+                            onPress={() => setShowCreateGroupModal(false)}
+                        >
+                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.nextButton, isCreating && styles.disabledButton]}
+                            onPress={handleCreateGroupChat}
+                            disabled={isCreating}
+                        >
+                            {isCreating ? (
+                                <ActivityIndicator size="small" color={colors.text.inverse} />
+                            ) : (
+                                <Text style={styles.nextButtonText}>Next</Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </Modal>
     );
 
     return (
@@ -75,13 +250,16 @@ export const ChatsScreen: React.FC = () => {
                 <Text style={styles.title}>Messages</Text>
             </View>
 
+            {renderTabs()}
+            {renderSearch()}
+
             {isLoading && chats.length === 0 ? (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={colors.primary.main} />
                 </View>
             ) : (
                 <FlatList
-                    data={chats}
+                    data={filteredChats}
                     renderItem={renderChatItem}
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles.listContent}
@@ -91,102 +269,68 @@ export const ChatsScreen: React.FC = () => {
                     ListEmptyComponent={
                         <EmptyState
                             title="No Messages"
-                            message="You haven't started any chats yet."
+                            message={activeTab === 'all' ? "You haven't started any chats yet." : `No ${activeTab} chats found.`}
                             icon="chatbubble-ellipses-outline"
                         />
                     }
+                    ListFooterComponent={renderCreateButtons}
                 />
             )}
+
+            {renderCreateGroupModal()}
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.background.default,
-    },
-    header: {
-        padding: spacing.base,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border.light,
-        backgroundColor: colors.background.default,
-    },
-    title: {
-        ...textStyles.h2,
-        color: colors.text.primary,
-    },
-    listContent: {
-        paddingVertical: spacing.sm,
-    },
-    chatItem: {
-        flexDirection: 'row',
-        padding: spacing.base,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border.light,
-        alignItems: 'center',
-    },
-    avatar: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: colors.neutral[200],
-    },
-    chatInfo: {
-        flex: 1,
-        marginLeft: spacing.base,
-        justifyContent: 'center',
-    },
-    chatHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 4,
-    },
-    chatTitle: {
-        ...textStyles.h4,
-        color: colors.text.primary,
-        flex: 1,
-    },
-    timeText: {
-        ...textStyles.caption,
-        color: colors.text.tertiary,
-    },
-    chatFooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    lastMessage: {
-        ...textStyles.body,
-        color: colors.text.secondary,
-        flex: 1,
-        marginRight: spacing.sm,
-    },
-    unreadBadge: {
-        backgroundColor: colors.primary.main,
-        borderRadius: 10,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        minWidth: 20,
-        alignItems: 'center',
-    },
-    unreadText: {
-        fontSize: 10,
-        color: colors.text.inverse,
-        fontWeight: 'bold',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    emptyContainer: {
-        padding: spacing.xl,
-        alignItems: 'center',
-        marginTop: 50,
-    },
-    emptyText: {
-        ...textStyles.body,
-        color: colors.text.tertiary,
-    },
+    container: { flex: 1, backgroundColor: colors.background.default },
+    header: { padding: spacing.base, borderBottomWidth: 1, borderBottomColor: colors.border.light },
+    title: { ...textStyles.h2, color: colors.text.primary },
+
+    tabsContainer: { flexDirection: 'row', paddingHorizontal: spacing.base, paddingVertical: spacing.sm, gap: spacing.sm },
+    tab: { flex: 1, paddingVertical: spacing.sm, borderRadius: borderRadius.round, backgroundColor: colors.neutral[100], alignItems: 'center' },
+    activeTab: { backgroundColor: colors.neutral[800] },
+    tabText: { ...textStyles.body, color: colors.text.secondary },
+    activeTabText: { color: colors.text.inverse },
+
+    searchContainer: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.base, marginBottom: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.neutral[100], borderRadius: borderRadius.md, gap: spacing.sm },
+    searchInput: { flex: 1, ...textStyles.body, color: colors.text.primary, padding: 0 },
+
+    listContent: { paddingVertical: spacing.sm, paddingBottom: 100 },
+    chatItem: { flexDirection: 'row', padding: spacing.base, borderBottomWidth: 1, borderBottomColor: colors.border.light, alignItems: 'center' },
+    avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.neutral[200] },
+    avatarPlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.neutral[200], justifyContent: 'center', alignItems: 'center' },
+    chatInfo: { flex: 1, marginLeft: spacing.base, justifyContent: 'center' },
+    chatHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+    chatTitle: { ...textStyles.body, fontWeight: '600', color: colors.text.primary, flex: 1 },
+    timeText: { ...textStyles.caption, color: colors.text.tertiary },
+    chatFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    lastMessage: { ...textStyles.caption, color: colors.text.secondary, flex: 1, marginRight: spacing.sm },
+    unreadBadge: { backgroundColor: colors.primary.main, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2, minWidth: 20, alignItems: 'center' },
+    unreadText: { fontSize: 10, color: colors.text.inverse, fontWeight: 'bold' },
+
+    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
+    createButtonsContainer: { padding: spacing.base, gap: spacing.sm },
+    createButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingVertical: spacing.md, borderWidth: 1, borderColor: colors.neutral[300], borderRadius: borderRadius.md },
+    createButtonText: { ...textStyles.body, color: colors.text.primary },
+    createGroupButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingVertical: spacing.md, backgroundColor: colors.neutral[800], borderRadius: borderRadius.md },
+    createGroupButtonText: { ...textStyles.body, color: colors.text.inverse },
+
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
+    modalContent: { backgroundColor: colors.background.default, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400 },
+    modalTitle: { ...textStyles.h3, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.lg },
+    modalLabel: { ...textStyles.body, color: colors.text.primary, marginBottom: spacing.sm },
+    courseList: { marginBottom: spacing.md },
+    courseChip: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.neutral[100], borderRadius: borderRadius.round, marginRight: spacing.sm },
+    courseChipSelected: { backgroundColor: colors.primary.main },
+    courseChipText: { ...textStyles.body, color: colors.text.secondary },
+    courseChipTextSelected: { color: colors.text.inverse },
+    modalInput: { borderWidth: 1, borderColor: colors.neutral[300], borderRadius: borderRadius.md, padding: spacing.md, ...textStyles.body, color: colors.text.primary, marginBottom: spacing.lg },
+    modalButtons: { flexDirection: 'row', gap: spacing.md },
+    cancelButton: { flex: 1, paddingVertical: spacing.md, borderWidth: 1, borderColor: colors.neutral[300], borderRadius: borderRadius.md, alignItems: 'center' },
+    cancelButtonText: { ...textStyles.body, color: colors.text.primary },
+    nextButton: { flex: 1, paddingVertical: spacing.md, backgroundColor: colors.primary.main, borderRadius: borderRadius.md, alignItems: 'center' },
+    nextButtonText: { ...textStyles.body, color: colors.text.inverse, fontWeight: '600' },
+    disabledButton: { opacity: 0.6 },
 });

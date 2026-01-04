@@ -18,6 +18,7 @@ export const ProfileScreen: React.FC = () => {
     const navigation = useNavigation<NavigationProp>();
 
     const [myCourses, setMyCourses] = useState<Course[]>([]);
+    const [favorites, setFavorites] = useState<Course[]>([]);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     const fetchMyCourses = async () => {
@@ -34,15 +35,25 @@ export const ProfileScreen: React.FC = () => {
         }
     };
 
+    const fetchFavorites = async () => {
+        try {
+            const data = await courseService.getFavouriteCourses();
+            setFavorites(data);
+        } catch (error) {
+            logger.error('Failed to fetch favorites', error);
+        }
+    };
+
     const onRefresh = useCallback(async () => {
         setIsRefreshing(true);
-        await fetchMyCourses();
+        await Promise.all([fetchMyCourses(), fetchFavorites()]);
         setIsRefreshing(false);
-    }, [user?.role]); // Add user.role dependency
+    }, [user?.role]);
 
     useEffect(() => {
         fetchMyCourses();
-    }, [user?.role]); // Add user.role dependency
+        fetchFavorites();
+    }, [user?.role]);
 
     const renderCourseItem = (course: Course) => (
         <TouchableOpacity
@@ -135,6 +146,22 @@ export const ProfileScreen: React.FC = () => {
                             actionLabel="Browse Courses"
                             onAction={() => navigation.navigate('Main', { screen: 'Courses' })}
                         />
+                    )}
+                </View>
+
+                {/* My Favorites Section */}
+                <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>My Favorites</Text>
+                </View>
+
+                <View style={styles.coursesList}>
+                    {favorites.length > 0 ? (
+                        favorites.map(renderCourseItem)
+                    ) : (
+                        <View style={styles.emptyFavorites}>
+                            <Ionicons name="heart-outline" size={32} color={colors.text.tertiary} />
+                            <Text style={styles.emptyFavoritesText}>No favorite courses yet</Text>
+                        </View>
                     )}
                 </View>
 
@@ -392,5 +419,14 @@ const styles = StyleSheet.create({
     menuText: {
         ...textStyles.bodyLarge,
         color: colors.text.primary,
+    },
+    emptyFavorites: {
+        alignItems: 'center',
+        paddingVertical: spacing.lg,
+        gap: spacing.sm,
+    },
+    emptyFavoritesText: {
+        ...textStyles.body,
+        color: colors.text.tertiary,
     },
 });

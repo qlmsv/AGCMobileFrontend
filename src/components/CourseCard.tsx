@@ -1,21 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { colors, spacing, borderRadius, textStyles } from '../theme';
 import { Course } from '../types';
 import { Rating } from './Rating';
+import { Ionicons } from '@expo/vector-icons';
+import { courseService } from '../services/courseService';
+import { logger } from '../utils/logger';
 
 interface CourseCardProps {
     course: Course;
     onPress: (course: Course) => void;
     variant?: 'horizontal' | 'vertical';
+    showFavorite?: boolean;
+    onFavoriteChange?: () => void;
 }
 
 export const CourseCard: React.FC<CourseCardProps> = ({
     course,
     onPress,
-    variant = 'vertical'
+    variant = 'vertical',
+    showFavorite = true,
+    onFavoriteChange
 }) => {
     const isHorizontal = variant === 'horizontal';
+    const [isFavorite, setIsFavorite] = useState(course.is_favourite || false);
+    const [isToggling, setIsToggling] = useState(false);
+
+    const handleToggleFavorite = async () => {
+        if (isToggling) return;
+        setIsToggling(true);
+
+        try {
+            if (isFavorite) {
+                await courseService.removeFromFavourites(course.id);
+                setIsFavorite(false);
+            } else {
+                await courseService.addToFavourites(course.id);
+                setIsFavorite(true);
+            }
+            onFavoriteChange?.();
+        } catch (error) {
+            logger.error('Failed to toggle favorite:', error);
+        } finally {
+            setIsToggling(false);
+        }
+    };
 
     return (
         <TouchableOpacity
@@ -26,13 +55,28 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             onPress={() => onPress(course)}
             activeOpacity={0.7}
         >
-            <Image
-                source={{ uri: course.cover || undefined }}
-                style={[
-                    styles.image,
-                    isHorizontal ? styles.imageHorizontal : styles.imageVertical
-                ]}
-            />
+            <View style={styles.imageContainer}>
+                <Image
+                    source={{ uri: course.cover || undefined }}
+                    style={[
+                        styles.image,
+                        isHorizontal ? styles.imageHorizontal : styles.imageVertical
+                    ]}
+                />
+                {showFavorite && (
+                    <TouchableOpacity
+                        style={styles.favoriteButton}
+                        onPress={handleToggleFavorite}
+                        disabled={isToggling}
+                    >
+                        <Ionicons
+                            name={isFavorite ? 'heart' : 'heart-outline'}
+                            size={20}
+                            color={isFavorite ? colors.primary.main : colors.text.inverse}
+                        />
+                    </TouchableOpacity>
+                )}
+            </View>
             <View style={[
                 styles.content,
                 isHorizontal ? styles.contentHorizontal : styles.contentVertical
@@ -77,6 +121,9 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
         marginHorizontal: spacing.base,
     },
+    imageContainer: {
+        position: 'relative',
+    },
     image: {
         backgroundColor: colors.neutral[200],
     },
@@ -90,6 +137,17 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: borderRadius.md,
+    },
+    favoriteButton: {
+        position: 'absolute',
+        top: spacing.sm,
+        right: spacing.sm,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     content: {
         justifyContent: 'space-between',

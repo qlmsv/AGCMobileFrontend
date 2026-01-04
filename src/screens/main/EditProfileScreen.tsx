@@ -5,21 +5,25 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
 import { logger } from '../../utils/logger';
+import apiService from '../../services/api';
 
 export const EditProfileScreen: React.FC = () => {
     const navigation = useNavigation();
-    const { user, profile, updateProfile } = useAuth();
+    const { user, profile, updateProfile, logout } = useAuth();
 
     const [firstName, setFirstName] = useState(profile?.first_name || '');
     const [lastName, setLastName] = useState(profile?.last_name || '');
+    const [phone, setPhone] = useState(profile?.phone || '');
     const [isLoading, setIsLoading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleSave = async () => {
         setIsLoading(true);
         try {
             await updateProfile({
                 first_name: firstName,
-                last_name: lastName
+                last_name: lastName,
+                phone: phone,
             });
             Alert.alert('Success', 'Profile updated successfully!');
             navigation.goBack();
@@ -31,43 +35,57 @@ export const EditProfileScreen: React.FC = () => {
         }
     };
 
+    const handleDeleteAccount = () => {
+        Alert.alert(
+            'Delete Account',
+            'Are you sure you want to delete your account? This action cannot be undone.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        setIsDeleting(true);
+                        try {
+                            await apiService.delete('/users/my-user/');
+                            Alert.alert('Account Deleted', 'Your account has been deleted.');
+                            logout();
+                        } catch (error: any) {
+                            logger.error('Failed to delete account:', error);
+                            Alert.alert('Error', error.response?.data?.detail || 'Failed to delete account.');
+                        } finally {
+                            setIsDeleting(false);
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Edit Profile</Text>
+                <Text style={styles.headerTitle}>Profile</Text>
                 <TouchableOpacity onPress={handleSave} disabled={isLoading}>
                     {isLoading ? (
                         <ActivityIndicator color={colors.primary.main} />
                     ) : (
-                        <Text style={styles.saveButton}>Save</Text>
+                        <Text style={styles.saveButton}>Edit</Text>
                     )}
                 </TouchableOpacity>
             </View>
 
             <View style={styles.content}>
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>First Name</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={firstName}
-                        onChangeText={setFirstName}
-                        placeholder="Enter first name"
-                        placeholderTextColor={colors.text.tertiary}
-                    />
+                {/* Avatar placeholder */}
+                <View style={styles.avatarContainer}>
+                    <View style={styles.avatar}>
+                        <Ionicons name="person-outline" size={40} color={colors.text.tertiary} />
+                    </View>
                 </View>
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Last Name</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={lastName}
-                        onChangeText={setLastName}
-                        placeholder="Enter last name"
-                        placeholderTextColor={colors.text.tertiary}
-                    />
-                </View>
+
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Email</Text>
                     <TextInput
@@ -75,8 +93,31 @@ export const EditProfileScreen: React.FC = () => {
                         value={user?.email}
                         editable={false}
                     />
-                    <Text style={styles.helperText}>Email cannot be changed.</Text>
                 </View>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Phone Number</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={phone}
+                        onChangeText={setPhone}
+                        placeholder="+1234567890"
+                        placeholderTextColor={colors.text.tertiary}
+                        keyboardType="phone-pad"
+                    />
+                </View>
+
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={handleDeleteAccount}
+                    disabled={isDeleting}
+                >
+                    {isDeleting ? (
+                        <ActivityIndicator color={colors.primary.main} />
+                    ) : (
+                        <Text style={styles.deleteButtonText}>Delete account</Text>
+                    )}
+                </TouchableOpacity>
             </View>
         </SafeAreaView>
     );
@@ -109,6 +150,20 @@ const styles = StyleSheet.create({
     content: {
         padding: spacing.base,
     },
+    avatarContainer: {
+        alignItems: 'center',
+        marginBottom: spacing.xl,
+    },
+    avatar: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: colors.neutral[100],
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: colors.neutral[300],
+    },
     inputGroup: {
         marginBottom: spacing.lg,
     },
@@ -131,9 +186,13 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutral[100],
         color: colors.text.tertiary,
     },
-    helperText: {
-        ...textStyles.caption,
-        color: colors.text.tertiary,
-        marginTop: 4,
+    deleteButton: {
+        marginTop: spacing.xl,
+        alignItems: 'center',
+        paddingVertical: spacing.md,
+    },
+    deleteButtonText: {
+        ...textStyles.body,
+        color: colors.primary.main,
     },
 });
