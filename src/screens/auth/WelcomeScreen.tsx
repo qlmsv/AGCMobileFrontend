@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView } from 'r
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
-import { Ionicons } from '@expo/vector-icons';
 
 type WelcomeScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Welcome'>;
 
@@ -18,7 +17,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
                 {/* Logo or Illustration */}
                 <View style={styles.illustrationContainer}>
                     <Image
-                        source={require('../../../assets/icon.png')} // Fallback to icon for now
+                        source={require('../../../assets/icon.png')}
                         style={styles.logo}
                         resizeMode="contain"
                     />
@@ -36,10 +35,18 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.actionContainer}>
                     <TouchableOpacity
                         style={styles.primaryButton}
-                        onPress={() => navigation.navigate('EmailInput')}
+                        onPress={() => navigation.navigate('EmailInput', { mode: 'login' })}
                         activeOpacity={0.8}
                     >
-                        <Text style={styles.primaryButtonText}>Get Started</Text>
+                        <Text style={styles.primaryButtonText}>Log In</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.secondaryButton}
+                        onPress={() => navigation.navigate('EmailInput', { mode: 'signup' })}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.secondaryButtonText}>Create Account</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -88,7 +95,7 @@ const styles = StyleSheet.create({
     primaryButton: {
         backgroundColor: colors.primary.main,
         height: 48,
-        borderRadius: borderRadius.md, // 12px
+        borderRadius: borderRadius.md,
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: colors.primary.main,
@@ -100,5 +107,18 @@ const styles = StyleSheet.create({
     primaryButtonText: {
         ...textStyles.button,
         color: colors.text.inverse,
+    },
+    secondaryButton: {
+        backgroundColor: 'transparent',
+        height: 48,
+        borderRadius: borderRadius.md,
+        borderWidth: 1,
+        borderColor: colors.primary.main,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    secondaryButtonText: {
+        ...textStyles.button,
+        color: colors.primary.main,
     },
 });

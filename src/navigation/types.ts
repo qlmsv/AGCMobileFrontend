@@ -17,8 +17,8 @@ export type RootStackParamList = {
 
 export type AuthStackParamList = {
     Welcome: undefined;
-    EmailInput: undefined;
-    Verification: { email: string };
+    EmailInput: { mode: 'login' | 'signup' };
+    Verification: { email: string; mode: 'login' | 'signup' };
     Information: { email: string };
 };
 

@@ -17,8 +17,8 @@ export const chatService = {
     return await apiService.get<Chat>(API_ENDPOINTS.CHAT_BY_ID(chatId));
   },
 
-  async createChat(data: ChatCreate): Promise<ChatCreate> {
-    return await apiService.post<ChatCreate>(API_ENDPOINTS.CHATS, data);
+  async createChat(data: ChatCreate): Promise<Chat> {
+    return await apiService.post<Chat>(API_ENDPOINTS.CHATS, data);
   },
 
   async updateChat(

@@ -30,7 +30,7 @@ interface Props {
 }
 
 export const VerificationScreen: React.FC<Props> = ({ navigation, route }) => {
-    const { email } = route.params;
+    const { email, mode } = route.params;
     const [code, setCode] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { verifyCode } = useAuth();
@@ -43,8 +43,9 @@ export const VerificationScreen: React.FC<Props> = ({ navigation, route }) => {
 
         setIsLoading(true);
         try {
-            await verifyCode(email, code);
+            await verifyCode(email, code, mode);
             // Navigation is handled by AuthContext state change (user becomes authenticated)
+            // For signup, user may need to go to Information screen
         } catch (error: any) {
             logger.error('Verification error:', error);
             Alert.alert('Error', error.message || 'Invalid code. Please try again.');

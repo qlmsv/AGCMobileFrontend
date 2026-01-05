@@ -14,6 +14,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../navigation/types';
 import { colors, spacing, borderRadius, textStyles, layout } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,15 +23,20 @@ import { validateEmail } from '../../utils/validation';
 import { logger } from '../../utils/logger';
 
 type NavigationProp = StackNavigationProp<AuthStackParamList, 'EmailInput'>;
+type EmailInputRouteProp = RouteProp<AuthStackParamList, 'EmailInput'>;
 
 interface Props {
     navigation: NavigationProp;
+    route: EmailInputRouteProp;
 }
 
-export const EmailInputScreen: React.FC<Props> = ({ navigation }) => {
+export const EmailInputScreen: React.FC<Props> = ({ navigation, route }) => {
+    const { mode } = route.params;
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { sendCode } = useAuth();
+
+    const isSignup = mode === 'signup';
 
     const handleContinue = async () => {
         const { isValid, error } = validateEmail(email);
@@ -41,8 +47,8 @@ export const EmailInputScreen: React.FC<Props> = ({ navigation }) => {
 
         setIsLoading(true);
         try {
-            await sendCode(email);
-            navigation.navigate('Verification', { email });
+            await sendCode(email, isSignup ? 'signup' : 'login');
+            navigation.navigate('Verification', { email, mode });
         } catch (error: any) {
             logger.error('Failed to send verification code:', error);
 
@@ -50,6 +56,24 @@ export const EmailInputScreen: React.FC<Props> = ({ navigation }) => {
                 Alert.alert(
                     'Limit Reached',
                     'You have requested too many codes. Please wait 60 seconds before trying again.'
+                );
+            } else if (error.response?.status === 404 && !isSignup) {
+                Alert.alert(
+                    'Account Not Found',
+                    'No account found with this email. Would you like to create one?',
+                    [
+                        { text: 'Cancel', style: 'cancel' },
+                        { text: 'Create Account', onPress: () => navigation.replace('EmailInput', { mode: 'signup' }) }
+                    ]
+                );
+            } else if (error.response?.status === 400 && isSignup) {
+                Alert.alert(
+                    'Account Exists',
+                    'An account with this email already exists. Please log in instead.',
+                    [
+                        { text: 'OK' },
+                        { text: 'Log In', onPress: () => navigation.replace('EmailInput', { mode: 'login' }) }
+                    ]
                 );
             } else {
                 Alert.alert('Error', error.message || 'Failed to send verification code. Please check your internet connection.');
@@ -75,9 +99,14 @@ export const EmailInputScreen: React.FC<Props> = ({ navigation }) => {
                             >
                                 <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
                             </TouchableOpacity>
-                            <Text style={styles.title}>What's your email?</Text>
+                            <Text style={styles.title}>
+                                {isSignup ? 'Create your account' : 'Welcome back!'}
+                            </Text>
                             <Text style={styles.subtitle}>
-                                We'll check if you have an account or help you create one.
+                                {isSignup
+                                    ? 'Enter your email to get started with AGC.'
+                                    : 'Enter your email to sign in to your account.'
+                                }
                             </Text>
                         </View>
 
@@ -108,6 +137,21 @@ export const EmailInputScreen: React.FC<Props> = ({ navigation }) => {
                                 ) : (
                                     <Text style={styles.buttonText}>Continue</Text>
                                 )}
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.switchButton}
+                                onPress={() => navigation.replace('EmailInput', { mode: isSignup ? 'login' : 'signup' })}
+                            >
+                                <Text style={styles.switchText}>
+                                    {isSignup
+                                        ? 'Already have an account? '
+                                        : "Don't have an account? "
+                                    }
+                                    <Text style={styles.switchLink}>
+                                        {isSignup ? 'Log In' : 'Sign Up'}
+                                    </Text>
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -160,8 +204,8 @@ const styles = StyleSheet.create({
     input: {
         height: layout.input.height,
         borderWidth: 1,
-        borderColor: colors.border.default, // #E2E2E2
-        borderRadius: layout.input.borderRadius, // 8px
+        borderColor: colors.border.default,
+        borderRadius: layout.input.borderRadius,
         paddingHorizontal: spacing.base,
         fontSize: 16,
         fontFamily: 'Inter',
@@ -170,11 +214,12 @@ const styles = StyleSheet.create({
     },
     footer: {
         marginBottom: spacing.xl,
+        gap: spacing.md,
     },
     button: {
         height: layout.button.height,
-        backgroundColor: colors.primary.main, // #FF5A05
-        borderRadius: borderRadius.md, // 12px
+        backgroundColor: colors.primary.main,
+        borderRadius: borderRadius.md,
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: colors.primary.main,
@@ -190,5 +235,17 @@ const styles = StyleSheet.create({
     buttonText: {
         ...textStyles.button,
         color: colors.text.inverse,
+    },
+    switchButton: {
+        alignItems: 'center',
+        paddingVertical: spacing.sm,
+    },
+    switchText: {
+        ...textStyles.body,
+        color: colors.text.secondary,
+    },
+    switchLink: {
+        color: colors.primary.main,
+        fontWeight: '600',
     },
 });

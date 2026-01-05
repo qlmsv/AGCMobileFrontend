@@ -13,7 +13,7 @@ export const EditProfileScreen: React.FC = () => {
 
     const [firstName, setFirstName] = useState(profile?.first_name || '');
     const [lastName, setLastName] = useState(profile?.last_name || '');
-    const [phone, setPhone] = useState(profile?.phone || '');
+    const [phone, setPhone] = useState(profile?.phone_number || '');
     const [isLoading, setIsLoading] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -23,7 +23,7 @@ export const EditProfileScreen: React.FC = () => {
             await updateProfile({
                 first_name: firstName,
                 last_name: lastName,
-                phone: phone,
+                phone_number: phone,
             });
             Alert.alert('Success', 'Profile updated successfully!');
             navigation.goBack();

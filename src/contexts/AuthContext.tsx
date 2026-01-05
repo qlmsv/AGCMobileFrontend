@@ -9,8 +9,8 @@ interface AuthContextType {
   profile: Profile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  sendCode: (email: string) => Promise<void>;
-  verifyCode: (email: string, code: string) => Promise<void>;
+  sendCode: (email: string, codeType?: 'signup' | 'login') => Promise<void>;
+  verifyCode: (email: string, code: string, codeType?: 'signup' | 'login') => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
@@ -58,12 +58,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const sendCode = async (email: string) => {
-    await authService.sendCode(email);
+  const sendCode = async (email: string, codeType: 'signup' | 'login' = 'login') => {
+    await authService.sendCode(email, codeType);
   };
 
-  const verifyCode = async (email: string, code: string) => {
-    await authService.verifyCode(email, code);
+  const verifyCode = async (email: string, code: string, codeType: 'signup' | 'login' = 'login') => {
+    await authService.verifyCode(email, code, codeType);
     await loadUserData();
   };
 
