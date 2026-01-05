@@ -45,8 +45,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const userData = await authService.getCurrentUser();
       setUser(userData);
 
-      const profileData = await profileService.getMyProfile();
-      setProfile(profileData);
+      try {
+        const profileData = await profileService.getMyProfile();
+        setProfile(profileData);
+      } catch (profileError: any) {
+        // If profile not found, create one
+        if (profileError?.response?.status === 404) {
+          logger.info('Profile not found, creating new profile...');
+          const newProfile = await profileService.createProfile({});
+          setProfile(newProfile);
+        } else {
+          throw profileError;
+        }
+      }
     } catch (error: any) {
       if (error?.response?.status === 401) {
         logger.info('Session expired during user load');
@@ -64,7 +75,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const verifyCode = async (email: string, code: string, codeType: 'signup' | 'login' = 'login') => {
     await authService.verifyCode(email, code, codeType);
-    await loadUserData();
+    // For signup, don't load user data yet - wait for profile creation on Information screen
+    if (codeType === 'login') {
+      await loadUserData();
+    }
   };
 
   const logout = async () => {

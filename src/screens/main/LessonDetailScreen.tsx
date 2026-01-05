@@ -23,9 +23,18 @@ export const LessonDetailScreen: React.FC = () => {
         try {
             const data = await courseService.getLesson(lessonId);
             setLesson(data);
-        } catch (error) {
+        } catch (error: any) {
             logger.error('Error fetching lesson:', error);
-            Alert.alert('Error', 'Could not load lesson details');
+            const status = error?.response?.status;
+            const detail = error?.response?.data?.detail;
+
+            if (status === 404) {
+                Alert.alert('Lesson Not Found', 'This lesson may have been removed or is no longer available.');
+            } else if (status === 403) {
+                Alert.alert('Access Denied', detail || 'You need to enroll in this course to access this lesson.');
+            } else {
+                Alert.alert('Error', detail || 'Could not load lesson details. Please try again.');
+            }
             navigation.goBack();
         } finally {
             setIsLoading(false);

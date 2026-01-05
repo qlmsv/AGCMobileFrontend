@@ -178,7 +178,7 @@ export const courseService = {
     return await apiService.post<Module>(API_ENDPOINTS.MODULE_ENROLL(moduleId), {});
   },
 
-  async createStripeSession(moduleId: string): Promise<{ url: string }> {
+  async createStripeSession(moduleId: string): Promise<{ url?: string; checkout_url?: string }> {
     return await apiService.post(API_ENDPOINTS.MODULE_CREATE_STRIPE_SESSION(moduleId), {});
   },
 

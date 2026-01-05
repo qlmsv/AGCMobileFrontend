@@ -85,15 +85,20 @@ export const CourseDetailScreen: React.FC = () => {
                                 onPress: async () => {
                                     try {
                                         setIsEnrolling(true);
+                                        logger.info('Creating stripe session for module:', paidModule.id);
                                         const session = await courseService.createStripeSession(paidModule.id);
-                                        if (session && session.url) {
-                                            navigation.navigate('Payment', { url: session.url });
+                                        logger.info('Stripe session response:', session);
+                                        const checkoutUrl = (session as any).checkout_url || session.url;
+                                        if (checkoutUrl) {
+                                            navigation.navigate('Payment', { url: checkoutUrl });
                                         } else {
-                                            Alert.alert('Error', 'Could not create payment session.');
+                                            logger.error('Stripe session missing URL:', session);
+                                            Alert.alert('Error', 'Payment session created but no checkout URL received.');
                                         }
-                                    } catch (payError) {
-                                        logger.error('Payment session error', payError);
-                                        Alert.alert('Error', 'Failed to initialize payment.');
+                                    } catch (payError: any) {
+                                        logger.error('Payment session error:', payError);
+                                        const errorDetail = payError?.response?.data?.detail || payError?.message || 'Failed to initialize payment.';
+                                        Alert.alert('Error', errorDetail);
                                     } finally {
                                         setIsEnrolling(false);
                                     }

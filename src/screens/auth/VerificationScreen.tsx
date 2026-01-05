@@ -44,8 +44,11 @@ export const VerificationScreen: React.FC<Props> = ({ navigation, route }) => {
         setIsLoading(true);
         try {
             await verifyCode(email, code, mode);
-            // Navigation is handled by AuthContext state change (user becomes authenticated)
-            // For signup, user may need to go to Information screen
+            // For signup, navigate to Information screen to complete profile
+            if (mode === 'signup') {
+                navigation.navigate('Information', { email });
+            }
+            // For login, navigation is handled by AuthContext state change
         } catch (error: any) {
             logger.error('Verification error:', error);
             Alert.alert('Error', error.message || 'Invalid code. Please try again.');
