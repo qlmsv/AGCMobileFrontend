@@ -61,16 +61,12 @@ export const notificationService = {
   },
 
   async sendTokenToBackend(token: string) {
-    // TODO: Confirm the exact endpoint for mobile device registration.
-    // Common pattern for Django Expo: POST /api/notifications/devices/ or similar
-    // For now we will try a generic 'devices' endpoint or just log it.
     try {
-      // Example: await apiService.post('/notifications/devices/', { registration_id: token, type: 'expo' });
-      logger.info('Simulating backend registration for token:', token);
-
-      // If we were using the webpush endpoint:
-      // await apiService.post(API_ENDPOINTS.WEBPUSH_SUBSCRIPTIONS, { ... });
-      // But the formats don't match.
+      await apiService.post(API_ENDPOINTS.PUSH_DEVICES, {
+        registration_id: token,
+        type: 'expo',
+      });
+      logger.info('Push token registered successfully on backend');
     } catch (error) {
       logger.error('Failed to send token to backend:', error);
     }
@@ -86,5 +82,35 @@ export const notificationService = {
 
   removeNotificationSubscription(subscription: Notifications.Subscription) {
     subscription.remove();
-  }
+  },
+
+  // Server-side notification API methods
+  async getNotifications(params?: {
+    ordering?: string;
+    page?: number;
+    search?: string;
+  }): Promise<any[]> {
+    const data = await apiService.get<any>(API_ENDPOINTS.NOTIFICATIONS, { params });
+    // Handle paginated response
+    if (data && Array.isArray(data.results)) {
+      return data.results;
+    }
+    return Array.isArray(data) ? data : [];
+  },
+
+  async getNotification(id: string): Promise<any> {
+    return await apiService.get(API_ENDPOINTS.NOTIFICATION_BY_ID(id));
+  },
+
+  async markNotificationAsRead(id: string): Promise<void> {
+    await apiService.post(API_ENDPOINTS.MARK_NOTIFICATION_READ(id), {});
+  },
+
+  async markAllNotificationsAsRead(): Promise<void> {
+    await apiService.post(API_ENDPOINTS.MARK_ALL_NOTIFICATIONS_READ, {});
+  },
+
+  async getUnreadCount(): Promise<{ count: number }> {
+    return await apiService.get(API_ENDPOINTS.UNREAD_COUNT);
+  },
 };

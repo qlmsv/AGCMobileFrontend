@@ -7,25 +7,35 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { chatService } from '../../services/chatService';
 import { courseService } from '../../services/courseService';
-import { ChatList, Course } from '../../types';
+import { profileService } from '../../services/profileService';
+import { ChatList, Course, Profile } from '../../types';
 import { EmptyState } from '../../components';
 import { logger } from '../../utils/logger';
+import { useAuth } from '../../contexts/AuthContext';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 type TabType = 'all' | 'group' | 'personal';
 
 export const ChatsScreen: React.FC = () => {
     const navigation = useNavigation<NavigationProp>();
+    const { user } = useAuth();
     const [chats, setChats] = useState<ChatList[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<TabType>('all');
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Group chat modal
     const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
     const [courses, setCourses] = useState<Course[]>([]);
     const [selectedCourseId, setSelectedCourseId] = useState<string>('');
     const [groupName, setGroupName] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+
+    // Personal chat modal
+    const [showCreateChatModal, setShowCreateChatModal] = useState(false);
+    const [users, setUsers] = useState<Profile[]>([]);
+    const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
     const fetchChats = async () => {
         try {
@@ -45,6 +55,20 @@ export const ChatsScreen: React.FC = () => {
             setCourses(data);
         } catch (error) {
             logger.error('Error fetching courses:', error);
+        }
+    };
+
+    const fetchUsers = async () => {
+        setIsLoadingUsers(true);
+        try {
+            const data = await profileService.getProfiles();
+            // Filter out current user
+            const filteredUsers = data.filter(profile => profile.user !== user?.id);
+            setUsers(filteredUsers);
+        } catch (error) {
+            logger.error('Error fetching users:', error);
+        } finally {
+            setIsLoadingUsers(false);
         }
     };
 
@@ -73,11 +97,27 @@ export const ChatsScreen: React.FC = () => {
         return true;
     });
 
-    const handleCreateChat = () => {
-        Alert.alert('Create Chat', 'Select a user to start a personal chat with.', [
-            { text: 'Cancel', style: 'cancel' },
-        ]);
-        // TODO: Navigate to user selection screen
+    const handleOpenCreateChat = async () => {
+        await fetchUsers();
+        setShowCreateChatModal(true);
+    };
+
+    const handleCreatePersonalChat = async (selectedUser: Profile) => {
+        setIsCreating(true);
+        try {
+            const newChat = await chatService.createChat({
+                type: 'dm',
+                user_id: selectedUser.user,
+            });
+            setShowCreateChatModal(false);
+            navigation.navigate('ChatDetail', { chatId: newChat.id });
+        } catch (error: any) {
+            logger.error('Failed to create personal chat:', error);
+            const errorDetail = error.response?.data?.detail || 'Failed to create chat';
+            Alert.alert('Error', errorDetail);
+        } finally {
+            setIsCreating(false);
+        }
     };
 
     const handleOpenCreateGroup = async () => {
@@ -176,7 +216,7 @@ export const ChatsScreen: React.FC = () => {
     const renderCreateButtons = () => (
         <View style={styles.createButtonsContainer}>
             {activeTab !== 'group' && (
-                <TouchableOpacity style={styles.createButton} onPress={handleCreateChat}>
+                <TouchableOpacity style={styles.createButton} onPress={handleOpenCreateChat}>
                     <Ionicons name="add" size={20} color={colors.text.primary} />
                     <Text style={styles.createButtonText}>Create chat</Text>
                 </TouchableOpacity>
@@ -190,28 +230,90 @@ export const ChatsScreen: React.FC = () => {
         </View>
     );
 
+    // Personal Chat Modal - List of users
+    const renderCreateChatModal = () => (
+        <Modal visible={showCreateChatModal} transparent animationType="fade">
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>Create chat</Text>
+
+                    {isLoadingUsers ? (
+                        <View style={styles.loadingUsers}>
+                            <ActivityIndicator size="large" color={colors.primary.main} />
+                        </View>
+                    ) : users.length === 0 ? (
+                        <Text style={styles.noUsersText}>No users available</Text>
+                    ) : (
+                        <ScrollView style={styles.usersList}>
+                            {users.map(userProfile => (
+                                <TouchableOpacity
+                                    key={userProfile.id}
+                                    style={styles.userItem}
+                                    onPress={() => handleCreatePersonalChat(userProfile)}
+                                    disabled={isCreating}
+                                >
+                                    {userProfile.avatar ? (
+                                        <Image source={{ uri: userProfile.avatar }} style={styles.userAvatar} />
+                                    ) : (
+                                        <View style={styles.userAvatarPlaceholder}>
+                                            <Ionicons name="person" size={20} color={colors.text.tertiary} />
+                                        </View>
+                                    )}
+                                    <View style={styles.userInfo}>
+                                        <Text style={styles.userName}>
+                                            {userProfile.first_name || ''} {userProfile.last_name || ''}
+                                        </Text>
+                                        {/* Show email if available - need to get from user */}
+                                        <Text style={styles.userEmail} numberOfLines={1}>
+                                            {userProfile.first_name ? 'User' : 'No name'}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    )}
+
+                    <TouchableOpacity
+                        style={styles.modalCloseButton}
+                        onPress={() => setShowCreateChatModal(false)}
+                    >
+                        <Text style={styles.modalCloseText}>Cancel</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+    );
+
+    // Group Chat Modal
     const renderCreateGroupModal = () => (
         <Modal visible={showCreateGroupModal} transparent animationType="fade">
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>Create group chat</Text>
 
-                    <Text style={styles.modalLabel}>Choose course *</Text>
-                    <ScrollView style={styles.courseList} horizontal showsHorizontalScrollIndicator={false}>
-                        {courses.map(course => (
-                            <TouchableOpacity
-                                key={course.id}
-                                style={[styles.courseChip, selectedCourseId === course.id && styles.courseChipSelected]}
-                                onPress={() => setSelectedCourseId(course.id)}
-                            >
-                                <Text style={[styles.courseChipText, selectedCourseId === course.id && styles.courseChipTextSelected]}>
-                                    {course.title}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
+                    <Text style={styles.modalLabel}>Choose course <Text style={styles.required}>*</Text></Text>
+                    {courses.length === 0 ? (
+                        <Text style={styles.noCoursesText}>No courses available. Create a course first.</Text>
+                    ) : (
+                        <ScrollView style={styles.courseList} horizontal={false} showsVerticalScrollIndicator>
+                            {courses.map(course => (
+                                <TouchableOpacity
+                                    key={course.id}
+                                    style={[styles.courseItem, selectedCourseId === course.id && styles.courseItemSelected]}
+                                    onPress={() => setSelectedCourseId(course.id)}
+                                >
+                                    <Text style={[styles.courseItemText, selectedCourseId === course.id && styles.courseItemTextSelected]}>
+                                        {course.title}
+                                    </Text>
+                                    {selectedCourseId === course.id && (
+                                        <Ionicons name="checkmark" size={20} color={colors.primary.main} />
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    )}
 
-                    <Text style={styles.modalLabel}>Name of the chat *</Text>
+                    <Text style={styles.modalLabel}>Name of the chat <Text style={styles.required}>*</Text></Text>
                     <TextInput
                         style={styles.modalInput}
                         placeholder="Enter chat name"
@@ -223,14 +325,18 @@ export const ChatsScreen: React.FC = () => {
                     <View style={styles.modalButtons}>
                         <TouchableOpacity
                             style={styles.cancelButton}
-                            onPress={() => setShowCreateGroupModal(false)}
+                            onPress={() => {
+                                setShowCreateGroupModal(false);
+                                setGroupName('');
+                                setSelectedCourseId('');
+                            }}
                         >
                             <Text style={styles.cancelButtonText}>Cancel</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.nextButton, isCreating && styles.disabledButton]}
+                            style={[styles.nextButton, (isCreating || !selectedCourseId || !groupName.trim()) && styles.disabledButton]}
                             onPress={handleCreateGroupChat}
-                            disabled={isCreating}
+                            disabled={isCreating || !selectedCourseId || !groupName.trim()}
                         >
                             {isCreating ? (
                                 <ActivityIndicator size="small" color={colors.text.inverse} />
@@ -277,6 +383,7 @@ export const ChatsScreen: React.FC = () => {
                 />
             )}
 
+            {renderCreateChatModal()}
             {renderCreateGroupModal()}
         </SafeAreaView>
     );
@@ -306,8 +413,6 @@ const styles = StyleSheet.create({
     timeText: { ...textStyles.caption, color: colors.text.tertiary },
     chatFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     lastMessage: { ...textStyles.caption, color: colors.text.secondary, flex: 1, marginRight: spacing.sm },
-    unreadBadge: { backgroundColor: colors.primary.main, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2, minWidth: 20, alignItems: 'center' },
-    unreadText: { fontSize: 10, color: colors.text.inverse, fontWeight: 'bold' },
 
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
@@ -318,14 +423,32 @@ const styles = StyleSheet.create({
     createGroupButtonText: { ...textStyles.body, color: colors.text.inverse },
 
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
-    modalContent: { backgroundColor: colors.background.default, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400 },
+    modalContent: { backgroundColor: colors.background.default, borderRadius: borderRadius.lg, padding: spacing.lg, width: '100%', maxWidth: 400, maxHeight: '80%' },
     modalTitle: { ...textStyles.h3, color: colors.text.primary, textAlign: 'center', marginBottom: spacing.lg },
     modalLabel: { ...textStyles.body, color: colors.text.primary, marginBottom: spacing.sm },
-    courseList: { marginBottom: spacing.md },
-    courseChip: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.neutral[100], borderRadius: borderRadius.round, marginRight: spacing.sm },
-    courseChipSelected: { backgroundColor: colors.primary.main },
-    courseChipText: { ...textStyles.body, color: colors.text.secondary },
-    courseChipTextSelected: { color: colors.text.inverse },
+    required: { color: colors.primary.main },
+
+    // Users list for personal chat
+    usersList: { maxHeight: 300, marginBottom: spacing.md },
+    userItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border.light },
+    userAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.neutral[200] },
+    userAvatarPlaceholder: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.neutral[200], justifyContent: 'center', alignItems: 'center' },
+    userInfo: { marginLeft: spacing.md, flex: 1 },
+    userName: { ...textStyles.body, fontWeight: '600', color: colors.text.primary },
+    userEmail: { ...textStyles.caption, color: colors.text.secondary },
+    loadingUsers: { height: 150, justifyContent: 'center', alignItems: 'center' },
+    noUsersText: { ...textStyles.body, color: colors.text.secondary, textAlign: 'center', marginVertical: spacing.lg },
+    modalCloseButton: { paddingVertical: spacing.md, alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.border.light, marginTop: spacing.md },
+    modalCloseText: { ...textStyles.body, color: colors.text.secondary },
+
+    // Courses list for group chat
+    courseList: { maxHeight: 150, marginBottom: spacing.md },
+    courseItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.md, borderWidth: 1, borderColor: colors.border.light, borderRadius: borderRadius.md, marginBottom: spacing.sm },
+    courseItemSelected: { borderColor: colors.primary.main, backgroundColor: colors.primary.main + '10' },
+    courseItemText: { ...textStyles.body, color: colors.text.primary, flex: 1 },
+    courseItemTextSelected: { color: colors.primary.main, fontWeight: '600' },
+    noCoursesText: { ...textStyles.body, color: colors.text.secondary, textAlign: 'center', marginVertical: spacing.md },
+
     modalInput: { borderWidth: 1, borderColor: colors.neutral[300], borderRadius: borderRadius.md, padding: spacing.md, ...textStyles.body, color: colors.text.primary, marginBottom: spacing.lg },
     modalButtons: { flexDirection: 'row', gap: spacing.md },
     cancelButton: { flex: 1, paddingVertical: spacing.md, borderWidth: 1, borderColor: colors.neutral[300], borderRadius: borderRadius.md, alignItems: 'center' },

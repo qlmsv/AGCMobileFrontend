@@ -40,6 +40,7 @@ export const API_ENDPOINTS = {
   REMOVE_MANAGER: (id: string) => `/courses/courses/${id}/remove-manager/`,
   COURSE_STUDENTS: (id: string) => `/courses/courses/${id}/students/`,
   MY_STUDENTS: '/courses/courses/my-students/',
+  IAP_VERIFY_RECEIPT: (moduleId: string) => `/courses/modules/${moduleId}/verify-apple-receipt/`,
 
   // Chat
   CHATS: '/chat/chats/',
@@ -61,6 +62,7 @@ export const API_ENDPOINTS = {
   UNREAD_COUNT: '/notifications/notifications/unread_count/',
   WEBPUSH_SUBSCRIPTIONS: '/notifications/webpush/subscriptions/',
   WEBPUSH_SUBSCRIPTION_BY_ID: (id: string) => `/notifications/webpush/subscriptions/${id}/`,
+  PUSH_DEVICES: '/notifications/devices/',
 
   // Banners
   BANNERS: '/banners/',

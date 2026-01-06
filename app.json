@@ -35,6 +35,9 @@
       "eas": {
         "projectId": "03c3678b-99e8-454f-b060-c34c8b58e10a"
       }
-    }
+    },
+    "plugins": [
+      "react-native-iap"
+    ]
   }
 }

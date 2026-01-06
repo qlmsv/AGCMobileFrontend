@@ -210,4 +210,10 @@ export const courseService = {
   async checkLessonAccess(lessonId: string): Promise<Lesson> {
     return await apiService.get<Lesson>(API_ENDPOINTS.LESSON_CHECK_ACCESS(lessonId));
   },
+
+  async verifyAppleReceipt(moduleId: string, receiptData: string): Promise<{ success: boolean }> {
+    return await apiService.post(API_ENDPOINTS.IAP_VERIFY_RECEIPT(moduleId), {
+      receipt_data: receiptData,
+    });
+  },
 };

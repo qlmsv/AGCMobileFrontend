@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator, Image, Alert, Platform } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { colors, spacing, borderRadius, textStyles, layout } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { logger } from '../../utils/logger';
 import { useAuth } from '../../contexts/AuthContext';
+import { iapService } from '../../services/iapService';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -85,19 +86,40 @@ export const CourseDetailScreen: React.FC = () => {
                                 onPress: async () => {
                                     try {
                                         setIsEnrolling(true);
-                                        logger.info('Creating stripe session for module:', paidModule.id);
-                                        const session = await courseService.createStripeSession(paidModule.id);
-                                        logger.info('Stripe session response:', session);
-                                        const checkoutUrl = (session as any).checkout_url || session.url;
-                                        if (checkoutUrl) {
-                                            navigation.navigate('Payment', { url: checkoutUrl });
+
+                                        if (Platform.OS === 'ios') {
+                                            // Use Apple In-App Purchase on iOS
+                                            logger.info('IAP: Starting purchase for module:', paidModule.id);
+
+                                            await iapService.init();
+                                            const purchase = await iapService.purchase(paidModule.id);
+
+                                            if (purchase && purchase.transactionReceipt) {
+                                                // Verify receipt with backend
+                                                logger.info('IAP: Verifying receipt with backend');
+                                                await courseService.verifyAppleReceipt(paidModule.id, purchase.transactionReceipt);
+
+                                                Alert.alert('Success', 'Purchase completed! You now have access to this course.');
+                                                fetchCourseDetails();
+                                            } else {
+                                                Alert.alert('Error', 'Purchase was not completed.');
+                                            }
                                         } else {
-                                            logger.error('Stripe session missing URL:', session);
-                                            Alert.alert('Error', 'Payment session created but no checkout URL received.');
+                                            // Use Stripe on Android
+                                            logger.info('Creating stripe session for module:', paidModule.id);
+                                            const session = await courseService.createStripeSession(paidModule.id);
+                                            logger.info('Stripe session response:', session);
+                                            const checkoutUrl = (session as any).checkout_url || session.url;
+                                            if (checkoutUrl) {
+                                                navigation.navigate('Payment', { url: checkoutUrl });
+                                            } else {
+                                                logger.error('Stripe session missing URL:', session);
+                                                Alert.alert('Error', 'Payment session created but no checkout URL received.');
+                                            }
                                         }
                                     } catch (payError: any) {
-                                        logger.error('Payment session error:', payError);
-                                        const errorDetail = payError?.response?.data?.detail || payError?.message || 'Failed to initialize payment.';
+                                        logger.error('Payment error:', payError);
+                                        const errorDetail = payError?.response?.data?.detail || payError?.message || 'Failed to complete payment.';
                                         Alert.alert('Error', errorDetail);
                                     } finally {
                                         setIsEnrolling(false);
