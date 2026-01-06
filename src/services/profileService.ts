@@ -10,7 +10,10 @@ export const profileService = {
     search?: string;
   }): Promise<Profile[]> {
     const data = await apiService.get(API_ENDPOINTS.PROFILES, { params });
-    return extractResults<Profile>(data);
+    console.log('[ProfileService] Raw API response:', JSON.stringify(data));
+    const results = extractResults<Profile>(data);
+    console.log('[ProfileService] Extracted profiles:', results.length);
+    return results;
   },
 
   async getMyProfile(): Promise<Profile> {

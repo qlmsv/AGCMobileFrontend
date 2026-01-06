@@ -1,9 +1,8 @@
 import { Platform } from 'react-native';
-import * as RNIap from 'react-native-iap';
 import { logger } from '../utils/logger';
 
-// react-native-iap v14+ has Nitro Modules API
-// Using simplified types for compatibility
+// react-native-iap uses NitroModules which don't work in Expo Go
+// We dynamically import it only when needed in production builds
 
 export interface IAPProduct {
     productId: string;
@@ -21,10 +20,25 @@ export interface IAPPurchase {
     purchaseTime: number;
 }
 
+// Lazy load react-native-iap to avoid crashes in Expo Go
+let RNIap: any = null;
+
+const loadIAP = async () => {
+    if (RNIap) return RNIap;
+    try {
+        RNIap = await import('react-native-iap');
+        return RNIap;
+    } catch (error) {
+        logger.warn('IAP: Could not load react-native-iap (expected in Expo Go)');
+        return null;
+    }
+};
+
 class IAPService {
     private isConnected = false;
     private purchaseUpdateSubscription: any = null;
     private purchaseErrorSubscription: any = null;
+    private isSupported = false;
 
     // Initialize IAP connection
     async init(): Promise<boolean> {
@@ -33,27 +47,43 @@ class IAPService {
             return false;
         }
 
+        const iap = await loadIAP();
+        if (!iap) {
+            logger.info('IAP: Not available (running in Expo Go)');
+            this.isSupported = false;
+            return false;
+        }
+
         try {
-            const result = await RNIap.initConnection();
+            const result = await iap.initConnection();
             this.isConnected = true;
+            this.isSupported = true;
             logger.info('IAP: Connection initialized', result);
             return true;
         } catch (error) {
             logger.error('IAP: Failed to initialize:', error);
             this.isConnected = false;
+            this.isSupported = false;
             return false;
         }
     }
 
+    // Check if IAP is supported
+    isAvailable(): boolean {
+        return this.isSupported && Platform.OS === 'ios';
+    }
+
     // Get available products from App Store
     async getProducts(productIds: string[]): Promise<IAPProduct[]> {
+        const iap = await loadIAP();
+        if (!iap) return [];
+
         if (!this.isConnected) {
             await this.init();
         }
 
         try {
-            // Use getProducts for non-consumable items
-            const products: any[] = await (RNIap as any).getProducts({ skus: productIds });
+            const products: any[] = await iap.getProducts({ skus: productIds });
             logger.info('IAP: Products fetched:', products?.length || 0);
 
             if (!products) return [];
@@ -74,6 +104,11 @@ class IAPService {
 
     // Purchase a product
     async purchase(productId: string): Promise<IAPPurchase | null> {
+        const iap = await loadIAP();
+        if (!iap) {
+            throw new Error('IAP not available');
+        }
+
         if (!this.isConnected) {
             await this.init();
         }
@@ -81,18 +116,16 @@ class IAPService {
         try {
             logger.info('IAP: Requesting purchase for:', productId);
 
-            // Request purchase - shows Apple's payment sheet
-            const purchase: any = await RNIap.requestPurchase({
+            const purchase: any = await iap.requestPurchase({
                 sku: productId,
                 andDangerouslyFinishTransactionAutomaticallyIOS: false,
-            } as any);
+            });
 
             if (purchase) {
                 const purchaseData = Array.isArray(purchase) ? purchase[0] : purchase;
 
                 logger.info('IAP: Purchase successful:', purchaseData?.transactionId);
 
-                // Get receipt - field name varies by version
                 const receipt = purchaseData?.transactionReceipt
                     || purchaseData?.receipt
                     || purchaseData?.purchaseToken
@@ -117,8 +150,11 @@ class IAPService {
 
     // Finish transaction after backend verification
     async finishPurchase(purchase: any): Promise<void> {
+        const iap = await loadIAP();
+        if (!iap) return;
+
         try {
-            await RNIap.finishTransaction({ purchase, isConsumable: false });
+            await iap.finishTransaction({ purchase, isConsumable: false });
             logger.info('IAP: Transaction finished:', purchase?.transactionId);
         } catch (error) {
             logger.error('IAP: Failed to finish transaction:', error);
@@ -128,12 +164,15 @@ class IAPService {
 
     // Restore previous purchases
     async restorePurchases(): Promise<IAPPurchase[]> {
+        const iap = await loadIAP();
+        if (!iap) return [];
+
         if (!this.isConnected) {
             await this.init();
         }
 
         try {
-            const purchases: any[] = await RNIap.getAvailablePurchases();
+            const purchases: any[] = await iap.getAvailablePurchases();
             logger.info('IAP: Restored purchases:', purchases?.length || 0);
 
             if (!purchases) return [];
@@ -153,12 +192,15 @@ class IAPService {
     }
 
     // Set up purchase listeners
-    setupListeners(
+    async setupListeners(
         onPurchaseUpdate: (purchase: any) => void,
         onPurchaseError: (error: any) => void
-    ): void {
-        this.purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(onPurchaseUpdate);
-        this.purchaseErrorSubscription = RNIap.purchaseErrorListener(onPurchaseError);
+    ): Promise<void> {
+        const iap = await loadIAP();
+        if (!iap) return;
+
+        this.purchaseUpdateSubscription = iap.purchaseUpdatedListener(onPurchaseUpdate);
+        this.purchaseErrorSubscription = iap.purchaseErrorListener(onPurchaseError);
         logger.info('IAP: Listeners set up');
     }
 
@@ -177,10 +219,13 @@ class IAPService {
 
     // End connection
     async end(): Promise<void> {
+        const iap = await loadIAP();
+        if (!iap) return;
+
         this.removeListeners();
         if (this.isConnected) {
             try {
-                await RNIap.endConnection();
+                await iap.endConnection();
                 this.isConnected = false;
                 logger.info('IAP: Connection ended');
             } catch (error) {

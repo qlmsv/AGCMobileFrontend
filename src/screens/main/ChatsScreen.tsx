@@ -8,7 +8,8 @@ import { RootStackParamList } from '../../navigation/types';
 import { chatService } from '../../services/chatService';
 import { courseService } from '../../services/courseService';
 import { profileService } from '../../services/profileService';
-import { ChatList, Course, Profile } from '../../types';
+import { userService } from '../../services/userService';
+import { ChatList, Course, Profile, User } from '../../types';
 import { EmptyState } from '../../components';
 import { logger } from '../../utils/logger';
 import { useAuth } from '../../contexts/AuthContext';
@@ -61,12 +62,33 @@ export const ChatsScreen: React.FC = () => {
     const fetchUsers = async () => {
         setIsLoadingUsers(true);
         try {
-            const data = await profileService.getProfiles();
-            // Filter out current user
-            const filteredUsers = data.filter(profile => profile.user !== user?.id);
-            setUsers(filteredUsers);
-        } catch (error) {
-            logger.error('Error fetching users:', error);
+            logger.info('Getting existing DM contacts...');
+
+            // Show existing DM chats as contacts - clicking will open the chat
+            const dmChats = chats.filter(chat => chat.type === 'dm');
+            logger.info('DM chats found:', dmChats.length);
+
+            // Map DM chats to Profile-like structure for display
+            // Use chat.id as the identifier - we'll open the chat directly
+            const contacts: Profile[] = dmChats.map(chat => {
+                const nameParts = (chat.display_title || 'User').split(' ');
+                return {
+                    id: chat.id, // Use chat.id so we can open it directly
+                    user: chat.id, // This will be used as chatId when clicking
+                    first_name: nameParts[0] || 'User',
+                    last_name: nameParts.slice(1).join(' ') || '',
+                    avatar: chat.display_avatar || null,
+                } as Profile;
+            });
+
+            logger.info('Contacts from DM chats:', contacts.length);
+            setUsers(contacts);
+
+            if (contacts.length === 0) {
+                Alert.alert('Info', 'No DM conversations yet. Backend needs to fix /profiles/ API to show all users.');
+            }
+        } catch (error: any) {
+            logger.error('Error getting contacts:', error);
         } finally {
             setIsLoadingUsers(false);
         }
@@ -103,21 +125,10 @@ export const ChatsScreen: React.FC = () => {
     };
 
     const handleCreatePersonalChat = async (selectedUser: Profile) => {
-        setIsCreating(true);
-        try {
-            const newChat = await chatService.createChat({
-                type: 'dm',
-                user_id: selectedUser.user,
-            });
-            setShowCreateChatModal(false);
-            navigation.navigate('ChatDetail', { chatId: newChat.id });
-        } catch (error: any) {
-            logger.error('Failed to create personal chat:', error);
-            const errorDetail = error.response?.data?.detail || 'Failed to create chat';
-            Alert.alert('Error', errorDetail);
-        } finally {
-            setIsCreating(false);
-        }
+        // selectedUser.user now contains the chatId (from fetchUsers)
+        // Just navigate to the existing chat
+        setShowCreateChatModal(false);
+        navigation.navigate('ChatDetail', { chatId: selectedUser.user });
     };
 
     const handleOpenCreateGroup = async () => {

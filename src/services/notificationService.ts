@@ -62,13 +62,27 @@ export const notificationService = {
 
   async sendTokenToBackend(token: string) {
     try {
+      // Get auth token to check if user is authenticated
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+      const authToken = await AsyncStorage.getItem('accessToken');
+
+      if (!authToken) {
+        logger.info('Push token: User not authenticated, skipping backend registration');
+        return;
+      }
+
       await apiService.post(API_ENDPOINTS.PUSH_DEVICES, {
         registration_id: token,
         type: 'expo',
       });
       logger.info('Push token registered successfully on backend');
-    } catch (error) {
-      logger.error('Failed to send token to backend:', error);
+    } catch (error: any) {
+      // Silently handle 401/404 errors - endpoint may not exist yet
+      if (error?.response?.status === 401 || error?.response?.status === 404) {
+        logger.info('Push token: Backend endpoint not ready or requires auth');
+      } else {
+        logger.error('Failed to send token to backend:', error);
+      }
     }
   },
 

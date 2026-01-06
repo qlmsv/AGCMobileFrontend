@@ -87,11 +87,20 @@ export const CourseDetailScreen: React.FC = () => {
                                     try {
                                         setIsEnrolling(true);
 
+                                        // Try IAP on iOS if available (only in production builds)
+                                        let useIAP = false;
                                         if (Platform.OS === 'ios') {
+                                            try {
+                                                await iapService.init();
+                                                useIAP = iapService.isAvailable();
+                                            } catch {
+                                                useIAP = false;
+                                            }
+                                        }
+
+                                        if (useIAP) {
                                             // Use Apple In-App Purchase on iOS
                                             logger.info('IAP: Starting purchase for module:', paidModule.id);
-
-                                            await iapService.init();
                                             const purchase = await iapService.purchase(paidModule.id);
 
                                             if (purchase && purchase.transactionReceipt) {
@@ -105,7 +114,7 @@ export const CourseDetailScreen: React.FC = () => {
                                                 Alert.alert('Error', 'Purchase was not completed.');
                                             }
                                         } else {
-                                            // Use Stripe on Android
+                                            // Use Stripe WebView (Android or iOS without IAP)
                                             logger.info('Creating stripe session for module:', paidModule.id);
                                             const session = await courseService.createStripeSession(paidModule.id);
                                             logger.info('Stripe session response:', session);
