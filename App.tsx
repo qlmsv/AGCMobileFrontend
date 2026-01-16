@@ -27,7 +27,7 @@ export default function App() {
     'Inter-SemiBold': Inter_600SemiBold,
     'Inter-Bold': Inter_700Bold,
     // Alias for code that uses 'Inter' directly if configured that way
-    'Inter': Inter_400Regular,
+    Inter: Inter_400Regular,
   });
 
   const onLayoutRootView = useCallback(async () => {
@@ -39,7 +39,7 @@ export default function App() {
   useEffect(() => {
     // Only register if fonts are loaded to ensure we are ready
     if (fontsLoaded) {
-      notificationService.registerForPushNotificationsAsync().then(token => {
+      notificationService.registerForPushNotificationsAsync().then((token) => {
         if (token) {
           notificationService.sendTokenToBackend(token);
         }

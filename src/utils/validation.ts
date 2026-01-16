@@ -30,7 +30,10 @@ export const validatePhone = (phone: string): { isValid: boolean; error?: string
 /**
  * Validate verification code
  */
-export const validateVerificationCode = (code: string, minLength: number = 4): { isValid: boolean; error?: string } => {
+export const validateVerificationCode = (
+  code: string,
+  minLength: number = 4
+): { isValid: boolean; error?: string } => {
   if (!code || !code.trim()) {
     return { isValid: false, error: 'Verification code is required' };
   }
@@ -87,7 +90,7 @@ export const validateFileType = (
   allowedTypes: string[] = ['image/jpeg', 'image/png', 'image/webp']
 ): { isValid: boolean; error?: string } => {
   if (!allowedTypes.includes(mimeType)) {
-    const typesStr = allowedTypes.map(t => t.split('/')[1]).join(', ');
+    const typesStr = allowedTypes.map((t) => t.split('/')[1]).join(', ');
     return { isValid: false, error: `Only ${typesStr} files are allowed` };
   }
 
@@ -97,7 +100,10 @@ export const validateFileType = (
 /**
  * Validate required field
  */
-export const validateRequired = (value: string, fieldName: string = 'Field'): { isValid: boolean; error?: string } => {
+export const validateRequired = (
+  value: string,
+  fieldName: string = 'Field'
+): { isValid: boolean; error?: string } => {
   if (!value || !value.trim()) {
     return { isValid: false, error: `${fieldName} is required` };
   }

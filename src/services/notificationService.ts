@@ -90,7 +90,9 @@ export const notificationService = {
     return Notifications.addNotificationReceivedListener(callback);
   },
 
-  addNotificationResponseReceivedListener(callback: (response: Notifications.NotificationResponse) => void) {
+  addNotificationResponseReceivedListener(
+    callback: (response: Notifications.NotificationResponse) => void
+  ) {
     return Notifications.addNotificationResponseReceivedListener(callback);
   },
 

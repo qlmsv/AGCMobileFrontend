@@ -1,4 +1,11 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from 'react';
 import { authService } from '../services/authService';
 import { User, Profile } from '../types';
 import { profileService } from '../services/profileService';
@@ -23,24 +30,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const isAuth = await authService.isAuthenticated();
-      if (isAuth) {
-        await loadUserData();
-      }
-    } catch (error) {
-      logger.error('Auth check failed:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     try {
       const userData = await authService.getCurrentUser();
       setUser(userData);
@@ -67,13 +57,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(null);
       setProfile(null);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const isAuth = await authService.isAuthenticated();
+        if (isAuth) {
+          await loadUserData();
+        }
+      } catch (error) {
+        logger.error('Auth check failed:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkAuth();
+  }, [loadUserData]);
 
   const sendCode = async (email: string, codeType: 'signup' | 'login' = 'login') => {
     await authService.sendCode(email, codeType);
   };
 
-  const verifyCode = async (email: string, code: string, codeType: 'signup' | 'login' = 'login') => {
+  const verifyCode = async (
+    email: string,
+    code: string,
+    codeType: 'signup' | 'login' = 'login'
+  ) => {
     await authService.verifyCode(email, code, codeType);
     // For signup, don't load user data yet - wait for profile creation on Information screen
     if (codeType === 'login') {

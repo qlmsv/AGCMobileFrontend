@@ -5,7 +5,7 @@ export const spacing = {
   xs: 4,
   sm: 8,
   md: 12,
-  base: 16,   // Standard padding
+  base: 16, // Standard padding
   lg: 20,
   xl: 24,
   xxl: 32,
@@ -15,9 +15,9 @@ export const spacing = {
 // Border radius values (updated from Figma V2)
 export const borderRadius = {
   xs: 4,
-  sm: 8,      // Inputs, small cards
-  md: 12,     // Buttons, Cards, Modals
-  lg: 16,     // Larger cards
+  sm: 8, // Inputs, small cards
+  md: 12, // Buttons, Cards, Modals
+  lg: 16, // Larger cards
   xl: 20,
   xxl: 24,
   round: 9999,
@@ -26,14 +26,14 @@ export const borderRadius = {
 // Common spacing patterns
 export const layout = {
   padding: {
-    screen: spacing.base,   // 16px
-    card: spacing.md,       // 12px
-    section: spacing.xl,    // 24px
+    screen: spacing.base, // 16px
+    card: spacing.md, // 12px
+    section: spacing.xl, // 24px
   },
   gap: {
-    xs: spacing.xs,   // 4px
-    sm: spacing.sm,   // 8px
-    md: spacing.md,   // 12px
+    xs: spacing.xs, // 4px
+    sm: spacing.sm, // 8px
+    md: spacing.md, // 12px
     lg: spacing.base, // 16px
   },
   // Component sizes
@@ -43,7 +43,7 @@ export const layout = {
   },
   button: {
     height: 48,
-    borderRadius: 12,  // Rounded rect, not capsule
+    borderRadius: 12, // Rounded rect, not capsule
   },
   iconButton: {
     width: 40,

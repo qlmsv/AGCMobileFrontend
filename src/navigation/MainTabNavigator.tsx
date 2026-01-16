@@ -2,57 +2,55 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../screens/main/HomeScreen';
 import { CoursesScreen } from '../screens/main/CoursesScreen';
-import { ScheduleScreen } from '../screens/main/ScheduleScreen';
+
 import { ChatsScreen } from '../screens/main/ChatsScreen';
 import { ProfileScreen } from '../screens/main/ProfileScreen';
 import { MainTabParamList } from './types';
-import { colors, spacing, borderRadius } from '../theme';
+import { colors } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export const MainTabNavigator = () => {
-    const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
 
-    return (
-        <Tab.Navigator
-            screenOptions={({ route }) => ({
-                headerShown: false,
-                tabBarShowLabel: true,
-                tabBarStyle: {
-                    height: 60 + insets.bottom,
-                    backgroundColor: colors.background.default,
-                    borderTopColor: colors.border.light,
-                    paddingTop: 8,
-                    paddingBottom: insets.bottom + 8,
-                },
-                tabBarActiveTintColor: colors.primary.main, // #FF5A05
-                tabBarInactiveTintColor: colors.neutral[400],
-                tabBarIcon: ({ focused, color, size }) => {
-                    let iconName: keyof typeof Ionicons.glyphMap = 'home';
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarShowLabel: true,
+        tabBarStyle: {
+          height: 60 + insets.bottom,
+          backgroundColor: colors.background.default,
+          borderTopColor: colors.border.light,
+          paddingTop: 8,
+          paddingBottom: insets.bottom + 8,
+        },
+        tabBarActiveTintColor: colors.primary.main, // #FF5A05
+        tabBarInactiveTintColor: colors.neutral[400],
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap = 'home';
 
-                    if (route.name === 'Home') {
-                        iconName = focused ? 'home' : 'home-outline';
-                    } else if (route.name === 'Courses') {
-                        iconName = focused ? 'book' : 'book-outline';
-                    } else if (route.name === 'Schedule') {
-                        iconName = focused ? 'calendar' : 'calendar-outline';
-                    } else if (route.name === 'Chats') {
-                        iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-                    } else if (route.name === 'Profile') {
-                        iconName = focused ? 'person' : 'person-outline';
-                    }
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Courses') {
+            iconName = focused ? 'book' : 'book-outline';
+          } else if (route.name === 'Chats') {
+            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+          }
 
-                    return <Ionicons name={iconName} size={24} color={color} />;
-                },
-            })}
-        >
-            <Tab.Screen name="Home" component={HomeScreen} />
-            <Tab.Screen name="Courses" component={CoursesScreen} />
-            <Tab.Screen name="Schedule" component={ScheduleScreen} />
-            <Tab.Screen name="Chats" component={ChatsScreen} />
-            <Tab.Screen name="Profile" component={ProfileScreen} />
-        </Tab.Navigator>
-    );
+          return <Ionicons name={iconName} size={24} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Courses" component={CoursesScreen} />
+
+      <Tab.Screen name="Chats" component={ChatsScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
 };

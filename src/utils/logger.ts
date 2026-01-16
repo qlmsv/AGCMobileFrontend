@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Logger utility for development and production
  * In production, logs should be sent to error tracking service (e.g., Sentry)

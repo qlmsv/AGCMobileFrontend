@@ -12,12 +12,12 @@ export const typography = {
   // Font sizes (from Figma)
   sizes: {
     xs: 10,
-    sm: 12,     // Caption
-    base: 14,   // Body Medium
-    md: 16,     // Body Large
-    lg: 20,     // H3
-    xl: 24,     // H2
-    xxl: 32,    // H1/Title
+    sm: 12, // Caption
+    base: 14, // Body Medium
+    md: 16, // Body Large
+    lg: 20, // H3
+    xl: 24, // H2
+    xxl: 32, // H1/Title
   },
 
   // Font weights

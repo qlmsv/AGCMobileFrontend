@@ -5,7 +5,7 @@ import {
   SendCodeResponse,
   VerifyCodeRequest,
   VerifyCodeResponse,
-  User
+  User,
 } from '../types';
 import { logger } from '../utils/logger';
 
@@ -17,13 +17,10 @@ export const authService = {
     logger.debug('📤 Sending code to:', email);
     const payload: SendCodeRequest = {
       email,
-      code_type: codeType
+      code_type: codeType,
     };
     logger.debug('📦 Payload:', JSON.stringify(payload));
-    return await apiService.post<SendCodeResponse>(
-      API_ENDPOINTS.AUTH_SEND_CODE,
-      payload
-    );
+    return await apiService.post<SendCodeResponse>(API_ENDPOINTS.AUTH_SEND_CODE, payload);
   },
 
   async verifyCode(
@@ -37,7 +34,7 @@ export const authService = {
       email,
       code,
       code_type: codeType,
-      remember_me: rememberMe
+      remember_me: rememberMe,
     };
     logger.debug('📦 Payload:', JSON.stringify(payload));
 
@@ -59,7 +56,7 @@ export const authService = {
 
   async refreshToken(refreshToken: string): Promise<{ access: string; refresh?: string }> {
     return await apiService.post(API_ENDPOINTS.AUTH_REFRESH, {
-      refresh: refreshToken
+      refresh: refreshToken,
     });
   },
 

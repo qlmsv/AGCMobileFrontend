@@ -4,28 +4,32 @@ import { User } from '../types';
 import { extractResults } from '../utils/extractResults';
 
 export const userService = {
-    async getUsers(params?: {
-        ordering?: string;
-        page?: number;
-        search?: string;
-    }): Promise<User[]> {
-        const data = await apiService.get(API_ENDPOINTS.USERS, { params });
-        return extractResults<User>(data);
-    },
+  async getUsers(params?: { ordering?: string; page?: number; search?: string }): Promise<User[]> {
+    const data = await apiService.get(API_ENDPOINTS.USERS, { params });
+    return extractResults<User>(data);
+  },
 
-    async getMyUser(): Promise<User> {
-        return await apiService.get<User>(API_ENDPOINTS.MY_USER);
-    },
+  // Search all users - new endpoint for finding users to chat with
+  async searchUsers(search?: string): Promise<User[]> {
+    const data = await apiService.get(API_ENDPOINTS.USERS_SEARCH, {
+      params: search ? { search } : {},
+    });
+    return extractResults<User>(data);
+  },
 
-    async getUser(id: string): Promise<User> {
-        return await apiService.get<User>(API_ENDPOINTS.USER_BY_ID(id));
-    },
+  async getMyUser(): Promise<User> {
+    return await apiService.get<User>(API_ENDPOINTS.MY_USER);
+  },
 
-    async updateUser(id: string, data: Partial<User>): Promise<User> {
-        return await apiService.patch<User>(API_ENDPOINTS.USER_BY_ID(id), data);
-    },
+  async getUser(id: string): Promise<User> {
+    return await apiService.get<User>(API_ENDPOINTS.USER_BY_ID(id));
+  },
 
-    async deleteUser(id: string): Promise<void> {
-        await apiService.delete(API_ENDPOINTS.USER_BY_ID(id));
-    },
+  async updateUser(id: string, data: Partial<User>): Promise<User> {
+    return await apiService.patch<User>(API_ENDPOINTS.USER_BY_ID(id), data);
+  },
+
+  async deleteUser(id: string): Promise<void> {
+    await apiService.delete(API_ENDPOINTS.USER_BY_ID(id));
+  },
 };

@@ -1,6 +1,8 @@
 export interface User {
   id: string;
   email: string;
+  first_name?: string;
+  last_name?: string;
   is_active: boolean;
   is_staff: boolean;
   role: 'student' | 'teacher' | 'admin';
@@ -168,6 +170,18 @@ export interface ChatCreate {
   avatar?: string | null;
   course?: string | null;
   member_ids?: string[];
+}
+
+export interface ChatMember {
+  id: number;
+  user: string;
+  user_profile?: {
+    first_name: string | null;
+    last_name: string | null;
+    avatar: string | null;
+  };
+  role: 'owner' | 'moderator' | 'member';
+  joined_at: string;
 }
 
 export interface Message {

@@ -11,3 +11,8 @@ npm-debug.*
 web-build/
 .env
 .env.local
+
+# Credentials
+credentials/
+android/keystore.properties
+android/local.properties

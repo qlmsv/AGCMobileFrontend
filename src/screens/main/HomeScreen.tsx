@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
+  Linking,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing, borderRadius, textStyles, layout } from '../../theme';
+import { colors, spacing, borderRadius, textStyles } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -33,13 +44,13 @@ export const HomeScreen: React.FC = () => {
       const [cats, courses, bans] = await Promise.all([
         courseService.getCategories(),
         homeService.getPopularCourses(),
-        homeService.getBanners()
+        homeService.getBanners(),
       ]);
       setCategories(cats);
       setPopularCourses(courses);
       setBanners(bans);
     } catch (error) {
-      logger.error("Failed to fetch home data", error);
+      logger.error('Failed to fetch home data', error);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -47,8 +58,15 @@ export const HomeScreen: React.FC = () => {
   };
 
   const onRefresh = () => {
-    setIsRefreshing(true);
     fetchData();
+  };
+
+  const handleBannerPress = (banner: Banner) => {
+    if (banner.link_url) {
+      Linking.openURL(banner.link_url).catch((err) => {
+        logger.error('Failed to open banner link', err);
+      });
+    }
   };
 
   const handleCoursePress = (course: Course) => {
@@ -56,11 +74,7 @@ export const HomeScreen: React.FC = () => {
   };
 
   const renderCourseCard = ({ item }: { item: Course }) => (
-    <CourseCard
-      course={item}
-      onPress={handleCoursePress}
-      variant="vertical"
-    />
+    <CourseCard course={item} onPress={handleCoursePress} variant="vertical" />
   );
 
   if (isLoading) {
@@ -75,9 +89,7 @@ export const HomeScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -85,18 +97,17 @@ export const HomeScreen: React.FC = () => {
             <Text style={styles.greeting}>Hello,</Text>
             <Text style={styles.username}>{profile?.first_name || 'Student'}</Text>
           </View>
-          <TouchableOpacity style={styles.notificationBtn}>
-            <Ionicons name="notifications-outline" size={24} color={colors.text.primary} />
-          </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
         <TouchableOpacity
           style={styles.searchContainer}
-          onPress={() => navigation.navigate('Main', {
-            screen: 'Courses',
-            params: { initialSearch: '' }
-          })}
+          onPress={() =>
+            navigation.navigate('Main', {
+              screen: 'Courses',
+              params: { initialSearch: '' },
+            })
+          }
         >
           <Ionicons name="search" size={20} color={colors.text.tertiary} />
           <Text style={styles.searchPlaceholder}>Search for courses...</Text>
@@ -106,9 +117,14 @@ export const HomeScreen: React.FC = () => {
         {banners.length > 0 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bannerScroll}>
             {banners.map((banner) => (
-              <View key={banner.id} style={styles.bannerContainer}>
+              <TouchableOpacity
+                key={banner.id}
+                style={styles.bannerContainer}
+                onPress={() => handleBannerPress(banner)}
+                activeOpacity={banner.link_url ? 0.7 : 1}
+              >
                 <Image source={{ uri: banner.image_url }} style={styles.bannerImage} />
-              </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         )}
@@ -120,12 +136,21 @@ export const HomeScreen: React.FC = () => {
             <Text style={styles.seeAll}>See All</Text>
           </TouchableOpacity>
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesList}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoriesList}
+        >
           {categories.map((cat) => (
             <TouchableOpacity
               key={cat.id}
               style={styles.categoryBadge}
-              onPress={() => navigation.navigate('Main', { screen: 'Courses', params: { initialSearch: cat.name } })}
+              onPress={() =>
+                navigation.navigate('Main', {
+                  screen: 'Courses',
+                  params: { initialSearch: cat.name },
+                })
+              }
             >
               <Text style={styles.categoryText}>{cat.name}</Text>
             </TouchableOpacity>

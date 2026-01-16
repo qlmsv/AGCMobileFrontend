@@ -61,13 +61,13 @@ export const courseService = {
 
   async addManager(courseId: string, managerId: string): Promise<Course> {
     return await apiService.post<Course>(API_ENDPOINTS.ADD_MANAGER(courseId), {
-      manager_id: managerId
+      manager_id: managerId,
     });
   },
 
   async removeManager(courseId: string, managerId: string): Promise<Course> {
     return await apiService.post<Course>(API_ENDPOINTS.REMOVE_MANAGER(courseId), {
-      manager_id: managerId
+      manager_id: managerId,
     });
   },
 
@@ -90,28 +90,32 @@ export const courseService = {
     }
 
     const results = await Promise.allSettled(
-      modules.map(module => this.enrollInModule(module.id))
+      modules.map((module) => this.enrollInModule(module.id))
     );
 
-    const paymentRequired = results.some(result =>
-      result.status === 'rejected' &&
-      (result.reason as any)?.response?.data?.code === 'payment_required'
+    const paymentRequired = results.some(
+      (result) =>
+        result.status === 'rejected' &&
+        (result.reason as any)?.response?.data?.code === 'payment_required'
     );
 
     if (paymentRequired) {
       throw new Error('Some modules require payment. Please purchase the course first.');
     }
 
-    const allAlreadyEnrolled = results.every(result =>
-      result.status === 'fulfilled' ||
-      (result.status === 'rejected' && (result.reason as any)?.response?.data?.code === 'already_enrolled')
+    const allAlreadyEnrolled = results.every(
+      (result) =>
+        result.status === 'fulfilled' ||
+        (result.status === 'rejected' &&
+          (result.reason as any)?.response?.data?.code === 'already_enrolled')
     );
 
     if (!allAlreadyEnrolled) {
-      const otherErrors = results.filter(result =>
-        result.status === 'rejected' &&
-        (result.reason as any)?.response?.data?.code !== 'already_enrolled' &&
-        (result.reason as any)?.response?.data?.code !== 'payment_required'
+      const otherErrors = results.filter(
+        (result) =>
+          result.status === 'rejected' &&
+          (result.reason as any)?.response?.data?.code !== 'already_enrolled' &&
+          (result.reason as any)?.response?.data?.code !== 'payment_required'
       );
 
       if (otherErrors.length > 0) {
@@ -209,11 +213,5 @@ export const courseService = {
 
   async checkLessonAccess(lessonId: string): Promise<Lesson> {
     return await apiService.get<Lesson>(API_ENDPOINTS.LESSON_CHECK_ACCESS(lessonId));
-  },
-
-  async verifyAppleReceipt(moduleId: string, receiptData: string): Promise<{ success: boolean }> {
-    return await apiService.post(API_ENDPOINTS.IAP_VERIFY_RECEIPT(moduleId), {
-      receipt_data: receiptData,
-    });
   },
 };

@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    SafeAreaView,
-    ScrollView,
-    TouchableOpacity,
-    TextInput,
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -23,254 +23,249 @@ import { logger } from '../../utils/logger';
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 export const AddModuleScreen: React.FC = () => {
-    const navigation = useNavigation<NavigationProp>();
-    const route = useRoute<any>();
-    const courseId = route.params?.courseId;
-    const existingModulesCount = route.params?.modulesCount || 0;
+  const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<any>();
+  const courseId = route.params?.courseId;
+  const existingModulesCount = route.params?.modulesCount || 0;
 
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [isFree, setIsFree] = useState(true);
-    const [price, setPrice] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [isFree, setIsFree] = useState(true);
+  const [price, setPrice] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-    const handleCreateModule = async () => {
-        if (!title.trim()) {
-            Alert.alert('Error', 'Please enter a module title');
-            return;
-        }
+  const handleCreateModule = async () => {
+    if (!title.trim()) {
+      Alert.alert('Error', 'Please enter a module title');
+      return;
+    }
 
-        setIsLoading(true);
-        try {
-            const moduleData: any = {
-                course: courseId,
-                title: title.trim(),
-                description: description.trim(),
-                position: existingModulesCount + 1,
-                is_free: isFree,
-            };
+    setIsLoading(true);
+    try {
+      const moduleData: any = {
+        course: courseId,
+        title: title.trim(),
+        description: description.trim(),
+        position: existingModulesCount + 1,
+        is_free: isFree,
+      };
 
-            if (!isFree && price) {
-                moduleData.price = price;
-            }
+      if (!isFree && price) {
+        moduleData.price = price;
+      }
 
-            logger.info('Creating module with data:', JSON.stringify(moduleData));
+      logger.info('Creating module with data:', JSON.stringify(moduleData));
 
-            await courseService.createModule(moduleData);
+      await courseService.createModule(moduleData);
 
-            Alert.alert(
-                'Success!',
-                'Module created successfully.',
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => navigation.goBack(),
-                    },
-                ]
-            );
-        } catch (error: any) {
-            logger.error('Failed to create module', error);
-            const errorMessage = error.response?.data?.detail ||
-                error.response?.data?.message ||
-                'Failed to create module';
-            Alert.alert('Error', errorMessage);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+      Alert.alert('Success!', 'Module created successfully.', [
+        {
+          text: 'OK',
+          onPress: () => navigation.goBack(),
+        },
+      ]);
+    } catch (error: any) {
+      logger.error('Failed to create module', error);
+      const errorMessage =
+        error.response?.data?.detail || error.response?.data?.message || 'Failed to create module';
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    return (
-        <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.keyboardView}
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Add Module</Text>
+          <View style={styles.backButton} />
+        </View>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.label}>Module Title *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter module title"
+            placeholderTextColor={colors.text.tertiary}
+            value={title}
+            onChangeText={setTitle}
+          />
+
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Describe this module"
+            placeholderTextColor={colors.text.tertiary}
+            value={description}
+            onChangeText={setDescription}
+            multiline
+            numberOfLines={4}
+          />
+
+          <Text style={styles.label}>Pricing</Text>
+          <View style={styles.priceRow}>
+            <TouchableOpacity
+              style={[styles.priceToggle, isFree && styles.priceToggleActive]}
+              onPress={() => setIsFree(true)}
             >
-                {/* Header */}
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Add Module</Text>
-                    <View style={styles.backButton} />
-                </View>
+              <Text style={[styles.priceToggleText, isFree && styles.priceToggleTextActive]}>
+                Free
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.priceToggle, !isFree && styles.priceToggleActive]}
+              onPress={() => setIsFree(false)}
+            >
+              <Text style={[styles.priceToggleText, !isFree && styles.priceToggleTextActive]}>
+                Paid
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {!isFree && (
+            <TextInput
+              style={styles.input}
+              placeholder="Enter price (e.g., 29.99)"
+              placeholderTextColor={colors.text.tertiary}
+              value={price}
+              onChangeText={setPrice}
+              keyboardType="decimal-pad"
+            />
+          )}
 
-                <ScrollView
-                    style={styles.scrollView}
-                    contentContainerStyle={styles.scrollContent}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    <Text style={styles.label}>Module Title *</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Enter module title"
-                        placeholderTextColor={colors.text.tertiary}
-                        value={title}
-                        onChangeText={setTitle}
-                    />
+          <Text style={styles.hint}>
+            After creating the module, you can add lessons to it from the course detail page.
+          </Text>
+        </ScrollView>
 
-                    <Text style={styles.label}>Description</Text>
-                    <TextInput
-                        style={[styles.input, styles.textArea]}
-                        placeholder="Describe this module"
-                        placeholderTextColor={colors.text.tertiary}
-                        value={description}
-                        onChangeText={setDescription}
-                        multiline
-                        numberOfLines={4}
-                    />
-
-                    <Text style={styles.label}>Pricing</Text>
-                    <View style={styles.priceRow}>
-                        <TouchableOpacity
-                            style={[styles.priceToggle, isFree && styles.priceToggleActive]}
-                            onPress={() => setIsFree(true)}
-                        >
-                            <Text style={[styles.priceToggleText, isFree && styles.priceToggleTextActive]}>
-                                Free
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.priceToggle, !isFree && styles.priceToggleActive]}
-                            onPress={() => setIsFree(false)}
-                        >
-                            <Text style={[styles.priceToggleText, !isFree && styles.priceToggleTextActive]}>
-                                Paid
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                    {!isFree && (
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Enter price (e.g., 29.99)"
-                            placeholderTextColor={colors.text.tertiary}
-                            value={price}
-                            onChangeText={setPrice}
-                            keyboardType="decimal-pad"
-                        />
-                    )}
-
-                    <Text style={styles.hint}>
-                        After creating the module, you can add lessons to it from the course detail page.
-                    </Text>
-                </ScrollView>
-
-                {/* Bottom Button */}
-                <View style={styles.bottomButtons}>
-                    <TouchableOpacity
-                        style={[styles.button, styles.primaryButton, isLoading && styles.disabledButton]}
-                        onPress={handleCreateModule}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? (
-                            <ActivityIndicator color={colors.text.inverse} />
-                        ) : (
-                            <Text style={styles.primaryButtonText}>Create Module</Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
-    );
+        {/* Bottom Button */}
+        <View style={styles.bottomButtons}>
+          <TouchableOpacity
+            style={[styles.button, styles.primaryButton, isLoading && styles.disabledButton]}
+            onPress={handleCreateModule}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color={colors.text.inverse} />
+            ) : (
+              <Text style={styles.primaryButtonText}>Create Module</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.background.default,
-    },
-    keyboardView: {
-        flex: 1,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.sm,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.neutral[200],
-    },
-    backButton: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerTitle: {
-        ...textStyles.h3,
-        color: colors.text.primary,
-    },
-    scrollView: {
-        flex: 1,
-    },
-    scrollContent: {
-        padding: spacing.md,
-        gap: spacing.md,
-    },
-    label: {
-        ...textStyles.body,
-        fontWeight: '600',
-        color: colors.text.primary,
-        marginBottom: spacing.xs,
-    },
-    input: {
-        backgroundColor: colors.neutral[100],
-        borderRadius: borderRadius.md,
-        padding: spacing.md,
-        ...textStyles.body,
-        color: colors.text.primary,
-    },
-    textArea: {
-        minHeight: 100,
-        textAlignVertical: 'top',
-    },
-    priceRow: {
-        flexDirection: 'row',
-        gap: spacing.sm,
-        marginBottom: spacing.sm,
-    },
-    priceToggle: {
-        flex: 1,
-        paddingVertical: spacing.sm,
-        borderRadius: borderRadius.md,
-        backgroundColor: colors.neutral[100],
-        alignItems: 'center',
-    },
-    priceToggleActive: {
-        backgroundColor: colors.primary.main,
-    },
-    priceToggleText: {
-        ...textStyles.body,
-        color: colors.text.secondary,
-    },
-    priceToggleTextActive: {
-        color: colors.text.inverse,
-    },
-    hint: {
-        ...textStyles.caption,
-        color: colors.text.tertiary,
-        textAlign: 'center',
-        marginTop: spacing.md,
-    },
-    bottomButtons: {
-        padding: spacing.md,
-        borderTopWidth: 1,
-        borderTopColor: colors.neutral[200],
-    },
-    button: {
-        paddingVertical: spacing.md,
-        borderRadius: borderRadius.md,
-        alignItems: 'center',
-    },
-    primaryButton: {
-        backgroundColor: colors.primary.main,
-    },
-    primaryButtonText: {
-        ...textStyles.body,
-        color: colors.text.inverse,
-        fontWeight: '600',
-    },
-    disabledButton: {
-        opacity: 0.6,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background.default,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral[200],
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    ...textStyles.h3,
+    color: colors.text.primary,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  label: {
+    ...textStyles.body,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: spacing.xs,
+  },
+  input: {
+    backgroundColor: colors.neutral[100],
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    ...textStyles.body,
+    color: colors.text.primary,
+  },
+  textArea: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  priceRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  priceToggle: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.neutral[100],
+    alignItems: 'center',
+  },
+  priceToggleActive: {
+    backgroundColor: colors.primary.main,
+  },
+  priceToggleText: {
+    ...textStyles.body,
+    color: colors.text.secondary,
+  },
+  priceToggleTextActive: {
+    color: colors.text.inverse,
+  },
+  hint: {
+    ...textStyles.caption,
+    color: colors.text.tertiary,
+    textAlign: 'center',
+    marginTop: spacing.md,
+  },
+  bottomButtons: {
+    padding: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.neutral[200],
+  },
+  button: {
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+  },
+  primaryButton: {
+    backgroundColor: colors.primary.main,
+  },
+  primaryButtonText: {
+    ...textStyles.body,
+    color: colors.text.inverse,
+    fontWeight: '600',
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
 });

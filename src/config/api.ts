@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
 
   // Users
   USERS: '/users/',
+  USERS_SEARCH: '/users/search/',
   MY_USER: '/users/my-user/',
   USER_BY_ID: (id: string) => `/users/${id}/`,
 
@@ -40,13 +41,13 @@ export const API_ENDPOINTS = {
   REMOVE_MANAGER: (id: string) => `/courses/courses/${id}/remove-manager/`,
   COURSE_STUDENTS: (id: string) => `/courses/courses/${id}/students/`,
   MY_STUDENTS: '/courses/courses/my-students/',
-  IAP_VERIFY_RECEIPT: (moduleId: string) => `/courses/modules/${moduleId}/verify-apple-receipt/`,
 
   // Chat
   CHATS: '/chat/chats/',
   CHAT_BY_ID: (id: string) => `/chat/chats/${id}/`,
   CHAT_MEMBERS: (chatId: string) => `/chat/chats/${chatId}/members/`,
-  CHAT_MEMBER_BY_ID: (chatId: string, memberId: number) => `/chat/chats/${chatId}/members/${memberId}/`,
+  CHAT_MEMBER_BY_ID: (chatId: string, memberId: number) =>
+    `/chat/chats/${chatId}/members/${memberId}/`,
   CHAT_MEMBER_ME: (chatId: string) => `/chat/chats/${chatId}/members/me/`,
   CHAT_MESSAGES: (chatId: string) => `/chat/chats/${chatId}/messages/`,
   CHAT_READ: (chatId: string) => `/chat/chats/${chatId}/read/`,

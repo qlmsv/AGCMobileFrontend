@@ -2,6 +2,7 @@ import apiService from './api';
 import { API_ENDPOINTS } from '../config/api';
 import { Profile } from '../types';
 import { extractResults } from '../utils/extractResults';
+import { logger } from '../utils/logger';
 
 export const profileService = {
   async getProfiles(params?: {
@@ -10,9 +11,9 @@ export const profileService = {
     search?: string;
   }): Promise<Profile[]> {
     const data = await apiService.get(API_ENDPOINTS.PROFILES, { params });
-    console.log('[ProfileService] Raw API response:', JSON.stringify(data));
+    logger.debug('[ProfileService] Raw API response:', JSON.stringify(data));
     const results = extractResults<Profile>(data);
-    console.log('[ProfileService] Extracted profiles:', results.length);
+    logger.debug('[ProfileService] Extracted profiles:', results.length);
     return results;
   },
 
@@ -40,14 +41,19 @@ export const profileService = {
     const formData = new FormData();
     formData.append('avatar', file);
 
-    return await apiService.patch<Profile>(
-      API_ENDPOINTS.PROFILE_BY_ID(profileId),
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
+    return await apiService.patch<Profile>(API_ENDPOINTS.PROFILE_BY_ID(profileId), formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  async updateMyProfileWithAvatar(formData: FormData): Promise<Profile> {
+    return await apiService.patch<Profile>(API_ENDPOINTS.MY_PROFILE, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      transformRequest: (data) => data, // Prevent axios from stringifying FormData
+    });
   },
 };
