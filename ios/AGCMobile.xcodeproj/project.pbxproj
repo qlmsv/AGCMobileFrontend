@@ -9,10 +9,10 @@
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		44FF7374638F33F81B094116 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B059EA3FA66F902CC57CFEA5 /* PrivacyInfo.xcprivacy */; };
-		88B1E139974FA3B1AE477C47 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA770B8CB394835DFD846E46 /* ExpoModulesProvider.swift */; };
+		3F9E8D2534FE64067B001407 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6813E5ABE4D8C66C0AA95421 /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		E0814DB9B02A0E83B3340DCE /* libPods-AGCMobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E2283FFBFBD4AF299E6582E1 /* libPods-AGCMobile.a */; };
+		E8799F5380B77BDA9AD988CE /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889ACCC23EAA226D9C63C513 /* ExpoModulesProvider.swift */; };
+		EAE10F672882C33B8422AAD6 /* libPods-AGCMobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 853D034BD6BB2B602E3746C4 /* libPods-AGCMobile.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
@@ -20,14 +20,14 @@
 		13B07F961A680F5B00A75B9A /* AGCMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AGCMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = AGCMobile/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AGCMobile/Info.plist; sourceTree = "<group>"; };
-		91398021D4F35DD98693CA09 /* Pods-AGCMobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AGCMobile.debug.xcconfig"; path = "Target Support Files/Pods-AGCMobile/Pods-AGCMobile.debug.xcconfig"; sourceTree = "<group>"; };
+		2081D6067480255783D81833 /* Pods-AGCMobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AGCMobile.debug.xcconfig"; path = "Target Support Files/Pods-AGCMobile/Pods-AGCMobile.debug.xcconfig"; sourceTree = "<group>"; };
+		6813E5ABE4D8C66C0AA95421 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = AGCMobile/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		853D034BD6BB2B602E3746C4 /* libPods-AGCMobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AGCMobile.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		889ACCC23EAA226D9C63C513 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-AGCMobile/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = AGCMobile/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B059EA3FA66F902CC57CFEA5 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = AGCMobile/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B457D9FA21FD8A3CCAE62E3A /* Pods-AGCMobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AGCMobile.release.xcconfig"; path = "Target Support Files/Pods-AGCMobile/Pods-AGCMobile.release.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		DA770B8CB394835DFD846E46 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-AGCMobile/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		E2283FFBFBD4AF299E6582E1 /* libPods-AGCMobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AGCMobile.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		ED2FF665FE27A7BA3A96A9B0 /* Pods-AGCMobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AGCMobile.release.xcconfig"; path = "Target Support Files/Pods-AGCMobile/Pods-AGCMobile.release.xcconfig"; sourceTree = "<group>"; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = AGCMobile/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* AGCMobile-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "AGCMobile-Bridging-Header.h"; path = "AGCMobile/AGCMobile-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E0814DB9B02A0E83B3340DCE /* libPods-AGCMobile.a in Frameworks */,
+				EAE10F672882C33B8422AAD6 /* libPods-AGCMobile.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,7 +53,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				B059EA3FA66F902CC57CFEA5 /* PrivacyInfo.xcprivacy */,
+				6813E5ABE4D8C66C0AA95421 /* PrivacyInfo.xcprivacy */,
 			);
 			name = AGCMobile;
 			sourceTree = "<group>";
@@ -62,26 +62,17 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				E2283FFBFBD4AF299E6582E1 /* libPods-AGCMobile.a */,
+				853D034BD6BB2B602E3746C4 /* libPods-AGCMobile.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		5430FEB68954E2A29AC099AD /* ExpoModulesProviders */ = {
+		61079EE2784873B70F20EA9A /* AGCMobile */ = {
 			isa = PBXGroup;
 			children = (
-				EDFAD1414589D4599F89B797 /* AGCMobile */,
+				889ACCC23EAA226D9C63C513 /* ExpoModulesProvider.swift */,
 			);
-			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
-		56AEC40685F33AB4E88510E1 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				91398021D4F35DD98693CA09 /* Pods-AGCMobile.debug.xcconfig */,
-				ED2FF665FE27A7BA3A96A9B0 /* Pods-AGCMobile.release.xcconfig */,
-			);
-			path = Pods;
+			name = AGCMobile;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -98,8 +89,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				56AEC40685F33AB4E88510E1 /* Pods */,
-				5430FEB68954E2A29AC099AD /* ExpoModulesProviders */,
+				9D487617506843422E36D5F6 /* Pods */,
+				A3E4B78316E602225575C121 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -114,6 +105,24 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		9D487617506843422E36D5F6 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				2081D6067480255783D81833 /* Pods-AGCMobile.debug.xcconfig */,
+				B457D9FA21FD8A3CCAE62E3A /* Pods-AGCMobile.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		A3E4B78316E602225575C121 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				61079EE2784873B70F20EA9A /* AGCMobile */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -121,14 +130,6 @@
 			);
 			name = Supporting;
 			path = AGCMobile/Supporting;
-			sourceTree = "<group>";
-		};
-		EDFAD1414589D4599F89B797 /* AGCMobile */ = {
-			isa = PBXGroup;
-			children = (
-				DA770B8CB394835DFD846E46 /* ExpoModulesProvider.swift */,
-			);
-			name = AGCMobile;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -139,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AGCMobile" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				DDAA77317AD86FD200557FC3 /* [Expo] Configure project */,
+				11B9B13A5151DB04C08973CF /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				3FBF9C775192F03ED48BA538 /* [CP] Embed Pods Frameworks */,
+				E3B10F8FE65B84D47916757F /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -195,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				44FF7374638F33F81B094116 /* PrivacyInfo.xcprivacy in Resources */,
+				3F9E8D2534FE64067B001407 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -241,27 +242,29 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		3FBF9C775192F03ED48BA538 /* [CP] Embed Pods Frameworks */ = {
+		11B9B13A5151DB04C08973CF /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AGCMobile/Pods-AGCMobile-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			inputFileListPaths = (
 			);
-			name = "[CP] Embed Pods Frameworks";
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/AGCMobile/AGCMobile.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-AGCMobile/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-AGCMobile/ExpoModulesProvider.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AGCMobile/Pods-AGCMobile-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-AGCMobile/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -335,29 +338,27 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AGCMobile/Pods-AGCMobile-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		DDAA77317AD86FD200557FC3 /* [Expo] Configure project */ = {
+		E3B10F8FE65B84D47916757F /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/AGCMobile/AGCMobile.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-AGCMobile/expo-configure-project.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-AGCMobile/Pods-AGCMobile-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-AGCMobile/ExpoModulesProvider.swift",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-AGCMobile/expo-configure-project.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AGCMobile/Pods-AGCMobile-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -367,7 +368,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				88B1E139974FA3B1AE477C47 /* ExpoModulesProvider.swift in Sources */,
+				E8799F5380B77BDA9AD988CE /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,17 +377,12 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 91398021D4F35DD98693CA09 /* Pods-AGCMobile.debug.xcconfig */;
+			baseConfigurationReference = 2081D6067480255783D81833 /* Pods-AGCMobile.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = AGCMobile/AGCMobile.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 31;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = CKU7N8QKY4;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -407,8 +403,6 @@
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.agc.mobile;
 				PRODUCT_NAME = AGCMobile;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "AGCMobile AppStore";
 				SWIFT_OBJC_BRIDGING_HEADER = "AGCMobile/AGCMobile-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -419,17 +413,12 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = ED2FF665FE27A7BA3A96A9B0 /* Pods-AGCMobile.release.xcconfig */;
+			baseConfigurationReference = B457D9FA21FD8A3CCAE62E3A /* Pods-AGCMobile.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = AGCMobile/AGCMobile.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 31;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = CKU7N8QKY4;
 				INFOPLIST_FILE = AGCMobile/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -445,8 +434,6 @@
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.agc.mobile;
 				PRODUCT_NAME = AGCMobile;
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "AGCMobile AppStore";
 				SWIFT_OBJC_BRIDGING_HEADER = "AGCMobile/AGCMobile-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
