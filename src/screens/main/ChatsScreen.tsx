@@ -86,7 +86,7 @@ export const ChatsScreen: React.FC = () => {
 
       // Map to Profile-like structure
       // Use email as fallback if first_name is not available
-      const userProfiles: Profile[] = filteredUsers.map((u) => {
+      const userProfiles: (Profile & { email?: string })[] = filteredUsers.map((u) => {
         const displayName = u.first_name || u.email?.split('@')[0] || 'User';
         return {
           id: u.id,
@@ -94,7 +94,8 @@ export const ChatsScreen: React.FC = () => {
           first_name: displayName,
           last_name: u.last_name || '',
           avatar: null,
-        } as Profile;
+          email: u.email || '',
+        } as Profile & { email?: string };
       });
 
       logger.info('Filtered users (excluding current):', userProfiles.length);
@@ -343,9 +344,8 @@ export const ChatsScreen: React.FC = () => {
                     <Text style={styles.userName}>
                       {userProfile.first_name || ''} {userProfile.last_name || ''}
                     </Text>
-                    {/* Show email if available - need to get from user */}
                     <Text style={styles.userEmail} numberOfLines={1}>
-                      {userProfile.first_name ? 'User' : 'No name'}
+                      {(userProfile as any).email || 'No email'}
                     </Text>
                   </View>
                 </TouchableOpacity>
