@@ -6,6 +6,7 @@ import { Rating } from './Rating';
 import { Ionicons } from '@expo/vector-icons';
 import { courseService } from '../services/courseService';
 import { logger } from '../utils/logger';
+import { secureImageUrl } from '../utils/secureUrl';
 
 interface CourseCardProps {
   course: Course;
@@ -54,7 +55,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
     >
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: course.cover || undefined }}
+          source={{ uri: secureImageUrl(course.cover) }}
           style={[styles.image, isHorizontal ? styles.imageHorizontal : styles.imageVertical]}
           resizeMode="cover"
         />

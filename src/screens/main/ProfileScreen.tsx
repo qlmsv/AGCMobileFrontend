@@ -23,6 +23,7 @@ import { EmptyState } from '../../components';
 import { logger } from '../../utils/logger';
 import * as ImagePicker from 'expo-image-picker';
 import { profileService } from '../../services/profileService';
+import { secureImageUrl } from '../../utils/secureUrl';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -125,7 +126,7 @@ export const ProfileScreen: React.FC = () => {
       onPress={() => navigation.navigate('CourseDetail', { courseId: course.id })}
     >
       <Image
-        source={{ uri: course.cover || undefined }}
+        source={{ uri: secureImageUrl(course.cover) }}
         style={styles.courseImage}
         resizeMode="cover"
       />
@@ -176,7 +177,7 @@ export const ProfileScreen: React.FC = () => {
             disabled={isUploading}
           >
             {profile?.avatar ? (
-              <Image source={{ uri: profile.avatar }} style={styles.avatarImage} />
+              <Image source={{ uri: secureImageUrl(profile.avatar) }} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarText}>

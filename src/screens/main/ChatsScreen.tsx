@@ -206,6 +206,8 @@ export const ChatsScreen: React.FC = () => {
 
     // Check for valid avatar URL (not null, undefined, or empty string)
     const hasAvatar = item.display_avatar && item.display_avatar.trim() !== '';
+    // iOS blocks http:// - use secureImageUrl utility
+    const avatarUrl = secureImageUrl(item.display_avatar);
 
     return (
       <TouchableOpacity
@@ -213,7 +215,7 @@ export const ChatsScreen: React.FC = () => {
         onPress={() => navigation.navigate('ChatDetail', { chatId: item.id })}
       >
         {hasAvatar ? (
-          <Image source={{ uri: item.display_avatar }} style={styles.avatar} resizeMode="cover" />
+          <Image source={{ uri: avatarUrl }} style={styles.avatar} resizeMode="cover" />
         ) : (
           <View style={styles.avatarPlaceholder}>
             <Ionicons

@@ -22,6 +22,7 @@ import { chatService } from '../../services/chatService';
 import { Message, Chat, ChatMember } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { logger } from '../../utils/logger';
+import { secureImageUrl } from '../../utils/secureUrl';
 
 export const ChatDetailScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -244,7 +245,7 @@ export const ChatDetailScreen: React.FC = () => {
                     <View style={styles.memberAvatar}>
                       {member.user_profile?.avatar ? (
                         <Image
-                          source={{ uri: member.user_profile.avatar }}
+                          source={{ uri: secureImageUrl(member.user_profile.avatar) }}
                           style={styles.avatarImage}
                           resizeMode="cover"
                         />

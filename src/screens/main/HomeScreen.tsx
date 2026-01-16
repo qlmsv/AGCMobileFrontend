@@ -23,6 +23,7 @@ import { Banner, Category, Course } from '../../types';
 import { CourseCard } from '../../components';
 import { useAuth } from '../../contexts/AuthContext';
 import { logger } from '../../utils/logger';
+import { secureImageUrl } from '../../utils/secureUrl';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -123,7 +124,7 @@ export const HomeScreen: React.FC = () => {
                 onPress={() => handleBannerPress(banner)}
                 activeOpacity={banner.link_url ? 0.7 : 1}
               >
-                <Image source={{ uri: banner.image_url }} style={styles.bannerImage} />
+                <Image source={{ uri: secureImageUrl(banner.image_url) }} style={styles.bannerImage} />
               </TouchableOpacity>
             ))}
           </ScrollView>

@@ -19,6 +19,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { logger } from '../../utils/logger';
 import { useAuth } from '../../contexts/AuthContext';
+import { secureImageUrl } from '../../utils/secureUrl';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -194,7 +195,7 @@ export const CourseDetailScreen: React.FC = () => {
 
       <ScrollView contentContainerStyle={styles.content}>
         <Image
-          source={{ uri: course.cover || undefined }}
+          source={{ uri: secureImageUrl(course.cover) }}
           style={styles.courseImage}
           resizeMode="cover"
         />
