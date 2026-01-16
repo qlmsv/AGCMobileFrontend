@@ -25,6 +25,7 @@ import { userService } from '../../services/userService';
 import { ChatList, Course, Profile } from '../../types';
 import { EmptyState } from '../../components';
 import { logger } from '../../utils/logger';
+import { secureImageUrl } from '../../utils/secureUrl';
 import { useAuth } from '../../contexts/AuthContext';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
