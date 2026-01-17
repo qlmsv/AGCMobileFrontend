@@ -142,7 +142,7 @@ export interface Chat {
   title: string | null;
   description: string | null;
   display_title: string;
-  display_avatar: string;
+  display_avatar: string | null;
   avatar: string | null;
   course: string | null;
   created_by: string;
