@@ -55,6 +55,19 @@ export const ChatsScreen: React.FC = () => {
   const fetchChats = async () => {
     try {
       const data = await chatService.getChats({ ordering: '-created_at' });
+      // Debug: log first few chats to see display_avatar values
+      if (data.length > 0) {
+        logger.info('=== CHAT AVATARS DEBUG ===');
+        data.slice(0, 3).forEach((chat, idx) => {
+          logger.info(`Chat ${idx + 1}:`, {
+            id: chat.id,
+            type: chat.type,
+            display_title: chat.display_title,
+            display_avatar: chat.display_avatar,
+            avatar: chat.avatar,
+          });
+        });
+      }
       setChats(data);
     } catch (error) {
       logger.error('Error fetching chats:', error);
