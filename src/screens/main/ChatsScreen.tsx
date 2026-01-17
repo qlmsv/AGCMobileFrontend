@@ -87,14 +87,16 @@ export const ChatsScreen: React.FC = () => {
 
       // Map to Profile-like structure
       // Use email as fallback if first_name is not available
-      const userProfiles: (Profile & { email?: string })[] = filteredUsers.map((u) => {
-        const displayName = u.first_name || u.email?.split('@')[0] || 'User';
+      // Check for profile.avatar or user.avatar
+      const userProfiles: (Profile & { email?: string })[] = filteredUsers.map((u: any) => {
+        const displayName = u.first_name || u.profile?.first_name || u.email?.split('@')[0] || 'User';
+        const avatar = u.profile?.avatar || u.avatar || null;
         return {
           id: u.id,
           user: u.id,
           first_name: displayName,
-          last_name: u.last_name || '',
-          avatar: null,
+          last_name: u.last_name || u.profile?.last_name || '',
+          avatar: avatar,
           email: u.email || '',
         } as Profile & { email?: string };
       });
@@ -326,7 +328,7 @@ export const ChatsScreen: React.FC = () => {
                 >
                   {userProfile.avatar ? (
                     <Image
-                      source={{ uri: userProfile.avatar }}
+                      source={{ uri: secureImageUrl(userProfile.avatar) }}
                       style={styles.userAvatar}
                       resizeMode="cover"
                     />

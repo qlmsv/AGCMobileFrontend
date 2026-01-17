@@ -56,4 +56,18 @@ export const profileService = {
       transformRequest: (data) => data, // Prevent axios from stringifying FormData
     });
   },
+
+  // Get profile by user ID (searches through profiles)
+  async getProfileByUserId(userId: string): Promise<Profile | null> {
+    try {
+      const data = await apiService.get(API_ENDPOINTS.PROFILES, {
+        params: { user: userId },
+      });
+      const profiles = extractResults<Profile>(data);
+      return profiles.length > 0 ? profiles[0] : null;
+    } catch (error) {
+      logger.debug('Could not find profile for user:', userId);
+      return null;
+    }
+  },
 };

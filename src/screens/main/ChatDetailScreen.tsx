@@ -19,6 +19,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { chatService } from '../../services/chatService';
+import { userService } from '../../services/userService';
 import { Message, Chat, ChatMember } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { logger } from '../../utils/logger';
@@ -65,7 +66,25 @@ export const ChatDetailScreen: React.FC = () => {
     setIsLoadingMembers(true);
     try {
       const membersData = await chatService.getChatMembers(chatId);
-      setMembers(membersData);
+
+      // Load all users once, then match by ID
+      const allUsers = await userService.searchUsers();
+      const usersMap = new Map(allUsers.map((u: any) => [u.id, u]));
+
+      const membersWithProfiles = membersData.map((member: any) => {
+        const userData = usersMap.get(member.user);
+        return {
+          ...member,
+          role: member.role_in_chat || member.role || 'member',
+          user_profile: userData ? {
+            first_name: userData.first_name || userData.name?.split(' ')[0] || null,
+            last_name: userData.last_name || null,
+            avatar: userData.avatar || null,
+          } : null,
+        };
+      });
+
+      setMembers(membersWithProfiles);
     } catch (error) {
       logger.error('Error fetching members:', error);
       Alert.alert('Error', 'Failed to load members');
