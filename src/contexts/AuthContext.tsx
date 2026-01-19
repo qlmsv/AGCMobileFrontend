@@ -61,11 +61,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     const checkAuth = async () => {
+      // Safety timeout
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Auth check timeout')), 5000)
+      );
+
       try {
-        const isAuth = await authService.isAuthenticated();
-        if (isAuth) {
-          await loadUserData();
-        }
+        await Promise.race([
+          (async () => {
+            const isAuth = await authService.isAuthenticated();
+            if (isAuth) {
+              await loadUserData();
+            }
+          })(),
+          timeoutPromise
+        ]);
       } catch (error) {
         logger.error('Auth check failed:', error);
       } finally {

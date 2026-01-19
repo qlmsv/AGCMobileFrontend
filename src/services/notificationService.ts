@@ -1,6 +1,7 @@
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiService from './api';
 import { API_ENDPOINTS } from '../config/api';
 import { logger } from '../utils/logger';
@@ -63,8 +64,7 @@ export const notificationService = {
   async sendTokenToBackend(token: string) {
     try {
       // Get auth token to check if user is authenticated
-      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
-      const authToken = await AsyncStorage.getItem('accessToken');
+      const authToken = await AsyncStorage.getItem('access_token');
 
       if (!authToken) {
         logger.info('Push token: User not authenticated, skipping backend registration');

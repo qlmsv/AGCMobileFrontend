@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/67</span>
+                <span class='fraction'>0/65</span>
             </div>
         
             
@@ -536,7 +536,9 @@
 <a name='L471'></a><a href='#L471'>471</a>
 <a name='L472'></a><a href='#L472'>472</a>
 <a name='L473'></a><a href='#L473'>473</a>
-<a name='L474'></a><a href='#L474'>474</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L474'></a><a href='#L474'>474</a>
+<a name='L475'></a><a href='#L475'>475</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -561,11 +563,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -573,7 +570,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -596,6 +594,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1030,6 +1032,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { logger } from '../../utils/logger';
 import { useAuth } from '../../contexts/AuthContext';
+import { secureImageUrl } from '../../utils/secureUrl';
 &nbsp;
 type NavigationProp = StackNavigationProp&lt;RootStackParamList&gt;;
 &nbsp;
@@ -1043,10 +1046,6 @@ export const CourseDetailScreen: React.FC = <span class="cstat-no" title="statem
   const [modules, setModules] = <span class="cstat-no" title="statement not covered" >useState&lt;Module[]&gt;([]);</span>
   const [isLoading, setIsLoading] = <span class="cstat-no" title="statement not covered" >useState(true);</span>
   const [isEnrolling, setIsEnrolling] = <span class="cstat-no" title="statement not covered" >useState(false);</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  useEffect(<span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    fetchCourseDetails();</span>
-  }, [fetchCourseDetails]);
 &nbsp;
   const fetchCourseDetails = <span class="cstat-no" title="statement not covered" >useCallback(<span class="fstat-no" title="function not covered" >as</span>ync () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
@@ -1070,6 +1069,10 @@ export const CourseDetailScreen: React.FC = <span class="cstat-no" title="statem
 <span class="cstat-no" title="statement not covered" >      setIsLoading(false);</span>
     }
   }, [courseId]);
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  useEffect(<span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    fetchCourseDetails();</span>
+  }, [fetchCourseDetails]);
 &nbsp;
   const handleEnroll = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >as</span>ync () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (!course) <span class="cstat-no" title="statement not covered" >return;</span></span>
@@ -1205,7 +1208,7 @@ export const CourseDetailScreen: React.FC = <span class="cstat-no" title="statem
 &nbsp;
       &lt;ScrollView contentContainerStyle={styles.content}&gt;
         &lt;Image
-          source={{ uri: course.cover || undefined }}
+          source={{ uri: secureImageUrl(course.cover) }}
           style={styles.courseImage}
           resizeMode="cover"
         /&gt;
@@ -1489,7 +1492,7 @@ const styles = <span class="cstat-no" title="statement not covered" >StyleSheet.
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-16T09:18:47.548Z
+                at 2026-01-17T06:38:00.654Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
