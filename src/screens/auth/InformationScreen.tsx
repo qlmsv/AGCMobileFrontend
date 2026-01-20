@@ -199,11 +199,6 @@ export const InformationScreen: React.FC<Props> = ({ navigation, route }) => {
 
     setIsLoading(true);
     try {
-      // Debug: Check if we have a token
-      const apiService = await import('../services/api');
-      const token = await apiService.default.getAccessToken();
-      logger.info('🔑 Current access token:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
-
       const profileData = {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
