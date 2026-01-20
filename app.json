@@ -2,7 +2,7 @@
   "expo": {
     "name": "AGC Mobile",
     "slug": "agc-mobile-app",
-    "version": "1.0.38",
+    "version": "1.0.39",
     "orientation": "portrait",
     "icon": "./assets/final_icon.png",
     "userInterfaceStyle": "light",
@@ -24,7 +24,7 @@
       }
     },
     "android": {
-      "versionCode": 38,
+      "versionCode": 39,
       "adaptiveIcon": {
         "foregroundImage": "./assets/final_icon.png",
         "backgroundColor": "#ffffff"
