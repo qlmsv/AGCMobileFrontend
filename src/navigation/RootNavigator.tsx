@@ -10,6 +10,7 @@ import { EditProfileScreen } from '../screens/main/EditProfileScreen';
 import { PaymentScreen } from '../screens/main/PaymentScreen';
 import { StudentsScreen } from '../screens/teacher/StudentsScreen';
 import { CreateCourseScreen } from '../screens/teacher/CreateCourseScreen';
+import { EditCourseScreen } from '../screens/teacher/EditCourseScreen';
 import { AddModuleScreen } from '../screens/teacher/AddModuleScreen';
 import { TermsScreen } from '../screens/main/TermsScreen';
 import { PrivacyScreen } from '../screens/main/PrivacyScreen';
@@ -44,6 +45,7 @@ export const RootNavigator = () => {
           <Stack.Screen name="Payment" component={PaymentScreen} />
           <Stack.Screen name="Students" component={StudentsScreen} />
           <Stack.Screen name="CreateCourse" component={CreateCourseScreen} />
+          <Stack.Screen name="EditCourse" component={EditCourseScreen} />
           <Stack.Screen name="AddModule" component={AddModuleScreen} />
           <Stack.Screen name="Terms" component={TermsScreen} />
           <Stack.Screen name="Privacy" component={PrivacyScreen} />

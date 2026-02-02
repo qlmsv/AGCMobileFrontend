@@ -16,3 +16,6 @@ web-build/
 credentials/
 android/keystore.properties
 android/local.properties
+
+*.apk
+*.aab

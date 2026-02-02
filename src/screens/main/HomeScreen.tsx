@@ -74,8 +74,8 @@ export const HomeScreen: React.FC = () => {
     navigation.navigate('CourseDetail', { courseId: course.id });
   };
 
-  const renderCourseCard = ({ item }: { item: Course }) => (
-    <CourseCard course={item} onPress={handleCoursePress} variant="vertical" />
+  const renderCourseCard = ({ item, index }: { item: Course; index: number }) => (
+    <CourseCard course={item} onPress={handleCoursePress} variant="vertical" testID={`course-card-${index}`} />
   );
 
   if (isLoading) {
@@ -87,7 +87,7 @@ export const HomeScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="home-screen">
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
@@ -116,7 +116,7 @@ export const HomeScreen: React.FC = () => {
 
         {/* Banners */}
         {banners.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bannerScroll}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bannerScroll} testID="banners-carousel">
             {banners.map((banner) => (
               <TouchableOpacity
                 key={banner.id}
@@ -163,6 +163,7 @@ export const HomeScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>Popular Courses</Text>
         </View>
         <FlatList
+          testID="courses-list"
           data={popularCourses}
           renderItem={renderCourseCard}
           keyExtractor={(item) => item.id}

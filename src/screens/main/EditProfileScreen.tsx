@@ -61,18 +61,37 @@ export const EditProfileScreen: React.FC = () => {
       const match = /\.(\w+)$/.exec(filename);
       const type = match ? `image/${match[1]}` : 'image/jpeg';
 
+      logger.info('[EditProfileScreen] Uploading avatar:', {
+        uri,
+        filename,
+        type,
+      });
+
       formData.append('avatar', {
         uri,
         name: filename,
         type,
       } as any);
 
-      await profileService.updateMyProfileWithAvatar(formData);
+      const result = await profileService.updateMyProfileWithAvatar(formData);
+      logger.info('[EditProfileScreen] Avatar uploaded successfully:', JSON.stringify(result));
+
       setAvatarUri(uri);
       Alert.alert('Success', 'Avatar updated successfully!');
-    } catch (error) {
-      logger.error('Failed to upload avatar:', error);
-      Alert.alert('Error', 'Failed to upload avatar. Please try again.');
+    } catch (error: any) {
+      logger.error('[EditProfileScreen] Failed to upload avatar:', error);
+      if (error.response) {
+        logger.error('[EditProfileScreen] Error response data:', JSON.stringify(error.response.data));
+        logger.error('[EditProfileScreen] Error response status:', error.response.status);
+      }
+
+      const errorData = error.response?.data;
+      const errorDetail = errorData?.detail ||
+        errorData?.message ||
+        (typeof errorData === 'object' ? JSON.stringify(errorData) : null) ||
+        'Failed to upload avatar. Please try again.';
+
+      Alert.alert('Error', errorDetail);
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -124,7 +143,7 @@ export const EditProfileScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="edit-profile-screen">
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
@@ -134,7 +153,7 @@ export const EditProfileScreen: React.FC = () => {
           {isLoading ? (
             <ActivityIndicator color={colors.primary.main} />
           ) : (
-            <Text style={styles.saveButton}>Edit</Text>
+            <Text testID="save-profile-button" style={styles.saveButton}>Edit</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -163,6 +182,7 @@ export const EditProfileScreen: React.FC = () => {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>First Name</Text>
           <TextInput
+            testID="first-name-input"
             style={styles.input}
             value={firstName}
             onChangeText={setFirstName}
@@ -174,6 +194,7 @@ export const EditProfileScreen: React.FC = () => {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Last Name</Text>
           <TextInput
+            testID="last-name-input"
             style={styles.input}
             value={lastName}
             onChangeText={setLastName}

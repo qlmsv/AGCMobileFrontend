@@ -82,7 +82,7 @@ export const EmailInputScreen: React.FC<Props> = ({ navigation, route }) => {
         Alert.alert(
           'Error',
           error.message ||
-            'Failed to send verification code. Please check your internet connection.'
+          'Failed to send verification code. Please check your internet connection.'
         );
       }
     } finally {
@@ -91,7 +91,7 @@ export const EmailInputScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="email-input-screen">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
@@ -115,6 +115,7 @@ export const EmailInputScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.form}>
               <Text style={styles.label}>Email Address</Text>
               <TextInput
+                testID="email-input"
                 style={styles.input}
                 placeholder="example@email.com"
                 placeholderTextColor={colors.text.tertiary}
@@ -129,6 +130,7 @@ export const EmailInputScreen: React.FC<Props> = ({ navigation, route }) => {
             {/* Footer */}
             <View style={styles.footer}>
               <TouchableOpacity
+                testID="send-code-button"
                 style={[styles.button, isLoading && styles.buttonDisabled]}
                 onPress={handleContinue}
                 disabled={isLoading}

@@ -12,6 +12,7 @@ export type RootStackParamList = {
   Payment: { url: string };
   Students: undefined;
   CreateCourse: undefined;
+  EditCourse: { courseId: string };
   AddModule: { courseId: string; modulesCount?: number };
   Terms: undefined;
   Privacy: undefined;

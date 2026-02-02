@@ -186,6 +186,23 @@ export const courseService = {
     return await apiService.post(API_ENDPOINTS.MODULE_CREATE_STRIPE_SESSION(moduleId), {});
   },
 
+  /**
+   * Validate Apple IAP purchase with backend
+   * 
+   * StoreKit 2: sends JWS (signed transaction) NOT base64 receipt
+   * Backend must use App Store Server API to validate
+   */
+  async validateAppleReceipt(
+    moduleId: string,
+    signedTransaction: string,
+    transactionId: string
+  ): Promise<{ success: boolean; enrolled: boolean }> {
+    return await apiService.post(API_ENDPOINTS.MODULE_VALIDATE_APPLE_RECEIPT(moduleId), {
+      signed_transaction: signedTransaction, // JWS format for StoreKit 2
+      transaction_id: transactionId,
+    });
+  },
+
   async getLessons(params?: {
     ordering?: string;
     page?: number;

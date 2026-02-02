@@ -14,6 +14,7 @@ interface CourseCardProps {
   variant?: 'horizontal' | 'vertical';
   showFavorite?: boolean;
   onFavoriteChange?: () => void;
+  testID?: string;
 }
 
 export const CourseCard: React.FC<CourseCardProps> = ({
@@ -22,6 +23,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   variant = 'vertical',
   showFavorite = true,
   onFavoriteChange,
+  testID,
 }) => {
   const isHorizontal = variant === 'horizontal';
   const [isFavorite, setIsFavorite] = useState(course.is_favourite || false);
@@ -52,6 +54,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
       style={[styles.card, isHorizontal ? styles.cardHorizontal : styles.cardVertical]}
       onPress={() => onPress(course)}
       activeOpacity={0.7}
+      testID={testID}
     >
       <View style={styles.imageContainer}>
         <Image
@@ -61,6 +64,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         />
         {showFavorite && (
           <TouchableOpacity
+            testID="course-fav-icon"
             style={styles.favoriteButton}
             onPress={handleToggleFavorite}
             disabled={isToggling}

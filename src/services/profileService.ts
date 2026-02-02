@@ -8,13 +8,56 @@ export const profileService = {
   async getProfiles(params?: {
     ordering?: string;
     page?: number;
+    page_size?: number;
     search?: string;
   }): Promise<Profile[]> {
-    const data = await apiService.get(API_ENDPOINTS.PROFILES, { params });
-    logger.debug('[ProfileService] Raw API response:', JSON.stringify(data));
-    const results = extractResults<Profile>(data);
-    logger.debug('[ProfileService] Extracted profiles:', results.length);
-    return results;
+    const data = await apiService.get<any>(API_ENDPOINTS.PROFILES, { params });
+    logger.debug('[ProfileService] Low-level getProfiles called');
+    return extractResults<Profile>(data);
+  },
+
+  // Helper to fetch EVERYTHING by following pagination
+  async getAllProfiles(): Promise<Profile[]> {
+    let allProfiles: Profile[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      try {
+        logger.debug(`[ProfileService] Fetching page ${page}...`);
+        // Try to get 50 items per page
+        const data = await apiService.get<any>(API_ENDPOINTS.PROFILES, {
+          params: { page, page_size: 50 }
+        });
+
+        const results = extractResults<Profile>(data);
+        allProfiles = [...allProfiles, ...results];
+
+        // Check if there is a next page
+        if (data && data.next) {
+          page++;
+        } else {
+          hasMore = false;
+        }
+
+        // Safety break to prevent infinite loops (e.g. > 1000 users)
+        if (page > 20) {
+          logger.warn('Stopped fetching profiles after 20 pages');
+          hasMore = false;
+        }
+      } catch (error) {
+        logger.error('Error fetching profiles page:', error);
+        hasMore = false;
+      }
+    }
+
+    // Deduplicate just in case
+    const uniqueIds = new Set();
+    return allProfiles.filter(p => {
+      if (uniqueIds.has(p.id)) return false;
+      uniqueIds.add(p.id);
+      return true;
+    });
   },
 
   async getMyProfile(): Promise<Profile> {
@@ -43,15 +86,16 @@ export const profileService = {
 
     return await apiService.patch<Profile>(API_ENDPOINTS.PROFILE_BY_ID(profileId), formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Accept': 'application/json',
       },
+      transformRequest: (data) => data, // Prevent axios from stringifying FormData
     });
   },
 
   async updateMyProfileWithAvatar(formData: FormData): Promise<Profile> {
     return await apiService.patch<Profile>(API_ENDPOINTS.MY_PROFILE, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Accept': 'application/json',
       },
       transformRequest: (data) => data, // Prevent axios from stringifying FormData
     });

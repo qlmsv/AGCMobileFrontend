@@ -1,4 +1,5 @@
 import React from 'react';
+import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../screens/main/HomeScreen';
 import { CoursesScreen } from '../screens/main/CoursesScreen';
@@ -40,17 +41,46 @@ export const MainTabNavigator = () => {
             iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
+          } else if (route.name === 'Schedule') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
           }
 
-          return <Ionicons name={iconName} size={24} color={color} />;
+          return (
+            <View
+              testID={`tab-icon-${route.name.toLowerCase()}`}
+              style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Ionicons name={iconName} size={24} color={color} />
+            </View>
+          );
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Courses" component={CoursesScreen} />
-
-      <Tab.Screen name="Chats" component={ChatsScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ tabBarTestID: 'tab-home' }}
+      />
+      <Tab.Screen
+        name="Courses"
+        component={CoursesScreen}
+        options={{ tabBarTestID: 'tab-courses' }}
+      />
+      <Tab.Screen
+        name="Schedule"
+        component={require('../screens/main/ScheduleScreen').ScheduleScreen}
+        options={{ tabBarTestID: 'tab-schedule', tabBarLabel: 'Schedule' }}
+      />
+      <Tab.Screen
+        name="Chats"
+        component={ChatsScreen}
+        options={{ tabBarTestID: 'tab-chats' }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ tabBarTestID: 'tab-profile' }}
+      />
     </Tab.Navigator>
   );
 };

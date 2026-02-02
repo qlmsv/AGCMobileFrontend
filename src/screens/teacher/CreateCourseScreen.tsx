@@ -271,7 +271,7 @@ export const CreateCourseScreen: React.FC = () => {
         category_id: selectedCategoryId,
         language,
         is_free: isFree,
-        status: 'draft',
+        status: 'published',
         duration,
         start_date: startDate.toISOString().split('T')[0],
         certificate: hasCertificate,
@@ -387,6 +387,7 @@ export const CreateCourseScreen: React.FC = () => {
         placeholder="Enter course title"
         placeholderTextColor={colors.text.tertiary}
         value={title}
+        testID="course-title-input"
         onChangeText={setTitle}
       />
 
@@ -403,13 +404,14 @@ export const CreateCourseScreen: React.FC = () => {
 
       <Text style={styles.label}>Category *</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryList}>
-        {categories.map((cat) => (
+        {categories.map((cat, index) => (
           <TouchableOpacity
             key={cat.id}
             style={[
               styles.categoryChip,
               selectedCategoryId === cat.id && styles.categoryChipSelected,
             ]}
+            testID={`category-option-${index}`}
             onPress={() => setSelectedCategoryId(cat.id)}
           >
             <Text
@@ -429,6 +431,7 @@ export const CreateCourseScreen: React.FC = () => {
         {DURATION_OPTIONS.map((opt) => (
           <TouchableOpacity
             key={opt.value}
+            testID={`duration-option-${opt.value}`}
             style={[styles.optionButton, duration === opt.value && styles.optionButtonActive]}
             onPress={() => setDuration(opt.value)}
           >
@@ -479,9 +482,10 @@ export const CreateCourseScreen: React.FC = () => {
       <View style={styles.toggleRow}>
         <View style={styles.toggleInfo}>
           <Ionicons name="gift-outline" size={24} color={colors.text.secondary} />
-          <Text style={styles.toggleLabel}>Free course</Text>
+          <Text testID="is-free-label" style={styles.toggleLabel}>Free course</Text>
         </View>
         <TouchableOpacity
+          testID="is-free-toggle"
           style={[styles.toggle, isFree && styles.toggleActive]}
           onPress={() => setIsFree(!isFree)}
         >
@@ -537,6 +541,7 @@ export const CreateCourseScreen: React.FC = () => {
             placeholder="Module title"
             placeholderTextColor={colors.text.tertiary}
             value={mod.title}
+            testID={`module-title-${index}`}
             onChangeText={(val) => updateModule(index, 'title', val)}
           />
           <TextInput
@@ -561,7 +566,7 @@ export const CreateCourseScreen: React.FC = () => {
         </View>
       ))}
 
-      <TouchableOpacity style={styles.addButton} onPress={addModule}>
+      <TouchableOpacity testID="add-module-button" style={styles.addButton} onPress={addModule}>
         <Ionicons name="add" size={20} color={colors.text.primary} />
         <Text style={styles.addButtonText}>Add module</Text>
       </TouchableOpacity>
@@ -624,6 +629,7 @@ export const CreateCourseScreen: React.FC = () => {
                 placeholder="Name of the lesson"
                 placeholderTextColor={colors.text.tertiary}
                 value={lesson.title}
+                testID={`lesson-title-${lessonIndex}`}
                 onChangeText={(val) => updateLesson(selectedModuleIndex, lessonIndex, 'title', val)}
               />
               <View style={styles.dateTimeRow}>
@@ -665,7 +671,7 @@ export const CreateCourseScreen: React.FC = () => {
             </View>
           ))}
 
-          <TouchableOpacity style={styles.addButton} onPress={() => addLesson(selectedModuleIndex)}>
+          <TouchableOpacity testID="add-lesson-button" style={styles.addButton} onPress={() => addLesson(selectedModuleIndex)}>
             <Ionicons name="add" size={20} color={colors.text.primary} />
             <Text style={styles.addButtonText}>Add lesson</Text>
           </TouchableOpacity>
@@ -764,6 +770,7 @@ export const CreateCourseScreen: React.FC = () => {
             <TouchableOpacity
               style={[styles.button, styles.primaryButton, isLoading && styles.disabledButton]}
               onPress={handleCreateCourse}
+              testID="submit-course-button"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -773,7 +780,7 @@ export const CreateCourseScreen: React.FC = () => {
               )}
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={handleNext}>
+            <TouchableOpacity testID="continue-button" style={[styles.button, styles.primaryButton]} onPress={handleNext}>
               <Text style={styles.primaryButtonText}>Continue</Text>
             </TouchableOpacity>
           )}

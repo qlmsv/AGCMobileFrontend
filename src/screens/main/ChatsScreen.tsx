@@ -22,6 +22,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { chatService } from '../../services/chatService';
 import { courseService } from '../../services/courseService';
 import { userService } from '../../services/userService';
+import { profileService } from '../../services/profileService';
 import { ChatList, Course, Profile } from '../../types';
 import { EmptyState } from '../../components';
 import { logger } from '../../utils/logger';
@@ -76,40 +77,37 @@ export const ChatsScreen: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
     try {
-      logger.info('Fetching users from /users/search/...');
+      logger.info('Fetching available users for chat...');
 
-      // Use the new /users/search/ endpoint
-      const data = await userService.searchUsers();
-      logger.info('Users received:', data?.length || 0);
+      // Use specialized endpoint as per backend requirement
+      const profiles = await chatService.getAvailableUsers();
+      logger.info('Available users total:', profiles?.length || 0);
 
-      // Filter out current user
-      const filteredUsers = data.filter((u) => u.id !== user?.id);
+      // Filter out current user's profile just in case backend includes it
+      const filteredProfiles = profiles.filter((p) => p.user !== user?.id);
 
-      // Map to Profile-like structure
-      // Use email as fallback if first_name is not available
-      // Check for profile.avatar or user.avatar
-      const userProfiles: (Profile & { email?: string })[] = filteredUsers.map((u: any) => {
-        const displayName = u.first_name || u.profile?.first_name || u.email?.split('@')[0] || 'User';
-        const avatar = u.profile?.avatar || u.avatar || null;
+      // Map to Profile with email from user if needed
+      const userProfiles: (Profile & { email?: string })[] = filteredProfiles.map((p: any) => {
+        const displayName = p.first_name || p.name || 'User';
         return {
-          id: u.id,
-          user: u.id,
+          id: p.id,
+          user: p.user || p.id, // Support both Profile (user) and User (id) structures
           first_name: displayName,
-          last_name: u.last_name || u.profile?.last_name || '',
-          avatar: avatar,
-          email: u.email || '',
+          last_name: p.last_name || '',
+          avatar: p.avatar || null,
+          email: p.email || '',
         } as Profile & { email?: string };
       });
 
       logger.info('Filtered users (excluding current):', userProfiles.length);
       setUsers(userProfiles);
 
-      if (userProfiles.length === 0) {
-        Alert.alert('Info', 'No other users found.');
+      if (profiles.length === 0) {
+        Alert.alert('Info', 'No users found to chat with.');
       }
     } catch (error: any) {
       logger.error('Error fetching users:', error);
-      Alert.alert('Error', 'Failed to load users');
+      Alert.alert('Error', `Failed to load users: ${error.message}`);
     } finally {
       setIsLoadingUsers(false);
     }
@@ -141,23 +139,41 @@ export const ChatsScreen: React.FC = () => {
   });
 
   const handleOpenCreateChat = async () => {
-    await fetchUsers();
+    // Open modal immediately, then fetch users
     setShowCreateChatModal(true);
+    await fetchUsers();
   };
 
   const handleCreatePersonalChat = async (selectedUser: Profile) => {
     setIsCreating(true);
+    logger.info('[ChatsScreen] Creating personal chat with user:', JSON.stringify(selectedUser));
+
     try {
-      // Create new DM chat with selected user
-      const newChat = await chatService.createChat({
-        type: 'dm',
+      const payload = {
+        type: 'dm' as const,
         user_id: selectedUser.user,
-      });
+      };
+      logger.info('[ChatsScreen] createChat payload:', JSON.stringify(payload));
+
+      // Create new DM chat with selected user
+      const newChat = await chatService.createChat(payload);
+      logger.info('[ChatsScreen] Chat created successfully:', JSON.stringify(newChat));
+
       setShowCreateChatModal(false);
       navigation.navigate('ChatDetail', { chatId: newChat.id });
     } catch (error: any) {
-      logger.error('Failed to create personal chat:', error);
-      const errorDetail = error.response?.data?.detail || 'Failed to create chat';
+      logger.error('[ChatsScreen] Failed to create personal chat:', error);
+      if (error.response) {
+        logger.error('[ChatsScreen] Error response data:', JSON.stringify(error.response.data));
+        logger.error('[ChatsScreen] Error response status:', error.response.status);
+      }
+
+      const errorData = error.response?.data;
+      const errorDetail = errorData?.detail ||
+        errorData?.message ||
+        (typeof errorData === 'object' ? JSON.stringify(errorData) : null) ||
+        'Failed to create chat';
+
       Alert.alert('Error', errorDetail);
     } finally {
       setIsCreating(false);
@@ -198,7 +214,7 @@ export const ChatsScreen: React.FC = () => {
     }
   };
 
-  const renderChatItem = ({ item }: { item: ChatList }) => {
+  const renderChatItem = ({ item, index }: { item: ChatList; index: number }) => {
     // Check for valid avatar URL (not null, undefined, or empty string)
     const hasAvatar = item.display_avatar && item.display_avatar.trim() !== '';
     // iOS blocks http:// - use secureImageUrl utility
@@ -206,6 +222,7 @@ export const ChatsScreen: React.FC = () => {
 
     return (
       <TouchableOpacity
+        testID={`chat-item-${index}`}
         style={styles.chatItem}
         onPress={() => navigation.navigate('ChatDetail', { chatId: item.id })}
       >
@@ -287,7 +304,7 @@ export const ChatsScreen: React.FC = () => {
     return (
       <View style={styles.createButtonsContainer}>
         {showPersonal && (
-          <TouchableOpacity style={styles.createButton} onPress={handleOpenCreateChat}>
+          <TouchableOpacity testID="create-chat-button" style={styles.createButton} onPress={handleOpenCreateChat}>
             <Ionicons name="add" size={20} color={colors.text.primary} />
             <Text style={styles.createButtonText}>New Chat</Text>
           </TouchableOpacity>
@@ -295,7 +312,7 @@ export const ChatsScreen: React.FC = () => {
 
         {/* Check IS TEACHER for group chat creation */}
         {showGroup && (
-          <TouchableOpacity style={styles.createGroupButton} onPress={handleOpenCreateGroup}>
+          <TouchableOpacity testID="create-group-chat-button" style={styles.createGroupButton} onPress={handleOpenCreateGroup}>
             <Ionicons name="people" size={20} color={colors.text.inverse} />
             <Text style={styles.createGroupButtonText}>New Group</Text>
           </TouchableOpacity>
@@ -306,9 +323,9 @@ export const ChatsScreen: React.FC = () => {
 
   // Personal Chat Modal - List of users
   const renderCreateChatModal = () => (
-    <Modal visible={showCreateChatModal} transparent animationType="fade">
+    <Modal visible={showCreateChatModal} transparent animationType="fade" testID="create-chat-modal">
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+        <View style={styles.modalContent} testID="create-chat-modal-content">
           <Text style={styles.modalTitle}>Create chat</Text>
 
           {isLoadingUsers ? (
@@ -318,10 +335,14 @@ export const ChatsScreen: React.FC = () => {
           ) : users.length === 0 ? (
             <Text style={styles.noUsersText}>No users available</Text>
           ) : (
-            <ScrollView style={styles.usersList}>
-              {users.map((userProfile) => (
+            <FlatList
+              data={users}
+              keyExtractor={(item) => item.id}
+              style={styles.usersList}
+              contentContainerStyle={{ paddingBottom: spacing.md }}
+              renderItem={({ item: userProfile, index }) => (
                 <TouchableOpacity
-                  key={userProfile.id}
+                  testID={`user-item-${index}`}
                   style={styles.userItem}
                   onPress={() => handleCreatePersonalChat(userProfile)}
                   disabled={isCreating}
@@ -339,18 +360,19 @@ export const ChatsScreen: React.FC = () => {
                   )}
                   <View style={styles.userInfo}>
                     <Text style={styles.userName}>
-                      {userProfile.first_name || ''} {userProfile.last_name || ''}
+                      {(userProfile.first_name || '').trim()} {(userProfile.last_name || '').trim()}
                     </Text>
                     <Text style={styles.userEmail} numberOfLines={1}>
                       {(userProfile as any).email || 'No email'}
                     </Text>
                   </View>
                 </TouchableOpacity>
-              ))}
-            </ScrollView>
+              )}
+            />
           )}
 
           <TouchableOpacity
+            testID="cancel-chat-modal"
             style={styles.modalCloseButton}
             onPress={() => setShowCreateChatModal(false)}
           >
@@ -382,6 +404,7 @@ export const ChatsScreen: React.FC = () => {
                     styles.courseItem,
                     selectedCourseId === course.id && styles.courseItemSelected,
                   ]}
+                  testID={`course-item-${course.id}`}
                   onPress={() => setSelectedCourseId(course.id)}
                 >
                   <Text
@@ -408,6 +431,7 @@ export const ChatsScreen: React.FC = () => {
             placeholder="Enter chat name"
             placeholderTextColor={colors.text.tertiary}
             value={groupName}
+            testID="group-chat-name-input"
             onChangeText={setGroupName}
           />
 
@@ -427,6 +451,7 @@ export const ChatsScreen: React.FC = () => {
                 styles.nextButton,
                 (isCreating || !selectedCourseId || !groupName.trim()) && styles.disabledButton,
               ]}
+              testID="create-group-submit-button"
               onPress={handleCreateGroupChat}
               disabled={isCreating || !selectedCourseId || !groupName.trim()}
             >
@@ -443,7 +468,7 @@ export const ChatsScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="chats-screen">
       <View style={styles.header}>
         <Text style={styles.title}>Messages</Text>
       </View>
@@ -458,6 +483,7 @@ export const ChatsScreen: React.FC = () => {
         </View>
       ) : (
         <FlatList
+          testID="chats-list"
           data={filteredChats}
           renderItem={renderChatItem}
           keyExtractor={(item) => item.id}
@@ -614,7 +640,7 @@ const styles = StyleSheet.create({
   required: { color: colors.primary.main },
 
   // Users list for personal chat
-  usersList: { maxHeight: 300, marginBottom: spacing.md },
+  usersList: { maxHeight: 400, marginBottom: spacing.md },
   userItem: {
     flexDirection: 'row',
     alignItems: 'center',

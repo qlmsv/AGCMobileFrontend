@@ -97,13 +97,20 @@ export const ProfileScreen: React.FC = () => {
       const match = /\.(\w+)$/.exec(filename);
       const type = match ? `image/${match[1]}` : 'image/jpeg';
 
+      logger.info('[ProfileScreen] Uploading avatar:', {
+        uri: asset.uri,
+        filename,
+        type,
+      });
+
       const fileToUpload = {
         uri: asset.uri,
         name: filename,
         type,
       };
 
-      await profileService.uploadAvatar(profile.id, fileToUpload as any);
+      const result = await profileService.uploadAvatar(profile.id, fileToUpload as any);
+      logger.info('[ProfileScreen] Avatar uploaded successfully:', JSON.stringify(result));
 
       // Refresh profile data
       if (refreshUser) {
@@ -111,9 +118,20 @@ export const ProfileScreen: React.FC = () => {
       }
 
       Alert.alert('Success', 'Avatar updated successfully');
-    } catch (error) {
-      logger.error('Error uploading avatar:', error);
-      Alert.alert('Error', 'Failed to upload avatar');
+    } catch (error: any) {
+      logger.error('[ProfileScreen] Error uploading avatar:', error);
+      if (error.response) {
+        logger.error('[ProfileScreen] Error response data:', JSON.stringify(error.response.data));
+        logger.error('[ProfileScreen] Error response status:', error.response.status);
+      }
+
+      const errorData = error.response?.data;
+      const errorDetail = errorData?.detail ||
+        errorData?.message ||
+        (typeof errorData === 'object' ? JSON.stringify(errorData) : null) ||
+        'Failed to upload avatar';
+
+      Alert.alert('Error', errorDetail);
     } finally {
       setIsUploading(false);
     }
@@ -147,14 +165,14 @@ export const ProfileScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="profile-screen">
       <View style={styles.header}>
         <Text style={styles.title}>Profile</Text>
         <View style={styles.headerButtons}>
-          <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.iconButton}>
+          <TouchableOpacity testID="settings-button" onPress={() => navigation.navigate('Settings')} style={styles.iconButton}>
             <Ionicons name="settings-outline" size={24} color={colors.text.primary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={logout} style={styles.iconButton}>
+          <TouchableOpacity testID="logout-button" onPress={logout} style={styles.iconButton}>
             <Ionicons name="log-out-outline" size={24} color={colors.error} />
           </TouchableOpacity>
         </View>
@@ -195,12 +213,12 @@ export const ProfileScreen: React.FC = () => {
             </View>
           </TouchableOpacity>
 
-          <Text style={styles.name}>
+          <Text testID="user-name" style={styles.name}>
             {profile?.first_name
               ? `${profile.first_name} ${profile.last_name || ''}`
               : profile?.phone_number || user?.email}
           </Text>
-          <Text style={styles.email}>{user?.email}</Text>
+          <Text testID="user-email" style={styles.email}>{user?.email}</Text>
           {user?.role === 'teacher' && (
             <View style={styles.teacherBadge}>
               <Text style={styles.teacherBadgeText}>Teacher</Text>
@@ -240,7 +258,7 @@ export const ProfileScreen: React.FC = () => {
                 : navigation.navigate('Main', { screen: 'Courses' })
             }
           >
-            <Text style={styles.seeAll}>
+            <Text style={styles.seeAll} testID="create-course-header-button">
               {user?.role === 'teacher' ? 'Create New' : 'Find More'}
             </Text>
           </TouchableOpacity>
@@ -304,6 +322,7 @@ export const ProfileScreen: React.FC = () => {
                     Alert.alert('Error', 'Failed to navigate to Create Course');
                   }
                 }}
+                testID="create-course-menu-item"
               >
                 <View style={styles.menuLeft}>
                   <View style={[styles.iconBox, { backgroundColor: colors.success + '20' }]}>

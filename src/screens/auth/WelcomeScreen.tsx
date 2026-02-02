@@ -13,7 +13,7 @@ interface Props {
 
 export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="welcome-screen">
       <View style={styles.content}>
         {/* Logo or Illustration */}
         <View style={styles.illustrationContainer}>
@@ -35,6 +35,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
         {/* Actions */}
         <View style={styles.actionContainer}>
           <TouchableOpacity
+            testID="login-button"
             style={styles.primaryButton}
             onPress={() => navigation.navigate('EmailInput', { mode: 'login' })}
             activeOpacity={0.8}
@@ -43,6 +44,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
 
           <TouchableOpacity
+            testID="signup-button"
             style={styles.secondaryButton}
             onPress={() => navigation.navigate('EmailInput', { mode: 'signup' })}
             activeOpacity={0.8}

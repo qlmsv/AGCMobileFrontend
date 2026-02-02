@@ -2,7 +2,7 @@
   "expo": {
     "name": "AGC Mobile",
     "slug": "agc-mobile-app",
-    "version": "1.0.39",
+    "version": "1.0.41",
     "orientation": "portrait",
     "icon": "./assets/final_icon.png",
     "userInterfaceStyle": "light",
@@ -24,7 +24,7 @@
       }
     },
     "android": {
-      "versionCode": 39,
+      "versionCode": 41,
       "adaptiveIcon": {
         "foregroundImage": "./assets/final_icon.png",
         "backgroundColor": "#ffffff"
@@ -40,7 +40,8 @@
       }
     },
     "plugins": [
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-iap"
     ]
   }
 }

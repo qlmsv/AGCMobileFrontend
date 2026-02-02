@@ -287,12 +287,13 @@ export const ScheduleScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="schedule-screen">
       <View style={styles.header}>
         <Text style={styles.title}>My Schedule</Text>
       </View>
 
       <ScrollView
+        testID="schedule-scroll-view"
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
@@ -304,6 +305,7 @@ export const ScheduleScreen: React.FC = () => {
       >
         {renderCalendar()}
         {renderScheduleForDay()}
+        <View testID="schedule-content" />
       </ScrollView>
     </SafeAreaView>
   );

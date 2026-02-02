@@ -58,7 +58,7 @@ export const VerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="verification-screen">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoid}
@@ -78,6 +78,7 @@ export const VerificationScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.form}>
               <Text style={styles.label}>Verification Code</Text>
               <TextInput
+                testID="code-input"
                 style={styles.input}
                 placeholder="0000"
                 placeholderTextColor={colors.text.tertiary}
@@ -91,6 +92,7 @@ export const VerificationScreen: React.FC<Props> = ({ navigation, route }) => {
 
             <View style={styles.footer}>
               <TouchableOpacity
+                testID="verify-button"
                 style={[styles.button, isLoading && styles.buttonDisabled]}
                 onPress={handleVerify}
                 disabled={isLoading}

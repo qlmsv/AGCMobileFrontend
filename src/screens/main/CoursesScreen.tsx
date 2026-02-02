@@ -42,6 +42,7 @@ const SearchHeader = React.memo(
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color={colors.text.tertiary} />
         <TextInput
+          testID="search-input"
           style={styles.searchInput}
           placeholder="Search courses..."
           placeholderTextColor={colors.text.tertiary}
@@ -52,16 +53,18 @@ const SearchHeader = React.memo(
 
       {/* Categories Filter */}
       <FlatList
+        testID="category-filters"
         horizontal
         data={[{ id: 'all', name: 'All' } as Category, ...categories]}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoriesList}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const isSelected =
             item.id === 'all' ? selectedCategory === null : selectedCategory === item.id;
           return (
             <TouchableOpacity
+              testID={`category-chip-${index}`}
               style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
               onPress={() => setSelectedCategory(item.id === 'all' ? null : item.id)}
             >
@@ -144,11 +147,12 @@ export const CoursesScreen: React.FC = () => {
     return () => clearTimeout(timer);
   }, [fetchData]);
 
-  const renderCourseItem = ({ item }: { item: Course }) => (
+  const renderCourseItem = ({ item, index }: { item: Course; index: number }) => (
     <CourseCard
       course={item}
       onPress={(course) => navigation.navigate('CourseDetail', { courseId: course.id })}
       variant="horizontal"
+      testID={`course-card-${index}`}
     />
   );
 
@@ -179,7 +183,7 @@ export const CoursesScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="courses-screen">
       <View style={styles.header}>
         <Text style={styles.title}>Courses</Text>
       </View>
@@ -192,6 +196,7 @@ export const CoursesScreen: React.FC = () => {
         </View>
       ) : (
         <FlatList
+          testID="courses-list"
           data={courses}
           renderItem={renderCourseItem}
           keyExtractor={(item) => item.id}

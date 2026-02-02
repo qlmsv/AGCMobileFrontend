@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Image,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -20,6 +21,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { logger } from '../../utils/logger';
 import { useAuth } from '../../contexts/AuthContext';
 import { secureImageUrl } from '../../utils/secureUrl';
+import { iapService } from '../../services/iapService';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -105,16 +107,39 @@ export const CourseDetailScreen: React.FC = () => {
                   try {
                     setIsEnrolling(true);
 
-                    // Use Stripe WebView directly
-                    logger.info('Creating stripe session for module:', paidModule.id);
-                    const session = await courseService.createStripeSession(paidModule.id);
-                    logger.info('Stripe session response:', session);
-                    const checkoutUrl = (session as any).checkout_url || session.url;
-                    if (checkoutUrl) {
-                      navigation.navigate('Payment', { url: checkoutUrl });
+                    // Use native Apple IAP on iOS, Stripe WebView on Android
+                    if (Platform.OS === 'ios' && iapService.isAvailable()) {
+                      // Apple In-App Purchase flow
+                      // Use apple_product_id from backend if available, otherwise generate from module ID
+                      const productId = (paidModule as any).apple_product_id
+                        || `com.agc.mobile.module.${paidModule.id.replace(/-/g, '_')}`;
+
+                      // DEBUG: Show product ID (remove after testing)
+                      console.log('IAP Product ID:', productId);
+                      // Alert.alert('Debug', `Looking for product: ${productId}`);
+
+                      logger.info('Initiating Apple IAP for product:', productId);
+
+                      const result = await iapService.purchaseModule(productId, paidModule.id);
+
+                      if (result.success) {
+                        Alert.alert('Success', 'Purchase completed! You are now enrolled.');
+                        fetchCourseDetails();
+                      } else if (result.error !== 'Purchase cancelled') {
+                        Alert.alert('Purchase Failed', result.error || 'Unknown error occurred');
+                      }
                     } else {
-                      logger.error('Stripe session missing URL:', session);
-                      Alert.alert('Error', 'Payment session created but no checkout URL received.');
+                      // Android: Use Stripe WebView
+                      logger.info('Creating stripe session for module:', paidModule.id);
+                      const session = await courseService.createStripeSession(paidModule.id);
+                      logger.info('Stripe session response:', session);
+                      const checkoutUrl = (session as any).checkout_url || session.url;
+                      if (checkoutUrl) {
+                        navigation.navigate('Payment', { url: checkoutUrl });
+                      } else {
+                        logger.error('Stripe session missing URL:', session);
+                        Alert.alert('Error', 'Payment session created but no checkout URL received.');
+                      }
                     }
                   } catch (payError: any) {
                     logger.error('Payment error:', payError);
@@ -180,7 +205,7 @@ export const CourseDetailScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="course-detail-screen">
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
@@ -188,9 +213,17 @@ export const CourseDetailScreen: React.FC = () => {
         <Text style={styles.headerTitle} numberOfLines={1}>
           Course Details
         </Text>
-        <TouchableOpacity>
-          <Ionicons name="share-outline" size={24} color={colors.text.primary} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          {/* Edit button for course author */}
+          {user?.id === course?.author && (
+            <TouchableOpacity onPress={() => navigation.navigate('EditCourse', { courseId: course.id })}>
+              <Ionicons name="create-outline" size={24} color={colors.primary.main} />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity>
+            <Ionicons name="share-outline" size={24} color={colors.text.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -217,7 +250,7 @@ export const CourseDetailScreen: React.FC = () => {
             )}
           </View>
 
-          <Text style={styles.title}>{course.title}</Text>
+          <Text testID="course-title" style={styles.title}>{course.title}</Text>
 
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
@@ -234,13 +267,17 @@ export const CourseDetailScreen: React.FC = () => {
           </View>
 
           <Text style={styles.sectionTitle}>About Course</Text>
-          <Text style={styles.description}>
+          <Text testID="course-description" style={styles.description}>
             {course.description || 'No description available for this course.'}
           </Text>
 
           <Text style={styles.sectionTitle}>Curriculum</Text>
           {modules.length > 0 ? (
-            modules.map((m, i) => renderModule(m, i))
+            modules.map((m, i) => (
+              <View key={m.id} testID="modules-list">
+                {renderModule(m, i)}
+              </View>
+            ))
           ) : (
             <Text style={styles.emptyText}>No modules available yet.</Text>
           )}
@@ -271,6 +308,7 @@ export const CourseDetailScreen: React.FC = () => {
           </Text>
         </View>
         <TouchableOpacity
+          testID="enroll-button"
           style={[
             styles.enrollButton,
             (isEnrolling || course.is_enrolled) && styles.disabledButton,

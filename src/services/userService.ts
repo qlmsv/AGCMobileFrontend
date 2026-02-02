@@ -9,10 +9,13 @@ export const userService = {
     return extractResults<User>(data);
   },
 
-  // Search all users - new endpoint for finding users to chat with
+  // Search all users - use standard /users/ endpoint with search param
   async searchUsers(search?: string): Promise<User[]> {
-    const data = await apiService.get(API_ENDPOINTS.USERS_SEARCH, {
-      params: search ? { search } : {},
+    const data = await apiService.get(API_ENDPOINTS.USERS, {
+      params: {
+        search: search || undefined,
+        page_size: 100, // Get more users at once
+      },
     });
     return extractResults<User>(data);
   },

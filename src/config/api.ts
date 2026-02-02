@@ -29,6 +29,7 @@ export const API_ENDPOINTS = {
   MODULE_ACCESS_STATUS: (id: string) => `/courses/modules/${id}/access-status/`,
   MODULE_ENROLL: (id: string) => `/courses/modules/${id}/enroll/`,
   MODULE_CREATE_STRIPE_SESSION: (id: string) => `/courses/modules/${id}/create-stripe-session/`,
+  MODULE_VALIDATE_APPLE_RECEIPT: (id: string) => `/courses/modules/${id}/validate-apple-receipt/`,
   COURSE_LESSONS: '/courses/lessons/',
   LESSON_BY_ID: (id: string) => `/courses/lessons/${id}/`,
   LESSON_CHECK_ACCESS: (id: string) => `/courses/lessons/${id}/check_access/`,
@@ -44,6 +45,7 @@ export const API_ENDPOINTS = {
 
   // Chat
   CHATS: '/chat/chats/',
+  AVAILABLE_USERS: '/chat/chats/available-users/',
   CHAT_BY_ID: (id: string) => `/chat/chats/${id}/`,
   CHAT_MEMBERS: (chatId: string) => `/chat/chats/${chatId}/members/`,
   CHAT_MEMBER_BY_ID: (chatId: string, memberId: number) =>
@@ -69,5 +71,5 @@ export const API_ENDPOINTS = {
   BANNERS: '/banners/',
 
   // Schedule
-  CALENDAR: '/schedule/calendar',
+  CALENDAR: '/schedule/calendar/',
 } as const;

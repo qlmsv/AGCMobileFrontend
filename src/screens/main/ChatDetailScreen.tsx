@@ -171,13 +171,13 @@ export const ChatDetailScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="chat-detail-screen">
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>{chat?.display_title || `Chat ${chatId}`}</Text>
+          <Text testID="chat-header" style={styles.headerTitle}>{chat?.display_title || `Chat ${chatId}`}</Text>
           {chat?.type === 'group' && (
             <Text style={styles.headerSubtitle}>{(chat as any)?.members_count || ''} members</Text>
           )}
@@ -195,6 +195,7 @@ export const ChatDetailScreen: React.FC = () => {
         </View>
       ) : (
         <FlatList
+          testID="messages-list"
           ref={flatListRef}
           data={messages}
           renderItem={renderMessageItem}
@@ -215,6 +216,7 @@ export const ChatDetailScreen: React.FC = () => {
       >
         <View style={styles.inputContainer}>
           <TextInput
+            testID="message-input"
             style={styles.input}
             placeholder="Type a message..."
             placeholderTextColor={colors.text.tertiary}
@@ -223,6 +225,7 @@ export const ChatDetailScreen: React.FC = () => {
             multiline
           />
           <TouchableOpacity
+            testID="send-message-button"
             style={[styles.sendButton, (!message.trim() || isSending) && styles.sendButtonDisabled]}
             onPress={handleSendMessage}
             disabled={!message.trim() || isSending}
