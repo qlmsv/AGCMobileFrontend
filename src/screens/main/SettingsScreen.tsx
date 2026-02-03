@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Switch,
+  Platform,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, textStyles, borderRadius } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
+import { iapService } from '../../services/iapService';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -16,6 +27,24 @@ export const SettingsScreen: React.FC = () => {
 
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(true);
+  const [isRestoring, setIsRestoring] = useState(false);
+
+  // Handle restore purchases for iOS - Required by Apple App Store
+  const handleRestorePurchases = async () => {
+    setIsRestoring(true);
+    try {
+      const restored = await iapService.restorePurchases();
+      if (restored.length > 0) {
+        Alert.alert('Success', `Restored ${restored.length} purchase(s). Your content is now available.`);
+      } else {
+        Alert.alert('Info', 'No previous purchases found to restore.');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', 'Failed to restore purchases. Please try again later.');
+    } finally {
+      setIsRestoring(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} testID="settings-screen">
@@ -69,6 +98,26 @@ export const SettingsScreen: React.FC = () => {
             <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
           </TouchableOpacity>
         </View>
+
+        {/* iOS-only Purchases section - Required by Apple for apps with IAP */}
+        {Platform.OS === 'ios' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Purchases</Text>
+            <TouchableOpacity
+              style={styles.item}
+              onPress={handleRestorePurchases}
+              disabled={isRestoring}
+              testID="restore-purchases-button"
+            >
+              <Text style={styles.itemText}>Restore Purchases</Text>
+              {isRestoring ? (
+                <ActivityIndicator size="small" color={colors.primary.main} />
+              ) : (
+                <Ionicons name="refresh" size={20} color={colors.text.tertiary} />
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
 
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
           <Ionicons name="log-out-outline" size={20} color={colors.error} />

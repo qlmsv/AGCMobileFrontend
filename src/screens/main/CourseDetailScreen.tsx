@@ -111,11 +111,12 @@ export const CourseDetailScreen: React.FC = () => {
                     if (Platform.OS === 'ios' && iapService.isAvailable()) {
                       // Apple In-App Purchase flow
                       // Use apple_product_id from backend if available, otherwise generate from module ID
-                      const productId = (paidModule as any).apple_product_id
-                        || `com.agc.mobile.module.${paidModule.id.replace(/-/g, '_')}`;
+                      const productId =
+                        (paidModule as any).apple_product_id ||
+                        `com.agc.mobile.module.${paidModule.id.replace(/-/g, '_')}`;
 
                       // DEBUG: Show product ID (remove after testing)
-                      console.log('IAP Product ID:', productId);
+                      // console.log('IAP Product ID:', productId);
                       // Alert.alert('Debug', `Looking for product: ${productId}`);
 
                       logger.info('Initiating Apple IAP for product:', productId);
@@ -138,7 +139,10 @@ export const CourseDetailScreen: React.FC = () => {
                         navigation.navigate('Payment', { url: checkoutUrl });
                       } else {
                         logger.error('Stripe session missing URL:', session);
-                        Alert.alert('Error', 'Payment session created but no checkout URL received.');
+                        Alert.alert(
+                          'Error',
+                          'Payment session created but no checkout URL received.'
+                        );
                       }
                     }
                   } catch (payError: any) {
@@ -216,7 +220,9 @@ export const CourseDetailScreen: React.FC = () => {
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           {/* Edit button for course author */}
           {user?.id === course?.author && (
-            <TouchableOpacity onPress={() => navigation.navigate('EditCourse', { courseId: course.id })}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('EditCourse', { courseId: course.id })}
+            >
               <Ionicons name="create-outline" size={24} color={colors.primary.main} />
             </TouchableOpacity>
           )}
@@ -250,7 +256,9 @@ export const CourseDetailScreen: React.FC = () => {
             )}
           </View>
 
-          <Text testID="course-title" style={styles.title}>{course.title}</Text>
+          <Text testID="course-title" style={styles.title}>
+            {course.title}
+          </Text>
 
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>

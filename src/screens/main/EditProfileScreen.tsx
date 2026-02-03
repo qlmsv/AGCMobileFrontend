@@ -81,12 +81,16 @@ export const EditProfileScreen: React.FC = () => {
     } catch (error: any) {
       logger.error('[EditProfileScreen] Failed to upload avatar:', error);
       if (error.response) {
-        logger.error('[EditProfileScreen] Error response data:', JSON.stringify(error.response.data));
+        logger.error(
+          '[EditProfileScreen] Error response data:',
+          JSON.stringify(error.response.data)
+        );
         logger.error('[EditProfileScreen] Error response status:', error.response.status);
       }
 
       const errorData = error.response?.data;
-      const errorDetail = errorData?.detail ||
+      const errorDetail =
+        errorData?.detail ||
         errorData?.message ||
         (typeof errorData === 'object' ? JSON.stringify(errorData) : null) ||
         'Failed to upload avatar. Please try again.';
@@ -153,7 +157,9 @@ export const EditProfileScreen: React.FC = () => {
           {isLoading ? (
             <ActivityIndicator color={colors.primary.main} />
           ) : (
-            <Text testID="save-profile-button" style={styles.saveButton}>Edit</Text>
+            <Text testID="save-profile-button" style={styles.saveButton}>
+              Edit
+            </Text>
           )}
         </TouchableOpacity>
       </View>

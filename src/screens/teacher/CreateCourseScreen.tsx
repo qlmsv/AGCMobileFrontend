@@ -482,7 +482,9 @@ export const CreateCourseScreen: React.FC = () => {
       <View style={styles.toggleRow}>
         <View style={styles.toggleInfo}>
           <Ionicons name="gift-outline" size={24} color={colors.text.secondary} />
-          <Text testID="is-free-label" style={styles.toggleLabel}>Free course</Text>
+          <Text testID="is-free-label" style={styles.toggleLabel}>
+            Free course
+          </Text>
         </View>
         <TouchableOpacity
           testID="is-free-toggle"
@@ -671,7 +673,11 @@ export const CreateCourseScreen: React.FC = () => {
             </View>
           ))}
 
-          <TouchableOpacity testID="add-lesson-button" style={styles.addButton} onPress={() => addLesson(selectedModuleIndex)}>
+          <TouchableOpacity
+            testID="add-lesson-button"
+            style={styles.addButton}
+            onPress={() => addLesson(selectedModuleIndex)}
+          >
             <Ionicons name="add" size={20} color={colors.text.primary} />
             <Text style={styles.addButtonText}>Add lesson</Text>
           </TouchableOpacity>
@@ -780,7 +786,11 @@ export const CreateCourseScreen: React.FC = () => {
               )}
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity testID="continue-button" style={[styles.button, styles.primaryButton]} onPress={handleNext}>
+            <TouchableOpacity
+              testID="continue-button"
+              style={[styles.button, styles.primaryButton]}
+              onPress={handleNext}
+            >
               <Text style={styles.primaryButtonText}>Continue</Text>
             </TouchableOpacity>
           )}

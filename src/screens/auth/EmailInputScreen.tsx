@@ -82,7 +82,7 @@ export const EmailInputScreen: React.FC<Props> = ({ navigation, route }) => {
         Alert.alert(
           'Error',
           error.message ||
-          'Failed to send verification code. Please check your internet connection.'
+            'Failed to send verification code. Please check your internet connection.'
         );
       }
     } finally {

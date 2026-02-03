@@ -65,8 +65,8 @@ export const TermsScreen: React.FC = () => {
 
         <Text style={styles.sectionTitle}>6. Intellectual Property</Text>
         <Text style={styles.paragraph}>
-          All content, trademarks, and materials within the App are owned by or licensed to THE
-          APEX SERIES PTE. LTD and may not be copied or redistributed without permission.
+          All content, trademarks, and materials within the App are owned by or licensed to THE APEX
+          SERIES PTE. LTD and may not be copied or redistributed without permission.
         </Text>
 
         <Text style={styles.sectionTitle}>7. Termination</Text>

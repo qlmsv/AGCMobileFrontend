@@ -59,27 +59,43 @@ export const MainTabNavigator = () => {
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ tabBarTestID: 'tab-home' }}
+        options={{
+          // @ts-ignore
+          tabBarTestID: 'tab-home',
+        }}
       />
       <Tab.Screen
         name="Courses"
         component={CoursesScreen}
-        options={{ tabBarTestID: 'tab-courses' }}
+        options={{
+          // @ts-ignore
+          tabBarTestID: 'tab-courses',
+        }}
       />
       <Tab.Screen
         name="Schedule"
         component={require('../screens/main/ScheduleScreen').ScheduleScreen}
-        options={{ tabBarTestID: 'tab-schedule', tabBarLabel: 'Schedule' }}
+        options={{
+          // @ts-ignore
+          tabBarTestID: 'tab-schedule',
+          tabBarLabel: 'Schedule',
+        }}
       />
       <Tab.Screen
         name="Chats"
         component={ChatsScreen}
-        options={{ tabBarTestID: 'tab-chats' }}
+        options={{
+          // @ts-ignore
+          tabBarTestID: 'tab-chats',
+        }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ tabBarTestID: 'tab-profile' }}
+        options={{
+          // @ts-ignore
+          tabBarTestID: 'tab-profile',
+        }}
       />
     </Tab.Navigator>
   );

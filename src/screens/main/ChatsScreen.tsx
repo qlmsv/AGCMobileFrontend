@@ -77,18 +77,44 @@ export const ChatsScreen: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
     try {
-      logger.info('Fetching available users for chat...');
+      logger.info('[ChatsScreen] Fetching available users for chat...');
 
       // Use specialized endpoint as per backend requirement
       const profiles = await chatService.getAvailableUsers();
-      logger.info('Available users total:', profiles?.length || 0);
+
+      // Debug: log raw response
+      logger.info('[ChatsScreen] Raw profiles response type:', typeof profiles);
+      logger.info('[ChatsScreen] Is array:', Array.isArray(profiles));
+      logger.info('[ChatsScreen] Available users count:', profiles?.length || 0);
+
+      if (profiles && profiles.length > 0) {
+        logger.info('[ChatsScreen] First profile sample:', JSON.stringify(profiles[0]));
+      }
+
+      // Check if profiles is actually an array
+      if (!Array.isArray(profiles)) {
+        logger.error('[ChatsScreen] Profiles is not an array, got:', typeof profiles);
+        setUsers([]);
+        Alert.alert('Error', 'Invalid response from server');
+        return;
+      }
+
+      // Log current user for filtering debug
+      logger.info('[ChatsScreen] Current user id for filtering:', user?.id);
 
       // Filter out current user's profile just in case backend includes it
-      const filteredProfiles = profiles.filter((p) => p.user !== user?.id);
+      const filteredProfiles = profiles.filter((p) => {
+        const profileUserId = p.user || p.id;
+        const shouldInclude = profileUserId !== user?.id;
+        logger.debug(`[ChatsScreen] Profile ${p.id}: userId=${profileUserId}, include=${shouldInclude}`);
+        return shouldInclude;
+      });
+
+      logger.info('[ChatsScreen] Filtered profiles count:', filteredProfiles.length);
 
       // Map to Profile with email from user if needed
       const userProfiles: (Profile & { email?: string })[] = filteredProfiles.map((p: any) => {
-        const displayName = p.first_name || p.name || 'User';
+        const displayName = p.first_name || p.name || p.username || 'User';
         return {
           id: p.id,
           user: p.user || p.id, // Support both Profile (user) and User (id) structures
@@ -99,14 +125,18 @@ export const ChatsScreen: React.FC = () => {
         } as Profile & { email?: string };
       });
 
-      logger.info('Filtered users (excluding current):', userProfiles.length);
+      logger.info('[ChatsScreen] Final user profiles count:', userProfiles.length);
       setUsers(userProfiles);
 
-      if (profiles.length === 0) {
+      if (userProfiles.length === 0) {
         Alert.alert('Info', 'No users found to chat with.');
       }
     } catch (error: any) {
-      logger.error('Error fetching users:', error);
+      logger.error('[ChatsScreen] Error fetching users:', error);
+      if (error.response) {
+        logger.error('[ChatsScreen] Error response:', JSON.stringify(error.response.data));
+        logger.error('[ChatsScreen] Error status:', error.response.status);
+      }
       Alert.alert('Error', `Failed to load users: ${error.message}`);
     } finally {
       setIsLoadingUsers(false);
@@ -169,7 +199,8 @@ export const ChatsScreen: React.FC = () => {
       }
 
       const errorData = error.response?.data;
-      const errorDetail = errorData?.detail ||
+      const errorDetail =
+        errorData?.detail ||
         errorData?.message ||
         (typeof errorData === 'object' ? JSON.stringify(errorData) : null) ||
         'Failed to create chat';
@@ -304,7 +335,11 @@ export const ChatsScreen: React.FC = () => {
     return (
       <View style={styles.createButtonsContainer}>
         {showPersonal && (
-          <TouchableOpacity testID="create-chat-button" style={styles.createButton} onPress={handleOpenCreateChat}>
+          <TouchableOpacity
+            testID="create-chat-button"
+            style={styles.createButton}
+            onPress={handleOpenCreateChat}
+          >
             <Ionicons name="add" size={20} color={colors.text.primary} />
             <Text style={styles.createButtonText}>New Chat</Text>
           </TouchableOpacity>
@@ -312,7 +347,11 @@ export const ChatsScreen: React.FC = () => {
 
         {/* Check IS TEACHER for group chat creation */}
         {showGroup && (
-          <TouchableOpacity testID="create-group-chat-button" style={styles.createGroupButton} onPress={handleOpenCreateGroup}>
+          <TouchableOpacity
+            testID="create-group-chat-button"
+            style={styles.createGroupButton}
+            onPress={handleOpenCreateGroup}
+          >
             <Ionicons name="people" size={20} color={colors.text.inverse} />
             <Text style={styles.createGroupButtonText}>New Group</Text>
           </TouchableOpacity>
@@ -323,7 +362,12 @@ export const ChatsScreen: React.FC = () => {
 
   // Personal Chat Modal - List of users
   const renderCreateChatModal = () => (
-    <Modal visible={showCreateChatModal} transparent animationType="fade" testID="create-chat-modal">
+    <Modal
+      visible={showCreateChatModal}
+      transparent
+      animationType="fade"
+      testID="create-chat-modal"
+    >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent} testID="create-chat-modal-content">
           <Text style={styles.modalTitle}>Create chat</Text>

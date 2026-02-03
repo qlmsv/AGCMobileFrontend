@@ -126,7 +126,8 @@ export const ProfileScreen: React.FC = () => {
       }
 
       const errorData = error.response?.data;
-      const errorDetail = errorData?.detail ||
+      const errorDetail =
+        errorData?.detail ||
         errorData?.message ||
         (typeof errorData === 'object' ? JSON.stringify(errorData) : null) ||
         'Failed to upload avatar';
@@ -169,7 +170,11 @@ export const ProfileScreen: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.title}>Profile</Text>
         <View style={styles.headerButtons}>
-          <TouchableOpacity testID="settings-button" onPress={() => navigation.navigate('Settings')} style={styles.iconButton}>
+          <TouchableOpacity
+            testID="settings-button"
+            onPress={() => navigation.navigate('Settings')}
+            style={styles.iconButton}
+          >
             <Ionicons name="settings-outline" size={24} color={colors.text.primary} />
           </TouchableOpacity>
           <TouchableOpacity testID="logout-button" onPress={logout} style={styles.iconButton}>
@@ -199,7 +204,9 @@ export const ProfileScreen: React.FC = () => {
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarText}>
-                  {profile?.first_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                  {profile?.first_name?.[0]?.toUpperCase() ||
+                    user?.email?.[0]?.toUpperCase() ||
+                    'U'}
                 </Text>
               </View>
             )}
@@ -218,7 +225,9 @@ export const ProfileScreen: React.FC = () => {
               ? `${profile.first_name} ${profile.last_name || ''}`
               : profile?.phone_number || user?.email}
           </Text>
-          <Text testID="user-email" style={styles.email}>{user?.email}</Text>
+          <Text testID="user-email" style={styles.email}>
+            {user?.email}
+          </Text>
           {user?.role === 'teacher' && (
             <View style={styles.teacherBadge}>
               <Text style={styles.teacherBadgeText}>Teacher</Text>
@@ -334,7 +343,10 @@ export const ProfileScreen: React.FC = () => {
               </TouchableOpacity>
             </>
           )}
-          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Main', { screen: 'Schedule' })}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('Main', { screen: 'Schedule' })}
+          >
             <View style={styles.menuLeft}>
               <View style={[styles.iconBox, { backgroundColor: colors.primary.light }]}>
                 <Ionicons name="calendar-outline" size={20} color={colors.primary.main} />

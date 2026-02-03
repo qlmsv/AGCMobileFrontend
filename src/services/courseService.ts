@@ -188,7 +188,7 @@ export const courseService = {
 
   /**
    * Validate Apple IAP purchase with backend
-   * 
+   *
    * StoreKit 2: sends JWS (signed transaction) NOT base64 receipt
    * Backend must use App Store Server API to validate
    */

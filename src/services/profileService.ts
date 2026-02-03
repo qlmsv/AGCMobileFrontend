@@ -27,7 +27,7 @@ export const profileService = {
         logger.debug(`[ProfileService] Fetching page ${page}...`);
         // Try to get 50 items per page
         const data = await apiService.get<any>(API_ENDPOINTS.PROFILES, {
-          params: { page, page_size: 50 }
+          params: { page, page_size: 50 },
         });
 
         const results = extractResults<Profile>(data);
@@ -53,7 +53,7 @@ export const profileService = {
 
     // Deduplicate just in case
     const uniqueIds = new Set();
-    return allProfiles.filter(p => {
+    return allProfiles.filter((p) => {
       if (uniqueIds.has(p.id)) return false;
       uniqueIds.add(p.id);
       return true;
@@ -82,11 +82,25 @@ export const profileService = {
 
   async uploadAvatar(profileId: string, file: any): Promise<Profile> {
     const formData = new FormData();
-    formData.append('avatar', file);
+
+    // React Native requires this specific format for file uploads
+    formData.append('avatar', {
+      uri: file.uri,
+      name: file.name || 'avatar.jpg',
+      type: file.type || 'image/jpeg',
+    } as any);
+
+    logger.debug('[ProfileService] Uploading avatar:', {
+      profileId,
+      uri: file.uri,
+      name: file.name,
+      type: file.type,
+    });
 
     return await apiService.patch<Profile>(API_ENDPOINTS.PROFILE_BY_ID(profileId), formData, {
       headers: {
-        'Accept': 'application/json',
+        'Content-Type': 'multipart/form-data',
+        Accept: 'application/json',
       },
       transformRequest: (data) => data, // Prevent axios from stringifying FormData
     });
@@ -95,7 +109,7 @@ export const profileService = {
   async updateMyProfileWithAvatar(formData: FormData): Promise<Profile> {
     return await apiService.patch<Profile>(API_ENDPOINTS.MY_PROFILE, formData, {
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       transformRequest: (data) => data, // Prevent axios from stringifying FormData
     });

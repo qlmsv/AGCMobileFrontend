@@ -76,11 +76,13 @@ export const ChatDetailScreen: React.FC = () => {
         return {
           ...member,
           role: member.role_in_chat || member.role || 'member',
-          user_profile: userData ? {
-            first_name: userData.first_name || userData.name?.split(' ')[0] || null,
-            last_name: userData.last_name || null,
-            avatar: userData.avatar || null,
-          } : null,
+          user_profile: userData
+            ? {
+                first_name: userData.first_name || userData.name?.split(' ')[0] || null,
+                last_name: userData.last_name || null,
+                avatar: userData.avatar || null,
+              }
+            : null,
         };
       });
 
@@ -177,7 +179,9 @@ export const ChatDetailScreen: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <Text testID="chat-header" style={styles.headerTitle}>{chat?.display_title || `Chat ${chatId}`}</Text>
+          <Text testID="chat-header" style={styles.headerTitle}>
+            {chat?.display_title || `Chat ${chatId}`}
+          </Text>
           {chat?.type === 'group' && (
             <Text style={styles.headerSubtitle}>{(chat as any)?.members_count || ''} members</Text>
           )}

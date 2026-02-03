@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               await loadUserData();
             }
           })(),
-          timeoutPromise
+          timeoutPromise,
         ]);
       } catch (error) {
         logger.error('Auth check failed:', error);

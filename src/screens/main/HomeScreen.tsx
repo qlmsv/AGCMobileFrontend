@@ -75,7 +75,12 @@ export const HomeScreen: React.FC = () => {
   };
 
   const renderCourseCard = ({ item, index }: { item: Course; index: number }) => (
-    <CourseCard course={item} onPress={handleCoursePress} variant="vertical" testID={`course-card-${index}`} />
+    <CourseCard
+      course={item}
+      onPress={handleCoursePress}
+      variant="vertical"
+      testID={`course-card-${index}`}
+    />
   );
 
   if (isLoading) {
@@ -116,7 +121,12 @@ export const HomeScreen: React.FC = () => {
 
         {/* Banners */}
         {banners.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bannerScroll} testID="banners-carousel">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.bannerScroll}
+            testID="banners-carousel"
+          >
             {banners.map((banner) => (
               <TouchableOpacity
                 key={banner.id}
@@ -124,7 +134,10 @@ export const HomeScreen: React.FC = () => {
                 onPress={() => handleBannerPress(banner)}
                 activeOpacity={banner.link_url ? 0.7 : 1}
               >
-                <Image source={{ uri: secureImageUrl(banner.image_url) }} style={styles.bannerImage} />
+                <Image
+                  source={{ uri: secureImageUrl(banner.image_url) }}
+                  style={styles.bannerImage}
+                />
               </TouchableOpacity>
             ))}
           </ScrollView>

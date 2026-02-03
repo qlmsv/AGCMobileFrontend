@@ -179,7 +179,7 @@ export const InformationScreen: React.FC<Props> = ({ navigation, route }) => {
     if (!countrySearch.trim()) return COUNTRY_CODES;
     const search = countrySearch.toLowerCase();
     return COUNTRY_CODES.filter(
-      c => c.country.toLowerCase().includes(search) || c.code.includes(search)
+      (c) => c.country.toLowerCase().includes(search) || c.code.includes(search)
     );
   }, [countrySearch]);
 
@@ -334,10 +334,12 @@ export const InformationScreen: React.FC<Props> = ({ navigation, route }) => {
                 <SafeAreaView style={styles.countryModalContainer}>
                   <View style={styles.countryModalHeader}>
                     <Text style={styles.countryModalTitle}>Select Country</Text>
-                    <TouchableOpacity onPress={() => {
-                      setShowCountryPicker(false);
-                      setCountrySearch('');
-                    }}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowCountryPicker(false);
+                        setCountrySearch('');
+                      }}
+                    >
                       <Ionicons name="close" size={24} color={colors.text.primary} />
                     </TouchableOpacity>
                   </View>
@@ -365,10 +367,12 @@ export const InformationScreen: React.FC<Props> = ({ navigation, route }) => {
                         style={[
                           styles.countryItem,
                           COUNTRY_CODES[selectedCountryIndex]?.countryCode === item.countryCode &&
-                          styles.countryItemSelected
+                            styles.countryItemSelected,
                         ]}
                         onPress={() => {
-                          const originalIndex = COUNTRY_CODES.findIndex(c => c.countryCode === item.countryCode);
+                          const originalIndex = COUNTRY_CODES.findIndex(
+                            (c) => c.countryCode === item.countryCode
+                          );
                           setSelectedCountryIndex(originalIndex);
                           setShowCountryPicker(false);
                           setCountrySearch('');
