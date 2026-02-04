@@ -113,7 +113,7 @@ export const CourseDetailScreen: React.FC = () => {
                       // Use apple_product_id from backend if available, otherwise generate from module ID
                       const productId =
                         (paidModule as any).apple_product_id ||
-                        `com.agc.mobile.module.${paidModule.id.replace(/-/g, '_')}`;
+                        `com.agc.mobile.module.${paidModule.id.replace(/-/g, '_')}_v2`;
 
                       // DEBUG: Show product ID (remove after testing)
                       // console.log('IAP Product ID:', productId);
