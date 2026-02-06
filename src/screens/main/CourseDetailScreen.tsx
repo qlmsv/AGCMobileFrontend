@@ -91,80 +91,80 @@ export const CourseDetailScreen: React.FC = () => {
         errorCode === 'payment_required'
       ) {
         // Find the first paid module to initiate session
-        // We assume paying for one module (or the main one) covers the course or flow
-        // This is a simplification based on the available API
         const paidModule = modules.find((m) => m.price && parseFloat(m.price) > 0) || modules[0];
 
         if (paidModule) {
-          Alert.alert(
-            'Payment Required',
-            `This course requires payment. Would you like to proceed to checkout?`,
-            [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Buy Now',
-                onPress: async () => {
-                  try {
-                    setIsEnrolling(true);
-
-                    // Use native Apple IAP on iOS, Stripe WebView on Android
-                    if (Platform.OS === 'ios' && iapService.isAvailable()) {
-                      // Apple In-App Purchase flow
-                      // Use apple_product_id from backend if available, otherwise generate from module ID
-                      const productId =
-                        (paidModule as any).apple_product_id ||
-                        `com.agc.mobile.module.${paidModule.id.replace(/-/g, '_')}_v2`;
-
-                      // DEBUG: Show product ID (remove after testing)
-                      // console.log('IAP Product ID:', productId);
-                      // Alert.alert('Debug', `Looking for product: ${productId}`);
-
-                      logger.info('Initiating Apple IAP for product:', productId);
-
-                      const result = await iapService.purchaseModule(productId, paidModule.id);
-
-                      if (result.success) {
-                        Alert.alert('Success', 'Purchase completed! You are now enrolled.');
-                        fetchCourseDetails();
-                      } else if (result.error !== 'Purchase cancelled') {
-                        Alert.alert('Purchase Failed', result.error || 'Unknown error occurred');
-                      }
-                    } else {
-                      // Android: Use Stripe WebView
-                      logger.info('Creating stripe session for module:', paidModule.id);
-                      const session = await courseService.createStripeSession(paidModule.id);
-                      logger.info('Stripe session response:', session);
-                      const checkoutUrl = (session as any).checkout_url || session.url;
-                      if (checkoutUrl) {
-                        navigation.navigate('Payment', { url: checkoutUrl });
-                      } else {
-                        logger.error('Stripe session missing URL:', session);
-                        Alert.alert(
-                          'Error',
-                          'Payment session created but no checkout URL received.'
-                        );
-                      }
-                    }
-                  } catch (payError: any) {
-                    logger.error('Payment error:', payError);
-                    const errorDetail =
-                      payError?.response?.data?.detail ||
-                      payError?.message ||
-                      'Failed to complete payment.';
-                    Alert.alert('Error', errorDetail);
-                  } finally {
-                    setIsEnrolling(false);
-                  }
+          // Strictly isolate flows by platform for Guideline 3.1.1 compliance
+          if (Platform.OS === 'ios') {
+            // iOS: Direct IAP flow
+            handleExecutePurchase(paidModule);
+          } else if (Platform.OS === 'android') {
+            // Android: Traditional web payment flow
+            Alert.alert(
+              'Payment Required',
+              `This course requires payment. Would you like to proceed to purchase?`,
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Pay Now',
+                  onPress: () => handleExecutePurchase(paidModule),
                 },
-              },
-            ]
-          );
+              ]
+            );
+          } else {
+            Alert.alert('Payment Required', 'This course requires payment.');
+          }
         } else {
           Alert.alert('Enrollment Failed', errorMessage);
         }
       } else {
         Alert.alert('Enrollment Failed', errorMessage);
       }
+    } finally {
+      setIsEnrolling(false);
+    }
+  };
+
+  const handleExecutePurchase = async (paidModule: Module) => {
+    try {
+      setIsEnrolling(true);
+
+      // Use native Apple IAP on iOS, Stripe WebView on Android (strictly isolated)
+      if (Platform.OS === 'ios' && iapService.isAvailable()) {
+        const productId =
+          (paidModule as any).apple_product_id ||
+          `com.agc.mobile.module.${paidModule.id.replace(/-/g, '_')}_v2`;
+
+        logger.info('Initiating Apple IAP for product:', productId);
+
+        const result = await iapService.purchaseModule(productId, paidModule.id);
+
+        if (result.success) {
+          Alert.alert('Success', 'Purchase completed! You are now enrolled.');
+          fetchCourseDetails();
+        } else if (result.error !== 'Purchase cancelled') {
+          Alert.alert('Purchase Failed', result.error || 'Unknown error occurred');
+        }
+      } else if (Platform.OS === 'android') {
+        // Android: Use Stripe WebView
+        logger.info('Creating stripe session for module:', paidModule.id);
+        const session = await courseService.createStripeSession(paidModule.id);
+        logger.info('Stripe session response:', session);
+        const checkoutUrl = (session as any).checkout_url || session.url;
+        if (checkoutUrl) {
+          navigation.navigate('Payment', { url: checkoutUrl });
+        } else {
+          logger.error('Stripe session missing URL:', session);
+          Alert.alert('Error', 'Payment session created but no URL received.');
+        }
+      } else {
+        Alert.alert('Payment Required', 'Payments are not supported on this platform.');
+      }
+    } catch (payError: any) {
+      logger.error('Payment error:', payError);
+      const errorDetail =
+        payError?.response?.data?.detail || payError?.message || 'Failed to complete payment.';
+      Alert.alert('Error', errorDetail);
     } finally {
       setIsEnrolling(false);
     }
@@ -329,7 +329,11 @@ export const CourseDetailScreen: React.FC = () => {
             <ActivityIndicator color={colors.text.inverse} />
           ) : (
             <Text style={styles.enrollButtonText}>
-              {course.is_enrolled ? 'Already Enrolled' : 'Enroll Now'}
+              {course.is_enrolled
+                ? 'Already Enrolled'
+                : !course.is_free && Platform.OS === 'ios'
+                  ? 'Purchase Course'
+                  : 'Enroll Now'}
             </Text>
           )}
         </TouchableOpacity>

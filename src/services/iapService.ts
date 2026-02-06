@@ -37,7 +37,7 @@ export interface PurchaseResult {
 }
 
 class IAPService {
-  private isConnected = false;
+  public isConnected = false;
   private purchaseUpdateSubscription: { remove: () => void } | null = null;
   private purchaseErrorSubscription: { remove: () => void } | null = null;
 
