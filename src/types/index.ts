@@ -80,7 +80,7 @@ export interface Course {
   category: Category;
   category_id?: string;
   modules: Module[];
-  apple_product_id?: string; // Apple IAP Product ID for full course purchase
+  apple_product_id?: string; // Reserved for future full course purchase feature
   created_at: string;
   updated_at: string;
   is_favourite: boolean;
@@ -102,7 +102,6 @@ export interface Module {
   description?: string;
   position: number;
   price?: string;
-  apple_product_id?: string; // Apple IAP Product ID (e.g., "com.agc.mobile.module.123")
   lessons: Lesson[];
   created_at: string;
   updated_at: string;
