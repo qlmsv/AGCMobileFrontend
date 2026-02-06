@@ -138,9 +138,13 @@ export const CourseDetailScreen: React.FC = () => {
         }
 
         // Generate Apple Product ID from module UUID
-        // Format: com.agc.mobile.module.{uuid_with_underscores}_v2
-        // Note: _v2 suffix added because original Product IDs were already used
-        const productId = `com.agc.mobile.module.${paidModule.id.replace(/-/g, '_')}_v2`;
+        // Format: com.agc.mobile.module.{uuid_with_underscores}
+        // Special case: one module requires _v3 suffix due to previous Product ID conflicts
+        const moduleIdFormatted = paidModule.id.replace(/-/g, '_');
+        const requiresV3Suffix = paidModule.id === 'a3549952-356d-4e5b-97a7-72ed492e13b3';
+        const productId = requiresV3Suffix
+          ? `com.agc.mobile.module.${moduleIdFormatted}_v3`
+          : `com.agc.mobile.module.${moduleIdFormatted}`;
 
         logger.info('Initiating Apple IAP for product:', productId);
 
