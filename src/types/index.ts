@@ -101,6 +101,7 @@ export interface Module {
   description?: string;
   position: number;
   price?: string;
+  apple_product_id?: string; // Apple IAP Product ID (e.g., "com.agc.mobile.module.123")
   lessons: Lesson[];
   created_at: string;
   updated_at: string;

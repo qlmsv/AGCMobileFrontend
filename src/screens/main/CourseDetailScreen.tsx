@@ -130,15 +130,22 @@ export const CourseDetailScreen: React.FC = () => {
       setIsEnrolling(true);
 
       if (Platform.OS === 'ios') {
-        // iOS: Strictly ONLY Apple In-App Purchase
+        // iOS: Strictly ONLY Apple In-App Purchase (App Store Guideline 3.1.1)
         if (!iapService.isAvailable()) {
           Alert.alert('Error', 'In-App Purchases are not available on this device.');
           return;
         }
 
-        const productId =
-          (paidModule as any).apple_product_id ||
-          `com.agc.mobile.module.${paidModule.id.replace(/-/g, '_')}_v2`;
+        // CRITICAL: Use apple_product_id from backend or fail gracefully
+        const productId = paidModule.apple_product_id;
+        if (!productId) {
+          logger.error('Missing apple_product_id for module:', paidModule.id);
+          Alert.alert(
+            'Configuration Error',
+            'This course is not properly configured for purchase. Please contact support.'
+          );
+          return;
+        }
 
         logger.info('Initiating Apple IAP for product:', productId);
 
@@ -148,10 +155,11 @@ export const CourseDetailScreen: React.FC = () => {
           Alert.alert('Success', 'Purchase completed! You are now enrolled.');
           fetchCourseDetails();
         } else if (result.error !== 'Purchase cancelled') {
-          Alert.alert('Purchase Failed', result.error || 'Unknown error occurred');
+          logger.error('IAP purchase failed:', result.error);
+          Alert.alert('Purchase Failed', result.error || 'Unable to complete purchase');
         }
       } else if (Platform.OS === 'android') {
-        // Android: Direct Stripe flow (completely separate)
+        // Android: Stripe payment (NOT available on iOS per App Store guidelines)
         logger.info('Creating stripe session for module:', paidModule.id);
         const session = await courseService.createStripeSession(paidModule.id);
         const checkoutUrl = (session as any).checkout_url || session.url;

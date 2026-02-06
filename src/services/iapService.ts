@@ -13,7 +13,6 @@ import {
   getAvailablePurchases,
   purchaseUpdatedListener,
   purchaseErrorListener,
-  type Product,
   type Purchase,
 } from 'expo-iap';
 import { Platform } from 'react-native';
@@ -128,24 +127,50 @@ class IAPService {
     if (!this.isConnected) {
       const connected = await this.initialize();
       if (!connected) {
+        logger.error('IAP: Not connected to App Store');
         return { success: false, error: 'Failed to connect to App Store' };
       }
     }
 
+    logger.info('IAP: Starting purchase flow', { productId, moduleId });
+
     return new Promise((resolve) => {
+      let isResolved = false;
+      const timeout = setTimeout(() => {
+        if (!isResolved) {
+          isResolved = true;
+          cleanup();
+          logger.error('IAP: Purchase timeout after 60s');
+          resolve({ success: false, error: 'Purchase timed out. Please try again.' });
+        }
+      }, 60000); // 60 second timeout
+
+      const cleanup = () => {
+        clearTimeout(timeout);
+        if (this.purchaseUpdateSubscription) {
+          this.purchaseUpdateSubscription.remove();
+          this.purchaseUpdateSubscription = null;
+        }
+        if (this.purchaseErrorSubscription) {
+          this.purchaseErrorSubscription.remove();
+          this.purchaseErrorSubscription = null;
+        }
+      };
+
       // Set up purchase listener
       this.purchaseUpdateSubscription = purchaseUpdatedListener(async (purchase: Purchase) => {
-        if (purchase.productId === productId) {
+        if (purchase.productId === productId && !isResolved) {
           try {
             logger.info('IAP: Purchase received', {
               productId: purchase.productId,
               purchaseState: purchase.purchaseState,
               hasToken: !!purchase.purchaseToken,
+              transactionId: purchase.id,
             });
 
             if (purchase.purchaseState === 'purchased' && purchase.purchaseToken) {
               // Validate JWS with backend
-              // purchase.purchaseToken is the JWS (signed transaction) for StoreKit 2
+              logger.info('IAP: Validating receipt with backend', { moduleId });
               const validation = await courseService.validateAppleReceipt(
                 moduleId,
                 purchase.purchaseToken, // JWS token
@@ -153,39 +178,64 @@ class IAPService {
               );
 
               if (validation.success) {
+                logger.info('IAP: Receipt validated successfully', { moduleId });
                 // Finish the transaction
                 await iapFinishTransaction({
                   purchase,
                   isConsumable: false, // Courses are non-consumable
                 });
 
+                isResolved = true;
+                cleanup();
                 resolve({
                   success: true,
                   transactionId: purchase.id,
                   jws: purchase.purchaseToken,
                 });
               } else {
+                logger.error('IAP: Receipt validation failed', { moduleId });
+                isResolved = true;
+                cleanup();
                 resolve({
                   success: false,
-                  error: 'Receipt validation failed',
+                  error: 'Receipt validation failed. Please contact support.',
                 });
               }
             } else if (purchase.purchaseState === 'pending') {
-              // Transaction is pending (e.g., parental approval)
+              logger.warn('IAP: Purchase pending', { productId });
+              isResolved = true;
+              cleanup();
               resolve({
                 success: false,
                 error: 'Purchase is pending approval',
+              });
+            } else {
+              // Unknown or other state
+              logger.warn('IAP: Unexpected purchase state', {
+                productId,
+                state: purchase.purchaseState
+              });
+              isResolved = true;
+              cleanup();
+              resolve({
+                success: false,
+                error: 'Unexpected purchase state. Please try again.',
               });
             }
           } catch (error) {
             logger.error('IAP: Receipt validation error', error);
             const status = (error as any)?.response?.status;
+            const detail = (error as any)?.response?.data?.detail;
             let errMsg = 'Failed to validate purchase with server';
             if (status === 401) {
-              errMsg = 'Ошибка авторизации (401). Перелогиньтесь.';
+              errMsg = 'Authentication error. Please log in again.';
             } else if (status === 404) {
-              errMsg = 'Endpoint не найден (404)';
+              errMsg = 'Module not found. Please contact support.';
+            } else if (detail) {
+              errMsg = detail;
             }
+            isResolved = true;
+            cleanup();
             resolve({
               success: false,
               error: errMsg,
@@ -196,26 +246,35 @@ class IAPService {
 
       // Set up error listener
       this.purchaseErrorSubscription = purchaseErrorListener((error) => {
-        logger.error('IAP: Purchase error', error);
-        if (error.code === 'user-cancelled') {
-          resolve({ success: false, error: 'Purchase cancelled' });
-        } else {
-          resolve({
-            success: false,
-            error: error.message || 'Purchase failed',
-          });
+        if (!isResolved) {
+          logger.error('IAP: Purchase error', { code: error.code, message: error.message });
+          isResolved = true;
+          cleanup();
+          if (error.code === 'user-cancelled') {
+            resolve({ success: false, error: 'Purchase cancelled' });
+          } else {
+            resolve({
+              success: false,
+              error: error.message || 'Purchase failed. Please try again.',
+            });
+          }
         }
       });
 
       // Initiate purchase
+      logger.info('IAP: Initiating purchase request', { productId });
       iapRequestPurchase({
         request: {
           apple: { sku: productId },
         },
         type: 'in-app',
       }).catch((error) => {
-        logger.error('IAP: Purchase initiation failed', error);
-        resolve({ success: false, error: 'Failed to initiate purchase' });
+        if (!isResolved) {
+          logger.error('IAP: Purchase initiation failed', error);
+          isResolved = true;
+          cleanup();
+          resolve({ success: false, error: 'Failed to initiate purchase. Please try again.' });
+        }
       });
     });
   }
