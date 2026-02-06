@@ -129,8 +129,13 @@ export const CourseDetailScreen: React.FC = () => {
     try {
       setIsEnrolling(true);
 
-      // Use native Apple IAP on iOS, Stripe WebView on Android (strictly isolated)
-      if (Platform.OS === 'ios' && iapService.isAvailable()) {
+      if (Platform.OS === 'ios') {
+        // iOS: Strictly ONLY Apple In-App Purchase
+        if (!iapService.isAvailable()) {
+          Alert.alert('Error', 'In-App Purchases are not available on this device.');
+          return;
+        }
+
         const productId =
           (paidModule as any).apple_product_id ||
           `com.agc.mobile.module.${paidModule.id.replace(/-/g, '_')}_v2`;
@@ -146,19 +151,15 @@ export const CourseDetailScreen: React.FC = () => {
           Alert.alert('Purchase Failed', result.error || 'Unknown error occurred');
         }
       } else if (Platform.OS === 'android') {
-        // Android: Use Stripe WebView
+        // Android: Direct Stripe flow (completely separate)
         logger.info('Creating stripe session for module:', paidModule.id);
         const session = await courseService.createStripeSession(paidModule.id);
-        logger.info('Stripe session response:', session);
         const checkoutUrl = (session as any).checkout_url || session.url;
         if (checkoutUrl) {
           navigation.navigate('Payment', { url: checkoutUrl });
         } else {
-          logger.error('Stripe session missing URL:', session);
           Alert.alert('Error', 'Payment session created but no URL received.');
         }
-      } else {
-        Alert.alert('Payment Required', 'Payments are not supported on this platform.');
       }
     } catch (payError: any) {
       logger.error('Payment error:', payError);

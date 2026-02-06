@@ -55,9 +55,9 @@ export const PrivacyScreen: React.FC = () => {
 
         <Text style={styles.subTitle}>1.3 Payment Information</Text>
         <Text style={styles.paragraph}>
-          All payments are processed by third-party payment providers (such as Stripe, Apple In-App
-          Purchase, or other supported providers). We do not store or process full payment card
-          details on our servers.
+          On iOS, all payments are processed through Apple In-App Purchase. For other platforms, we
+          use supported third-party providers. We do not store or process full payment card details
+          on our servers.
         </Text>
 
         <Text style={styles.sectionTitle}>2. How We Use Your Information</Text>
