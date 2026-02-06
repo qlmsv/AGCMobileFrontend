@@ -90,16 +90,42 @@ export const CourseDetailScreen: React.FC = () => {
         errorMessage.includes('pay') ||
         errorCode === 'payment_required'
       ) {
-        // Find the first paid module to initiate session
-        const paidModule = modules.find((m) => m.price && parseFloat(m.price) > 0) || modules[0];
+        // Check if full course purchase is available
+        const hasFullCoursePurchase = course?.apple_product_id && course?.price;
+        const paidModules = modules.filter((m) => m.price && parseFloat(m.price) > 0);
 
-        if (paidModule) {
-          // Strictly isolate flows by platform for Guideline 3.1.1 compliance
-          if (Platform.OS === 'ios') {
-            // iOS: Direct IAP flow
-            handleExecutePurchase(paidModule);
-          } else if (Platform.OS === 'android') {
-            // Android: Traditional web payment flow
+        if (Platform.OS === 'ios') {
+          // iOS: Show purchase options
+          if (hasFullCoursePurchase && paidModules.length > 1) {
+            // Multiple options: full course or individual module
+            Alert.alert(
+              'Purchase Options',
+              `Full Course: $${course.price}\nOr purchase modules individually`,
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Buy Full Course',
+                  onPress: () => handleExecutePurchaseCourse(course),
+                },
+                {
+                  text: 'Buy Module',
+                  onPress: () => handleExecutePurchase(paidModules[0]),
+                },
+              ]
+            );
+          } else if (hasFullCoursePurchase) {
+            // Only full course available
+            handleExecutePurchaseCourse(course);
+          } else if (paidModules.length > 0) {
+            // Only modules available
+            handleExecutePurchase(paidModules[0]);
+          } else {
+            Alert.alert('Error', 'No purchase options available.');
+          }
+        } else if (Platform.OS === 'android') {
+          // Android: Stripe flow (same as before)
+          const paidModule = paidModules[0] || modules[0];
+          if (paidModule) {
             Alert.alert(
               'Payment Required',
               `This course requires payment. Would you like to proceed to purchase?`,
@@ -112,10 +138,10 @@ export const CourseDetailScreen: React.FC = () => {
               ]
             );
           } else {
-            Alert.alert('Payment Required', 'This course requires payment.');
+            Alert.alert('Enrollment Failed', errorMessage);
           }
         } else {
-          Alert.alert('Enrollment Failed', errorMessage);
+          Alert.alert('Payment Required', 'This course requires payment.');
         }
       } else {
         Alert.alert('Enrollment Failed', errorMessage);
@@ -171,6 +197,55 @@ export const CourseDetailScreen: React.FC = () => {
       }
     } catch (payError: any) {
       logger.error('Payment error:', payError);
+      const errorDetail =
+        payError?.response?.data?.detail || payError?.message || 'Failed to complete payment.';
+      Alert.alert('Error', errorDetail);
+    } finally {
+      setIsEnrolling(false);
+    }
+  };
+
+  const handleExecutePurchaseCourse = async (course: Course) => {
+    try {
+      setIsEnrolling(true);
+
+      if (Platform.OS === 'ios') {
+        // iOS: Apple In-App Purchase for full course
+        if (!iapService.isAvailable()) {
+          Alert.alert('Error', 'In-App Purchases are not available on this device.');
+          return;
+        }
+
+        const productId = course.apple_product_id;
+        if (!productId) {
+          logger.error('Missing apple_product_id for course:', course.id);
+          Alert.alert(
+            'Configuration Error',
+            'This course is not properly configured for purchase. Please contact support.'
+          );
+          return;
+        }
+
+        logger.info('Initiating Apple IAP for full course:', productId);
+
+        // Purchase course using first module's ID for validation (or course ID)
+        const result = await iapService.purchaseModule(productId, course.id);
+
+        if (result.success) {
+          Alert.alert('Success', 'Full course purchased! You are now enrolled in all modules.');
+          fetchCourseDetails();
+        } else if (result.error !== 'Purchase cancelled') {
+          logger.error('IAP course purchase failed:', result.error);
+          Alert.alert('Purchase Failed', result.error || 'Unable to complete purchase');
+        }
+      } else if (Platform.OS === 'android') {
+        // Android: Stripe payment for full course
+        logger.info('Creating stripe session for full course:', course.id);
+        // Note: Backend needs to support course-level purchase endpoint
+        Alert.alert('Info', 'Full course purchase on Android coming soon. Please purchase modules individually.');
+      }
+    } catch (payError: any) {
+      logger.error('Course payment error:', payError);
       const errorDetail =
         payError?.response?.data?.detail || payError?.message || 'Failed to complete payment.';
       Alert.alert('Error', errorDetail);

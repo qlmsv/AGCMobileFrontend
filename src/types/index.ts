@@ -80,6 +80,7 @@ export interface Course {
   category: Category;
   category_id?: string;
   modules: Module[];
+  apple_product_id?: string; // Apple IAP Product ID for full course purchase
   created_at: string;
   updated_at: string;
   is_favourite: boolean;
