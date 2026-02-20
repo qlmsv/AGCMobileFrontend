@@ -21,8 +21,6 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { chatService } from '../../services/chatService';
 import { courseService } from '../../services/courseService';
-import { userService } from '../../services/userService';
-import { profileService } from '../../services/profileService';
 import { ChatList, Course, Profile } from '../../types';
 import { EmptyState } from '../../components';
 import { logger } from '../../utils/logger';
@@ -106,7 +104,9 @@ export const ChatsScreen: React.FC = () => {
       const filteredProfiles = profiles.filter((p) => {
         const profileUserId = p.user || p.id;
         const shouldInclude = profileUserId !== user?.id;
-        logger.debug(`[ChatsScreen] Profile ${p.id}: userId=${profileUserId}, include=${shouldInclude}`);
+        logger.debug(
+          `[ChatsScreen] Profile ${p.id}: userId=${profileUserId}, include=${shouldInclude}`
+        );
         return shouldInclude;
       });
 

@@ -22,14 +22,14 @@ describe('Chat Flow', () => {
         .toBeVisible()
         .withTimeout(5000);
       return;
-    } catch (e) {}
+    } catch {}
 
     // Check for welcome screen first
     try {
       await waitFor(element(by.id('welcome-screen')))
         .toBeVisible()
         .withTimeout(10000);
-    } catch (e) {}
+    } catch {}
 
     // Login flow
     await waitFor(element(by.id('login-button')))
@@ -105,7 +105,7 @@ describe('Chat Flow', () => {
       // Try to close modal if open
       try {
         await element(by.id('cancel-chat-modal')).tap();
-      } catch (e) {
+      } catch {
         /* Modal not open */
       }
     });
@@ -171,9 +171,10 @@ describe('Chat Flow', () => {
       // Demo user role needs to be checked. Assuming demo user has permissions or button is visible.
       try {
         await element(by.id('create-group-chat-button')).tap();
-      } catch (e) {
-        console.log('User might not be a teacher or button hidden');
-        return;
+      } catch {
+        throw new Error(
+          'Create group chat button is missing: expected testID "create-group-chat-button"'
+        );
       }
 
       await waitFor(element(by.text('Create group chat')))
@@ -189,7 +190,7 @@ describe('Chat Flow', () => {
         // We can try index if FlatList, but it's a map in ScrollView.
         // We will try finding by type
         // Or just skip if too dynamic without mocks
-      } catch (e) {
+      } catch {
         console.log('No courses available');
       }
 
@@ -236,14 +237,14 @@ describe('Chat Flow', () => {
         // Go back to chats list
         try {
           await element(by.id('back-button')).tap();
-        } catch (e) {
+        } catch {
           // Try iOS back gesture or header back
           try {
             await element(by.type('_UIButtonBarButton')).atIndex(0).tap();
-          } catch (e2) {}
+          } catch {}
         }
       } catch (e) {
-        console.log('No chats available - skipping detail test');
+        console.log('No chats available - skipping detail test', e);
       }
     });
 
@@ -254,7 +255,7 @@ describe('Chat Flow', () => {
           .toBeVisible()
           .withTimeout(3000);
         await element(by.text('Chats')).tap();
-      } catch (e) {
+      } catch {
         // Maybe already on chats or different screen, continue
       }
 
@@ -282,7 +283,7 @@ describe('Chat Flow', () => {
 
         // Verify message list is visible
         await expect(element(by.id('messages-list'))).toBeVisible();
-      } catch (e) {
+      } catch {
         console.log('Could not send message - no chats available');
       }
     });

@@ -51,6 +51,9 @@ export const Button: React.FC<ButtonProps> = ({
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: disabled || loading }}
     >
       {loading ? (
         <ActivityIndicator

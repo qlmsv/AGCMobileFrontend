@@ -17,7 +17,7 @@ describe('Schedule Flow', () => {
         .toBeVisible()
         .withTimeout(5000);
       return;
-    } catch (e) {
+    } catch {
       // Proceed to login
     }
 
@@ -57,7 +57,7 @@ describe('Schedule Flow', () => {
 
     try {
       await element(by.text('Schedule')).atIndex(0).tap();
-    } catch (e) {
+    } catch {
       console.log('Schedule tab not found, trying "Calendar" or verifying if it is available');
       // If tab name is different
     }

@@ -72,7 +72,7 @@ describe('Enrollment Flow', () => {
           .withTimeout(5000);
         await element(by.label('OK')).atIndex(0).tap();
       }
-    } catch (e) {
+    } catch {
       console.log('User might be already enrolled');
       await expect(element(by.text('Already Enrolled'))).toBeVisible();
     }

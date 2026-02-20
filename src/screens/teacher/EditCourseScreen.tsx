@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { courseService } from '../../services/courseService';
-import { Category, Course } from '../../types';
+import { Category } from '../../types';
 import { logger } from '../../utils/logger';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -58,8 +58,6 @@ export const EditCourseScreen: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [price, setPrice] = useState('');
-  const [isFree, setIsFree] = useState(true);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [newCoverImage, setNewCoverImage] = useState<string | null>(null);
   const [duration, setDuration] = useState('');
@@ -68,11 +66,7 @@ export const EditCourseScreen: React.FC = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [status, setStatus] = useState<'draft' | 'published'>('published');
 
-  useEffect(() => {
-    loadCourseData();
-  }, [courseId]);
-
-  const loadCourseData = async () => {
+  const loadCourseData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [course, categoriesData] = await Promise.all([
@@ -86,8 +80,6 @@ export const EditCourseScreen: React.FC = () => {
       setTitle(course.title || '');
       setDescription(course.description || '');
       setSelectedCategoryId(course.category?.id || null);
-      setPrice(course.price?.toString() || '');
-      setIsFree(course.is_free ?? true);
       setCoverImage(course.cover || null);
       setDuration(course.duration || '');
       setStartDate(course.start_date ? new Date(course.start_date) : new Date());
@@ -102,7 +94,11 @@ export const EditCourseScreen: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [courseId, navigation]);
+
+  useEffect(() => {
+    loadCourseData();
+  }, [loadCourseData]);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -161,13 +157,12 @@ export const EditCourseScreen: React.FC = () => {
         title: title.trim(),
         description: description.trim(),
         category_id: selectedCategoryId,
-        is_free: isFree,
+        is_free: true,
         status,
         duration,
         start_date: startDate.toISOString().split('T')[0],
         certificate: hasCertificate,
       };
-      if (!isFree && price) courseData.price = price;
 
       logger.info('Updating course:', JSON.stringify(courseData));
       await apiService.patch(API_ENDPOINTS.COURSE_BY_ID(courseId), courseData);
@@ -340,32 +335,9 @@ export const EditCourseScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleInfo}>
-              <Ionicons name="gift-outline" size={24} color={colors.text.secondary} />
-              <Text style={styles.toggleLabel}>Free course</Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.toggle, isFree && styles.toggleActive]}
-              onPress={() => setIsFree(!isFree)}
-            >
-              <View style={[styles.toggleKnob, isFree && styles.toggleKnobActive]} />
-            </TouchableOpacity>
-          </View>
-
-          {!isFree && (
-            <>
-              <Text style={styles.label}>Price</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter price (e.g., 99.00)"
-                placeholderTextColor={colors.text.tertiary}
-                value={price}
-                onChangeText={setPrice}
-                keyboardType="decimal-pad"
-              />
-            </>
-          )}
+          <Text style={styles.hintText}>
+            Courses are always free. Set paid access on module level in course modules.
+          </Text>
 
           <Text style={styles.label}>Cover Image</Text>
           <TouchableOpacity style={styles.coverPicker} onPress={pickImage}>
@@ -418,6 +390,11 @@ const styles = StyleSheet.create({
   headerTitle: { ...textStyles.h3, color: colors.text.primary },
   scrollView: { flex: 1 },
   scrollContent: { padding: spacing.base, paddingBottom: 100 },
+  hintText: {
+    ...textStyles.caption,
+    color: colors.text.tertiary,
+    marginTop: spacing.sm,
+  },
   label: {
     ...textStyles.bodyLarge,
     fontWeight: '600',

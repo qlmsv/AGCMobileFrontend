@@ -36,6 +36,15 @@ export const CourseDetailScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEnrolling, setIsEnrolling] = useState(false);
 
+  // Helper function to get tier price for iOS users
+  const getTierPrice = (modulePrice: number): string => {
+    if (modulePrice <= 15) return '12.99';
+    if (modulePrice <= 30) return '32.99';
+    if (modulePrice <= 110) return '129.99';
+    if (modulePrice <= 220) return '259.99';
+    return '389.99';
+  };
+
   const fetchCourseDetails = useCallback(async () => {
     try {
       const courseData = await courseService.getCourse(courseId);
@@ -101,7 +110,7 @@ export const CourseDetailScreen: React.FC = () => {
 
         if (Platform.OS === 'ios') {
           // iOS: Direct module purchase via IAP
-          handleExecutePurchase(firstPaidModule);
+          await handleExecutePurchase(firstPaidModule);
         } else if (Platform.OS === 'android') {
           // Android: Stripe payment
           Alert.alert(
@@ -111,7 +120,9 @@ export const CourseDetailScreen: React.FC = () => {
               { text: 'Cancel', style: 'cancel' },
               {
                 text: 'Pay Now',
-                onPress: () => handleExecutePurchase(firstPaidModule),
+                onPress: () => {
+                  void handleExecutePurchase(firstPaidModule);
+                },
               },
             ]
           );
@@ -137,16 +148,25 @@ export const CourseDetailScreen: React.FC = () => {
           return;
         }
 
-        // Generate Apple Product ID from module UUID
-        // Format: com.agc.mobile.module.{uuid_with_underscores}
-        // Special case: one module requires _v3 suffix due to previous Product ID conflicts
-        const moduleIdFormatted = paidModule.id.replace(/-/g, '_');
-        const requiresV3Suffix = paidModule.id === 'a3549952-356d-4e5b-97a7-72ed492e13b3';
-        const productId = requiresV3Suffix
-          ? `com.agc.mobile.module.${moduleIdFormatted}_v3`
-          : `com.agc.mobile.module.${moduleIdFormatted}`;
+        // Tier-based IAP: Map module price to predefined tier
+        // Pricing includes 30% Apple commission (rounded to .99)
+        // Backend prices → User pays: $10→$12.99, $25→$32.99, $100→$129.99, $200→$259.99, $300→$389.99
+        const getProductIdForPrice = (price: number): string => {
+          if (price <= 15) return 'com.agc.mobile.module.tier1'; // User pays $12.99
+          if (price <= 30) return 'com.agc.mobile.module.tier2'; // User pays $32.99
+          if (price <= 110) return 'com.agc.mobile.module.tier3'; // User pays $129.99
+          if (price <= 220) return 'com.agc.mobile.module.tier4'; // User pays $259.99
+          return 'com.agc.mobile.module.tier5'; // User pays $389.99
+        };
 
-        logger.info('Initiating Apple IAP for product:', productId);
+        const modulePrice = parseFloat(String(paidModule.price || 0));
+        const productId = getProductIdForPrice(modulePrice);
+
+        logger.info('Initiating Apple IAP for module:', {
+          moduleId: paidModule.id,
+          modulePrice,
+          tier: productId,
+        });
 
         const result = await iapService.purchaseModule(productId, paidModule.id);
 
@@ -178,27 +198,75 @@ export const CourseDetailScreen: React.FC = () => {
     }
   };
 
-  const renderModule = (module: Module, index: number) => (
-    <View key={module.id} style={styles.moduleContainer}>
-      <Text style={styles.moduleTitle}>
-        Module {index + 1}: {module.title}
-      </Text>
-      {module.lessons?.map((lesson, idx) => (
-        <TouchableOpacity
-          key={lesson.id}
-          style={styles.lessonItem}
-          // Navigate only if enrolled or free preview - simple logic for now
-          onPress={() => navigation.navigate('LessonDetail', { lessonId: lesson.id })}
-        >
-          <Ionicons name="play-circle" size={20} color={colors.primary.main} />
-          <Text style={styles.lessonTitle}>
-            {idx + 1}. {lesson.title}
+  const renderModule = (module: Module, index: number) => {
+    const modulePrice = parseFloat(String(module.price || '0'));
+    const isPaidModule = modulePrice > 0;
+
+    // Check access: only true if explicitly true
+    // If has_access is missing or false, user has no access to paid modules
+    const hasAccess = module.has_access === true || module.has_access === 'true';
+    const isLocked = isPaidModule && !hasAccess;
+
+    // DEBUG: Log to see what backend returns
+    logger.info(`[Module ${index + 1}] "${module.title}":`, {
+      price: module.price,
+      isPaid: isPaidModule,
+      has_access_value: module.has_access,
+      has_access_type: typeof module.has_access,
+      hasAccess,
+      isLocked,
+    });
+
+    return (
+      <View key={module.id} style={styles.moduleContainer}>
+        <View style={styles.moduleHeader}>
+          <Text style={styles.moduleTitle}>
+            Module {index + 1}: {module.title}
           </Text>
-          {/* Lock icon if locked? */}
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
+          {isPaidModule && (
+            <View style={styles.modulePriceBadge}>
+              <Text style={styles.modulePriceText}>
+                ${Platform.OS === 'ios' ? getTierPrice(modulePrice) : modulePrice}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {isLocked ? (
+          <View style={styles.lockedModule}>
+            <Ionicons name="lock-closed" size={32} color={colors.text.tertiary} />
+            <Text style={styles.lockedText}>This module is locked</Text>
+            <Text style={styles.lockedSubtext}>
+              Purchase this module to access {module.lessons?.length || 0} lessons
+            </Text>
+            <TouchableOpacity
+              style={styles.purchaseModuleButton}
+              onPress={() => handleExecutePurchase(module)}
+            >
+              <Text style={styles.purchaseModuleButtonText}>
+                Purchase for ${Platform.OS === 'ios' ? getTierPrice(modulePrice) : modulePrice}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            {module.lessons?.map((lesson, idx) => (
+              <TouchableOpacity
+                key={lesson.id}
+                style={styles.lessonItem}
+                onPress={() => navigation.navigate('LessonDetail', { lessonId: lesson.id })}
+              >
+                <Ionicons name="play-circle" size={20} color={colors.primary.main} />
+                <Text style={styles.lessonTitle}>
+                  {idx + 1}. {lesson.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
+      </View>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -320,7 +388,13 @@ export const CourseDetailScreen: React.FC = () => {
         <View style={styles.priceContainer}>
           <Text style={styles.priceLabel}>Price</Text>
           <Text style={styles.priceValue}>
-            {course.is_free ? 'Free' : course.price ? `$${course.price}` : 'Free'}
+            {course.is_free
+              ? 'Free'
+              : course.price
+                ? Platform.OS === 'ios'
+                  ? `$${getTierPrice(parseFloat(course.price))}`
+                  : `$${course.price}`
+                : 'Free'}
           </Text>
         </View>
         <TouchableOpacity
@@ -449,6 +523,53 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
     marginLeft: spacing.xs,
     fontSize: 16,
+    flex: 1,
+  },
+  moduleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
+  modulePriceBadge: {
+    backgroundColor: colors.primary.main,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  modulePriceText: {
+    ...textStyles.caption,
+    color: colors.text.inverse,
+    fontWeight: '600',
+  },
+  lockedModule: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.md,
+  },
+  lockedText: {
+    ...textStyles.h4,
+    color: colors.text.primary,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  lockedSubtext: {
+    ...textStyles.body,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  purchaseModuleButton: {
+    backgroundColor: colors.primary.main,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+  },
+  purchaseModuleButtonText: {
+    ...textStyles.button,
+    color: colors.text.inverse,
+    fontWeight: '600',
   },
   lessonItem: {
     flexDirection: 'row',

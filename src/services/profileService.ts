@@ -123,7 +123,7 @@ export const profileService = {
       });
       const profiles = extractResults<Profile>(data);
       return profiles.length > 0 ? profiles[0] : null;
-    } catch (error) {
+    } catch {
       logger.debug('Could not find profile for user:', userId);
       return null;
     }

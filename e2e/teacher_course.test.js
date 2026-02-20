@@ -22,8 +22,8 @@ describe('Teacher Course Flow', () => {
       await element(by.id('logout-button')).tap();
       try {
         await element(by.text('Выйти')).tap();
-      } catch (e) {}
-    } catch (e) {
+      } catch {}
+    } catch {
       // Not at home, proceed
     }
 
@@ -32,7 +32,7 @@ describe('Teacher Course Flow', () => {
       await waitFor(element(by.id('welcome-screen')))
         .toBeVisible()
         .withTimeout(10000);
-    } catch (e) {}
+    } catch {}
 
     // Login - exposed errors
     await waitFor(element(by.id('login-button')))
@@ -76,7 +76,7 @@ describe('Teacher Course Flow', () => {
         .toBeVisible()
         .withTimeout(5000);
       await element(by.id('create-course-menu-item')).tap();
-    } catch (e) {
+    } catch {
       console.log('Menu item not found, trying header button');
       await element(by.id('create-course-header-button')).tap();
     }

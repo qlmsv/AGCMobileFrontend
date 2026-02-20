@@ -273,83 +273,83 @@
  */
 &nbsp;
 export const OPENAPI_SPEC_ENDPOINTS = [
-    // Auth (4)
-    '/api/auth/code/check/',
-    '/api/auth/code/send/',
-    '/api/auth/logout/',
-    '/api/auth/refresh/',
+  // Auth (4)
+  '/api/auth/code/check/',
+  '/api/auth/code/send/',
+  '/api/auth/logout/',
+  '/api/auth/refresh/',
 &nbsp;
-    // Banners (1)
-    '/api/banners/',
+  // Banners (1)
+  '/api/banners/',
 &nbsp;
-    // Chat (10)
-    '/api/chat/chats/',
-    '/api/chat/chats/{chat_id}/',
-    '/api/chat/chats/{chat_id}/members/',
-    '/api/chat/chats/{chat_id}/members/{member_id}/',
-    '/api/chat/chats/{chat_id}/members/me/',
-    '/api/chat/chats/{chat_id}/messages/',
-    '/api/chat/chats/{chat_id}/read/',
-    '/api/chat/chats/{chat_id}/transfer_owner/',
-    '/api/chat/chats/{chat_id}/upload/',
-    '/api/chat/messages/{message_id}/',
+  // Chat (10)
+  '/api/chat/chats/',
+  '/api/chat/chats/{chat_id}/',
+  '/api/chat/chats/{chat_id}/members/',
+  '/api/chat/chats/{chat_id}/members/{member_id}/',
+  '/api/chat/chats/{chat_id}/members/me/',
+  '/api/chat/chats/{chat_id}/messages/',
+  '/api/chat/chats/{chat_id}/read/',
+  '/api/chat/chats/{chat_id}/transfer_owner/',
+  '/api/chat/chats/{chat_id}/upload/',
+  '/api/chat/messages/{message_id}/',
 &nbsp;
-    // Courses - Categories (2)
-    '/api/courses/categories/',
-    '/api/courses/categories/{id}/',
+  // Courses - Categories (2)
+  '/api/courses/categories/',
+  '/api/courses/categories/{id}/',
 &nbsp;
-    // Courses - Courses (12)
-    '/api/courses/courses/',
-    '/api/courses/courses/{id}/',
-    '/api/courses/courses/{id}/add-manager/',
-    '/api/courses/courses/{id}/favourite/',
-    '/api/courses/courses/{id}/managers/',
-    '/api/courses/courses/{id}/remove-manager/',
-    '/api/courses/courses/{id}/students/',
-    '/api/courses/courses/{id}/unfavourite/',
-    '/api/courses/courses/favourites/',
-    '/api/courses/courses/my-courses/',
-    '/api/courses/courses/my-students/',
+  // Courses - Courses (12)
+  '/api/courses/courses/',
+  '/api/courses/courses/{id}/',
+  '/api/courses/courses/{id}/add-manager/',
+  '/api/courses/courses/{id}/favourite/',
+  '/api/courses/courses/{id}/managers/',
+  '/api/courses/courses/{id}/remove-manager/',
+  '/api/courses/courses/{id}/students/',
+  '/api/courses/courses/{id}/unfavourite/',
+  '/api/courses/courses/favourites/',
+  '/api/courses/courses/my-courses/',
+  '/api/courses/courses/my-students/',
 &nbsp;
-    // Courses - Lessons (3)
-    '/api/courses/lessons/',
-    '/api/courses/lessons/{id}/',
-    '/api/courses/lessons/{id}/check_access/',
+  // Courses - Lessons (3)
+  '/api/courses/lessons/',
+  '/api/courses/lessons/{id}/',
+  '/api/courses/lessons/{id}/check_access/',
 &nbsp;
-    // Courses - Modules (5)
-    '/api/courses/modules/',
-    '/api/courses/modules/{id}/',
-    '/api/courses/modules/{id}/access-status/',
-    '/api/courses/modules/{id}/create-stripe-session/',
-    '/api/courses/modules/{id}/enroll/',
+  // Courses - Modules (5)
+  '/api/courses/modules/',
+  '/api/courses/modules/{id}/',
+  '/api/courses/modules/{id}/access-status/',
+  '/api/courses/modules/{id}/create-stripe-session/',
+  '/api/courses/modules/{id}/enroll/',
 &nbsp;
-    // OAuth (1)
-    '/api/dj-rest-auth/google/',
+  // OAuth (1)
+  '/api/dj-rest-auth/google/',
 &nbsp;
-    // Notifications (7)
-    '/api/notifications/notifications/',
-    '/api/notifications/notifications/{id}/',
-    '/api/notifications/notifications/{id}/mark_read/',
-    '/api/notifications/notifications/mark_all_read/',
-    '/api/notifications/notifications/unread_count/',
-    '/api/notifications/webpush/subscriptions/',
-    '/api/notifications/webpush/subscriptions/{id}/',
+  // Notifications (7)
+  '/api/notifications/notifications/',
+  '/api/notifications/notifications/{id}/',
+  '/api/notifications/notifications/{id}/mark_read/',
+  '/api/notifications/notifications/mark_all_read/',
+  '/api/notifications/notifications/unread_count/',
+  '/api/notifications/webpush/subscriptions/',
+  '/api/notifications/webpush/subscriptions/{id}/',
 &nbsp;
-    // Profiles (3)
-    '/api/profiles/',
-    '/api/profiles/{id}/',
-    '/api/profiles/my-profile/',
+  // Profiles (3)
+  '/api/profiles/',
+  '/api/profiles/{id}/',
+  '/api/profiles/my-profile/',
 &nbsp;
-    // Schedule (1)
-    '/api/schedule/calendar',
+  // Schedule (1)
+  '/api/schedule/calendar',
 &nbsp;
-    // Schema (1)
-    '/api/schema/',
+  // Schema (1)
+  '/api/schema/',
 &nbsp;
-    // Users (3)
-    '/api/users/',
-    '/api/users/{id}/',
-    '/api/users/my-user/',
+  // Users (3)
+  '/api/users/',
+  '/api/users/{id}/',
+  '/api/users/my-user/',
 ] as const;
 &nbsp;
 export const TOTAL_SPEC_ENDPOINTS = OPENAPI_SPEC_ENDPOINTS.length; // 52
@@ -358,16 +358,16 @@ export const TOTAL_SPEC_ENDPOINTS = OPENAPI_SPEC_ENDPOINTS.length; // 52
  * Группировка эндпоинтов по категориям для отчёта
  */
 export const ENDPOINT_CATEGORIES = {
-    auth: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/auth/')),
-    banners: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/banners')),
-    chat: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/chat/')),
-    courses: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/courses/')),
-    oauth: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/dj-rest-auth/')),
-    notifications: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/notifications/')),
-    profiles: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/profiles/')),
-    schedule: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/schedule/')),
-    schema: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/schema/')),
-    users: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/users/')),
+  auth: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/auth/')),
+  banners: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/banners')),
+  chat: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/chat/')),
+  courses: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/courses/')),
+  oauth: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/dj-rest-auth/')),
+  notifications: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/notifications/')),
+  profiles: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/profiles/')),
+  schedule: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/schedule/')),
+  schema: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/schema/')),
+  users: OPENAPI_SPEC_ENDPOINTS.filter((e) =&gt; e.startsWith('/api/users/')),
 } as const;
 &nbsp;</pre></td></tr></table></pre>
 
@@ -376,7 +376,7 @@ export const ENDPOINT_CATEGORIES = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-28T03:25:03.708Z
+                at 2026-02-19T06:13:22.134Z
             </div>
         <script src="../prettify.js"></script>
         <script>

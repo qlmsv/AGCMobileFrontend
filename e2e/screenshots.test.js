@@ -20,7 +20,7 @@ const takeScreenshot = (name) => {
     execSync(`xcrun simctl io booted screenshot "${filePath}"`);
     console.log(`Screenshot saved: ${filePath}`);
   } catch (error) {
-    console.error(`Failed to take screenshot ${name}:`, error);
+    console.error(`Failed to take screenshot ${name}:`, error.message);
   }
 };
 
@@ -44,7 +44,7 @@ describe('App Store Screenshots', () => {
     // Clear status bar override
     try {
       execSync('xcrun simctl status_bar booted clear');
-    } catch (e) {}
+    } catch {}
   });
 
   it('should navigate and take screenshots', async () => {

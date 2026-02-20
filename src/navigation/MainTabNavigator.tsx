@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../screens/main/HomeScreen';
 import { CoursesScreen } from '../screens/main/CoursesScreen';
+import { ScheduleScreen } from '../screens/main/ScheduleScreen';
 
 import { ChatsScreen } from '../screens/main/ChatsScreen';
 import { ProfileScreen } from '../screens/main/ProfileScreen';
@@ -48,6 +49,9 @@ export const MainTabNavigator = () => {
           return (
             <View
               testID={`tab-icon-${route.name.toLowerCase()}`}
+              accessibilityRole="tab"
+              accessibilityLabel={`${route.name} tab`}
+              accessibilityState={{ selected: focused }}
               style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
             >
               <Ionicons name={iconName} size={24} color={color} />
@@ -60,24 +64,21 @@ export const MainTabNavigator = () => {
         name="Home"
         component={HomeScreen}
         options={{
-          // @ts-ignore
-          tabBarTestID: 'tab-home',
+          tabBarButtonTestID: 'tab-home',
         }}
       />
       <Tab.Screen
         name="Courses"
         component={CoursesScreen}
         options={{
-          // @ts-ignore
-          tabBarTestID: 'tab-courses',
+          tabBarButtonTestID: 'tab-courses',
         }}
       />
       <Tab.Screen
         name="Schedule"
-        component={require('../screens/main/ScheduleScreen').ScheduleScreen}
+        component={ScheduleScreen}
         options={{
-          // @ts-ignore
-          tabBarTestID: 'tab-schedule',
+          tabBarButtonTestID: 'tab-schedule',
           tabBarLabel: 'Schedule',
         }}
       />
@@ -85,16 +86,14 @@ export const MainTabNavigator = () => {
         name="Chats"
         component={ChatsScreen}
         options={{
-          // @ts-ignore
-          tabBarTestID: 'tab-chats',
+          tabBarButtonTestID: 'tab-chats',
         }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          // @ts-ignore
-          tabBarTestID: 'tab-profile',
+          tabBarButtonTestID: 'tab-profile',
         }}
       />
     </Tab.Navigator>

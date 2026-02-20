@@ -176,7 +176,7 @@ describe('Auth Flow', () => {
           .toBeVisible()
           .withTimeout(2000);
         await element(by.text('Выйти')).tap();
-      } catch (e) {
+      } catch {
         // No confirmation dialog
       }
 

@@ -34,12 +34,20 @@ export const SettingsScreen: React.FC = () => {
     setIsRestoring(true);
     try {
       const restored = await iapService.restorePurchases();
-      if (restored.length > 0) {
-        Alert.alert('Success', `Restored ${restored.length} purchase(s). Your content is now available.`);
-      } else {
+      if (restored.success && restored.count > 0) {
+        Alert.alert(
+          'Success',
+          `Restored ${restored.count} purchase(s). Your content is now available.`
+        );
+      } else if (restored.success) {
         Alert.alert('Info', 'No previous purchases found to restore.');
+      } else {
+        Alert.alert(
+          'Error',
+          restored.error || 'Failed to restore purchases. Please try again later.'
+        );
       }
-    } catch (error: any) {
+    } catch {
       Alert.alert('Error', 'Failed to restore purchases. Please try again later.');
     } finally {
       setIsRestoring(false);
@@ -69,11 +77,14 @@ export const SettingsScreen: React.FC = () => {
           <View style={styles.item} testID="notification-settings">
             <Text style={styles.itemText}>Push Notifications</Text>
             <Switch
-              testID="theme-toggle" // Using push notification switch as proxy for 'theme' test which expects a toggle
+              testID="theme-toggle"
               value={pushEnabled}
               onValueChange={setPushEnabled}
               trackColor={{ false: colors.neutral[300], true: colors.primary.light }}
               thumbColor={pushEnabled ? colors.primary.main : colors.neutral[400]}
+              accessibilityRole="togglebutton"
+              accessibilityLabel="Push Notifications"
+              accessibilityState={{ checked: pushEnabled }}
             />
           </View>
           <View style={styles.item}>
@@ -83,17 +94,30 @@ export const SettingsScreen: React.FC = () => {
               onValueChange={setEmailEnabled}
               trackColor={{ false: colors.neutral[300], true: colors.primary.light }}
               thumbColor={emailEnabled ? colors.primary.main : colors.neutral[400]}
+              accessibilityRole="togglebutton"
+              accessibilityLabel="Email Updates"
+              accessibilityState={{ checked: emailEnabled }}
             />
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>More</Text>
-          <TouchableOpacity style={styles.item} onPress={() => navigation.navigate('Terms')}>
+          <TouchableOpacity
+            style={styles.item}
+            onPress={() => navigation.navigate('Terms')}
+            accessibilityRole="button"
+            accessibilityLabel="Terms of Service"
+          >
             <Text style={styles.itemText}>Terms of Service</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.item} onPress={() => navigation.navigate('Privacy')}>
+          <TouchableOpacity
+            style={styles.item}
+            onPress={() => navigation.navigate('Privacy')}
+            accessibilityRole="button"
+            accessibilityLabel="Privacy Policy"
+          >
             <Text style={styles.itemText}>Privacy Policy</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
           </TouchableOpacity>
@@ -108,6 +132,9 @@ export const SettingsScreen: React.FC = () => {
               onPress={handleRestorePurchases}
               disabled={isRestoring}
               testID="restore-purchases-button"
+              accessibilityRole="button"
+              accessibilityLabel="Restore Purchases"
+              accessibilityState={{ disabled: isRestoring }}
             >
               <Text style={styles.itemText}>Restore Purchases</Text>
               {isRestoring ? (
@@ -119,7 +146,12 @@ export const SettingsScreen: React.FC = () => {
           </View>
         )}
 
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={logout}
+          accessibilityRole="button"
+          accessibilityLabel="Log Out"
+        >
           <Ionicons name="log-out-outline" size={20} color={colors.error} />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>

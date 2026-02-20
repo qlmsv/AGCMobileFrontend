@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
@@ -24,6 +25,7 @@ import { logger } from '../../utils/logger';
 import * as ImagePicker from 'expo-image-picker';
 import { profileService } from '../../services/profileService';
 import { secureImageUrl } from '../../utils/secureUrl';
+import { iapService } from '../../services/iapService';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -35,6 +37,7 @@ export const ProfileScreen: React.FC = () => {
   const [favorites, setFavorites] = useState<Course[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   const fetchMyCourses = useCallback(async () => {
     try {
@@ -135,6 +138,39 @@ export const ProfileScreen: React.FC = () => {
       Alert.alert('Error', errorDetail);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    if (Platform.OS !== 'ios') {
+      Alert.alert('Info', 'Purchase restoration is only available on iOS');
+      return;
+    }
+
+    setIsRestoring(true);
+    try {
+      logger.info('[ProfileScreen] Starting purchase restoration...');
+      const result = await iapService.restorePurchases();
+
+      if (result.success) {
+        if (result.count === 0) {
+          Alert.alert('Info', 'No previous purchases found to restore.');
+        } else {
+          Alert.alert(
+            'Success',
+            `Successfully restored ${result.count} purchase${result.count > 1 ? 's' : ''}!`
+          );
+          // Refresh courses to show newly accessible modules
+          await onRefresh();
+        }
+      } else {
+        Alert.alert('Error', result.error || 'Failed to restore purchases');
+      }
+    } catch (error) {
+      logger.error('[ProfileScreen] Restore purchases error:', error);
+      Alert.alert('Error', 'Failed to restore purchases. Please try again.');
+    } finally {
+      setIsRestoring(false);
     }
   };
 
@@ -254,6 +290,24 @@ export const ProfileScreen: React.FC = () => {
             <Text style={styles.statLabel}>Certificates</Text>
           </View>
         </View>
+
+        {/* Restore Purchases Button (iOS only, Students only) */}
+        {Platform.OS === 'ios' && user?.role !== 'teacher' && (
+          <TouchableOpacity
+            style={styles.restorePurchasesButton}
+            onPress={handleRestorePurchases}
+            disabled={isRestoring}
+          >
+            {isRestoring ? (
+              <ActivityIndicator size="small" color={colors.primary.main} />
+            ) : (
+              <>
+                <Ionicons name="refresh-circle-outline" size={20} color={colors.primary.main} />
+                <Text style={styles.restorePurchasesText}>Restore Purchases</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
 
         {/* My Courses Section */}
         <View style={styles.sectionHeader}>
@@ -485,6 +539,30 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     marginBottom: spacing.xl,
+  },
+  restorePurchasesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background.default,
+    marginHorizontal: spacing.base,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.primary.main,
+    marginBottom: spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  restorePurchasesText: {
+    ...textStyles.body,
+    color: colors.primary.main,
+    fontWeight: '600',
+    marginLeft: spacing.sm,
   },
   statItem: {
     alignItems: 'center',

@@ -213,7 +213,7 @@ class IAPService {
               // Unknown or other state
               logger.warn('IAP: Unexpected purchase state', {
                 productId,
-                state: purchase.purchaseState
+                state: purchase.purchaseState,
               });
               isResolved = true;
               cleanup();
@@ -252,6 +252,12 @@ class IAPService {
           cleanup();
           if (error.code === 'user-cancelled') {
             resolve({ success: false, error: 'Purchase cancelled' });
+          } else if (error.code === 'sku-not-found') {
+            resolve({
+              success: false,
+              error:
+                'Product not available in the App Store. This product may not be configured yet. Please try again later.',
+            });
           } else {
             resolve({
               success: false,
@@ -273,7 +279,21 @@ class IAPService {
           logger.error('IAP: Purchase initiation failed', error);
           isResolved = true;
           cleanup();
-          resolve({ success: false, error: 'Failed to initiate purchase. Please try again.' });
+
+          // Check if it's a SKU not found error
+          const errorMsg = error?.message || '';
+          const isSKUNotFound =
+            errorMsg.includes('SKU not found') || errorMsg.includes('sku-not-found');
+
+          if (isSKUNotFound) {
+            resolve({
+              success: false,
+              error:
+                'Product not available in the App Store. This product may not be configured yet. Please try again later.',
+            });
+          } else {
+            resolve({ success: false, error: 'Failed to initiate purchase. Please try again.' });
+          }
         }
       });
     });
@@ -282,8 +302,12 @@ class IAPService {
   /**
    * Restore previous purchases and sync with backend
    * This is required by Apple for apps with In-App Purchases
+   *
+   * For tier-based IAP:
+   * - Sends all tier purchases to backend
+   * - Backend determines which modules user has access to based on purchase history
    */
-  async restorePurchases(): Promise<string[]> {
+  async restorePurchases(): Promise<{ success: boolean; count: number; error?: string }> {
     if (!this.isConnected) {
       await this.initialize();
     }
@@ -291,50 +315,59 @@ class IAPService {
     try {
       logger.info('IAP: Starting purchase restoration...');
       const purchases = await getAvailablePurchases();
-      const restoredProductIds: string[] = [];
 
       logger.info('IAP: Found purchases to restore:', purchases.length);
 
-      for (const purchase of purchases) {
-        restoredProductIds.push(purchase.productId);
+      if (purchases.length === 0) {
+        return { success: true, count: 0 };
+      }
 
-        // Validate restored purchase with backend if has token
-        if (purchase.purchaseToken) {
-          try {
-            // Extract moduleId from productId (e.g., "module_abc123" -> "abc123")
-            const moduleId = purchase.productId.replace('module_', '');
-            logger.info('IAP: Validating restored purchase with backend', {
-              productId: purchase.productId,
-              moduleId,
-            });
+      // Collect all tier purchases with their JWS tokens
+      const tierPurchases = purchases
+        .filter((p): p is Purchase & { purchaseToken: string } =>
+          Boolean(p.productId.includes('tier') && p.purchaseToken)
+        )
+        .map((p) => ({
+          productId: p.productId,
+          transactionId: p.id,
+          jws: p.purchaseToken,
+        }));
 
-            await courseService.validateAppleReceipt(
-              moduleId,
-              purchase.purchaseToken,
-              purchase.id
-            );
-            logger.info('IAP: Restored purchase validated successfully', purchase.productId);
-          } catch (validationError) {
-            // Don't fail the whole restore if one validation fails
-            logger.warn('IAP: Restored purchase validation failed (non-fatal)', {
-              productId: purchase.productId,
-              error: validationError,
-            });
-          }
+      logger.info('IAP: Tier purchases to restore:', tierPurchases.length);
+
+      // Send all purchases to backend for validation and restoration
+      if (tierPurchases.length > 0) {
+        try {
+          // Call backend endpoint to restore all purchases
+          await courseService.restorePurchases(tierPurchases);
+          logger.info('IAP: Restored purchases validated successfully');
+        } catch (validationError) {
+          logger.error('IAP: Restore validation failed', validationError);
+          return {
+            success: false,
+            count: 0,
+            error: 'Failed to validate restored purchases with server',
+          };
         }
+      }
 
-        // Finish restored transactions
+      // Finish all restored transactions
+      for (const purchase of purchases) {
         await iapFinishTransaction({
           purchase,
           isConsumable: false,
         });
       }
 
-      logger.info('IAP: Restored purchases complete', restoredProductIds);
-      return restoredProductIds;
+      logger.info('IAP: Restored purchases complete');
+      return { success: true, count: tierPurchases.length };
     } catch (error) {
       logger.error('IAP: Failed to restore purchases', error);
-      throw error; // Re-throw so UI can handle it
+      return {
+        success: false,
+        count: 0,
+        error: 'Failed to restore purchases. Please try again.',
+      };
     }
   }
 

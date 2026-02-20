@@ -64,6 +64,15 @@ const DURATION_OPTIONS = [
 
 const generateTempId = () => Math.random().toString(36).substr(2, 9);
 
+// Tier-based pricing configuration
+const TIER_PRICES = [
+  { value: '10', label: '$10', tier: 'tier1', userPays: '$12.99' },
+  { value: '25', label: '$25', tier: 'tier2', userPays: '$32.99' },
+  { value: '100', label: '$100', tier: 'tier3', userPays: '$129.99' },
+  { value: '200', label: '$200', tier: 'tier4', userPays: '$259.99' },
+  { value: '300', label: '$300', tier: 'tier5', userPays: '$389.99' },
+];
+
 export const CreateCourseScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const [currentStep, setCurrentStep] = useState<Step>('main');
@@ -74,8 +83,6 @@ export const CreateCourseScreen: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [price, setPrice] = useState('');
-  const [isFree, setIsFree] = useState(true);
   const [language] = useState('en');
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [duration, setDuration] = useState('');
@@ -270,13 +277,12 @@ export const CreateCourseScreen: React.FC = () => {
         description: description.trim(),
         category_id: selectedCategoryId,
         language,
-        is_free: isFree,
+        is_free: true, // Courses are always free, only modules can be paid
         status: 'published',
         duration,
         start_date: startDate.toISOString().split('T')[0],
         certificate: hasCertificate,
       };
-      if (!isFree && price) courseData.price = price;
 
       logger.info('Creating course:', JSON.stringify(courseData));
       const newCourse = await courseService.createCourse(courseData);
@@ -294,6 +300,7 @@ export const CreateCourseScreen: React.FC = () => {
           title: mod.title.trim(),
           description: mod.description.trim(),
           position: i + 1,
+          is_free: !(mod.price && parseFloat(mod.price) > 0),
           price: mod.price || '0',
         });
         logger.info('Module created:', moduleRes.id);
@@ -479,36 +486,6 @@ export const CreateCourseScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.toggleRow}>
-        <View style={styles.toggleInfo}>
-          <Ionicons name="gift-outline" size={24} color={colors.text.secondary} />
-          <Text testID="is-free-label" style={styles.toggleLabel}>
-            Free course
-          </Text>
-        </View>
-        <TouchableOpacity
-          testID="is-free-toggle"
-          style={[styles.toggle, isFree && styles.toggleActive]}
-          onPress={() => setIsFree(!isFree)}
-        >
-          <View style={[styles.toggleKnob, isFree && styles.toggleKnobActive]} />
-        </TouchableOpacity>
-      </View>
-
-      {!isFree && (
-        <>
-          <Text style={styles.label}>Price</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter price (e.g., 99.00)"
-            placeholderTextColor={colors.text.tertiary}
-            value={price}
-            onChangeText={setPrice}
-            keyboardType="decimal-pad"
-          />
-        </>
-      )}
-
       <Text style={styles.label}>Cover Image</Text>
       <TouchableOpacity style={styles.coverPicker} onPress={pickImage}>
         {coverImage ? (
@@ -554,16 +531,39 @@ export const CreateCourseScreen: React.FC = () => {
             onChangeText={(val) => updateModule(index, 'description', val)}
             multiline
           />
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Price</Text>
-            <TextInput
-              style={styles.priceInput}
-              placeholder="0"
-              placeholderTextColor={colors.text.tertiary}
-              value={mod.price}
-              onChangeText={(val) => updateModule(index, 'price', val)}
-              keyboardType="decimal-pad"
-            />
+          <View style={styles.tierSelector}>
+            <Text style={styles.label}>Module Price</Text>
+            {TIER_PRICES.map((tier) => (
+              <TouchableOpacity
+                key={tier.value}
+                style={[styles.tierOption, mod.price === tier.value && styles.tierOptionSelected]}
+                onPress={() => updateModule(index, 'price', tier.value)}
+              >
+                <View style={styles.tierOptionContent}>
+                  <View style={styles.radioButton}>
+                    {mod.price === tier.value && <View style={styles.radioButtonInner} />}
+                  </View>
+                  <View style={styles.tierInfo}>
+                    <Text style={styles.tierLabel}>{tier.label}</Text>
+                    <Text style={styles.tierHint}>Users pay: {tier.userPays}</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={[
+                styles.tierOption,
+                (mod.price === '0' || !mod.price) && styles.tierOptionSelected,
+              ]}
+              onPress={() => updateModule(index, 'price', '0')}
+            >
+              <View style={styles.tierOptionContent}>
+                <View style={styles.radioButton}>
+                  {(mod.price === '0' || !mod.price) && <View style={styles.radioButtonInner} />}
+                </View>
+                <Text style={styles.tierLabel}>Free Module</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
       ))}
@@ -714,10 +714,6 @@ export const CreateCourseScreen: React.FC = () => {
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Certificate:</Text>
           <Text style={styles.summaryValue}>{hasCertificate ? 'Yes' : 'No'}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Price:</Text>
-          <Text style={styles.summaryValue}>{isFree ? 'Free' : `$${price || '0'}`}</Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Modules:</Text>
@@ -1053,4 +1049,57 @@ const styles = StyleSheet.create({
     borderColor: colors.neutral[300],
   },
   charCount: { ...textStyles.caption, color: colors.text.tertiary, textAlign: 'right' },
+  // Tier selector styles
+  tierSelector: {
+    marginTop: spacing.md,
+  },
+  tierOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.background.card,
+  },
+  tierOptionSelected: {
+    borderColor: colors.primary.main,
+    borderWidth: 2,
+    backgroundColor: colors.primary.light + '10',
+  },
+  tierOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  radioButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.border.default,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  radioButtonInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.primary.main,
+  },
+  tierInfo: {
+    flex: 1,
+  },
+  tierLabel: {
+    ...textStyles.body,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  tierHint: {
+    ...textStyles.caption,
+    color: colors.text.tertiary,
+    marginTop: 2,
+  },
 });

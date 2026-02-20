@@ -14,7 +14,7 @@ describe('Favorites Flow', () => {
     try {
       await expect(element(by.id('home-screen'))).toBeVisible();
       return;
-    } catch (e) {
+    } catch {
       // Proceed to login
     }
 
@@ -54,9 +54,8 @@ describe('Favorites Flow', () => {
 
     try {
       await element(by.id('course-fav-icon')).atIndex(0).tap();
-    } catch (e) {
-      console.log('Favorite icon needs to be implemented or ID added');
-      return;
+    } catch {
+      throw new Error('Favorite icon is missing: expected testID "course-fav-icon"');
     }
 
     // 3. Navigate to Favorites tab (if exists) or check filter

@@ -16,6 +16,7 @@ import { AuthProvider } from './src/contexts/AuthContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { notificationService } from './src/services/notificationService';
 import { iapService } from './src/services/iapService';
+import { logger } from './src/utils/logger';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -44,7 +45,7 @@ export default function App() {
       // Warm up IAP connection for iOS
       if (Platform.OS === 'ios') {
         iapService.initialize().catch((err) => {
-          console.log('[App] Failed to initialize IAP:', err);
+          logger.error('[App] Failed to initialize IAP:', err);
         });
       }
 

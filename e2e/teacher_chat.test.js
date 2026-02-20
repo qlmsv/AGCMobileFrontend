@@ -22,8 +22,8 @@ describe('Teacher Chat Flow', () => {
       await element(by.id('logout-button')).tap();
       try {
         await element(by.text('Выйти')).tap();
-      } catch (e) {}
-    } catch (e) {
+      } catch {}
+    } catch {
       // Not at home, proceed
     }
 
@@ -32,7 +32,7 @@ describe('Teacher Chat Flow', () => {
       await waitFor(element(by.id('welcome-screen')))
         .toBeVisible()
         .withTimeout(10000);
-    } catch (e) {}
+    } catch {}
 
     await waitFor(element(by.id('login-button')))
       .toBeVisible()
@@ -107,7 +107,7 @@ describe('Teacher Chat Flow', () => {
         .toBeVisible()
         .withTimeout(10000);
       await expect(element(by.text('Teacher Group'))).toBeVisible();
-    } catch (e) {
+    } catch {
       console.log('Could not find E2E Test Course to select or creation failed');
     }
   });

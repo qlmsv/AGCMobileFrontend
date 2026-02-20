@@ -110,7 +110,7 @@ describe('Courses Flow', () => {
         await waitFor(element(by.id('courses-list')))
           .toBeVisible()
           .withTimeout(3000);
-      } catch (e) {
+      } catch {
         console.log('Only one category exists');
       }
     });
@@ -166,7 +166,7 @@ describe('Courses Flow', () => {
         await waitFor(element(by.id('modules-list')))
           .toBeVisible()
           .withTimeout(3000);
-      } catch (e) {
+      } catch {
         console.log('No modules found');
       }
     });

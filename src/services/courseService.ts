@@ -89,19 +89,18 @@ export const courseService = {
       throw new Error('Course has no modules available for enrollment');
     }
 
+    const isFreeModule = (module: Module): boolean => {
+      if (module.is_free === true || module.is_free === 'true') return true;
+      if (module.is_free === false || module.is_free === 'false') return false;
+      const numericPrice = parseFloat(String(module.price ?? '0'));
+      return !Number.isFinite(numericPrice) || numericPrice <= 0;
+    };
+
+    const freeModules = modules.filter(isFreeModule);
+
     const results = await Promise.allSettled(
-      modules.map((module) => this.enrollInModule(module.id))
+      freeModules.map((module) => this.enrollInModule(module.id))
     );
-
-    const paymentRequired = results.some(
-      (result) =>
-        result.status === 'rejected' &&
-        (result.reason as any)?.response?.data?.code === 'payment_required'
-    );
-
-    if (paymentRequired) {
-      throw new Error('Some modules require payment. Please purchase the course first.');
-    }
 
     const allAlreadyEnrolled = results.every(
       (result) =>
@@ -200,6 +199,18 @@ export const courseService = {
     return await apiService.post(API_ENDPOINTS.MODULE_VALIDATE_APPLE_RECEIPT(moduleId), {
       signed_transaction: signedTransaction, // JWS format for StoreKit 2
       transaction_id: transactionId,
+    });
+  },
+
+  /**
+   * Restore all previous purchases (required by Apple)
+   * Sends all tier purchases to backend for validation and access restoration
+   */
+  async restorePurchases(
+    purchases: { productId: string; transactionId: string; jws: string }[]
+  ): Promise<{ success: boolean; restored_count: number }> {
+    return await apiService.post('/courses/restore-purchases/', {
+      purchases,
     });
   },
 

@@ -22,6 +22,15 @@ import { logger } from '../../utils/logger';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
+// Tier-based pricing configuration
+const TIER_PRICES = [
+  { value: '10', label: '$10', tier: 'tier1', userPays: '$12.99' },
+  { value: '25', label: '$25', tier: 'tier2', userPays: '$32.99' },
+  { value: '100', label: '$100', tier: 'tier3', userPays: '$129.99' },
+  { value: '200', label: '$200', tier: 'tier4', userPays: '$259.99' },
+  { value: '300', label: '$300', tier: 'tier5', userPays: '$389.99' },
+];
+
 export const AddModuleScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<any>();
@@ -31,7 +40,7 @@ export const AddModuleScreen: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isFree, setIsFree] = useState(true);
-  const [price, setPrice] = useState('');
+  const [price, setPrice] = useState('10'); // Default to first tier
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCreateModule = async () => {
@@ -134,14 +143,26 @@ export const AddModuleScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
           {!isFree && (
-            <TextInput
-              style={styles.input}
-              placeholder="Enter price (e.g., 29.99)"
-              placeholderTextColor={colors.text.tertiary}
-              value={price}
-              onChangeText={setPrice}
-              keyboardType="decimal-pad"
-            />
+            <View style={styles.tierSelector}>
+              <Text style={styles.label}>Select Price</Text>
+              {TIER_PRICES.map((tier) => (
+                <TouchableOpacity
+                  key={tier.value}
+                  style={[styles.tierOption, price === tier.value && styles.tierOptionSelected]}
+                  onPress={() => setPrice(tier.value)}
+                >
+                  <View style={styles.tierOptionContent}>
+                    <View style={styles.radioButton}>
+                      {price === tier.value && <View style={styles.radioButtonInner} />}
+                    </View>
+                    <View style={styles.tierInfo}>
+                      <Text style={styles.tierLabel}>{tier.label}</Text>
+                      <Text style={styles.tierHint}>Users pay: {tier.userPays}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
           )}
 
           <Text style={styles.hint}>
@@ -267,5 +288,57 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.6,
+  },
+  // Tier selector styles
+  tierSelector: {
+    gap: spacing.sm,
+  },
+  tierOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.background.card,
+  },
+  tierOptionSelected: {
+    borderColor: colors.primary.main,
+    borderWidth: 2,
+    backgroundColor: colors.primary.light + '10',
+  },
+  tierOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  radioButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.border.default,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  radioButtonInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.primary.main,
+  },
+  tierInfo: {
+    flex: 1,
+  },
+  tierLabel: {
+    ...textStyles.body,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  tierHint: {
+    ...textStyles.caption,
+    color: colors.text.tertiary,
+    marginTop: 2,
   },
 });

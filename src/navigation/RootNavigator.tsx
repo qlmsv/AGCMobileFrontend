@@ -14,16 +14,11 @@ import { EditCourseScreen } from '../screens/teacher/EditCourseScreen';
 import { AddModuleScreen } from '../screens/teacher/AddModuleScreen';
 import { TermsScreen } from '../screens/main/TermsScreen';
 import { PrivacyScreen } from '../screens/main/PrivacyScreen';
+import { PaymentScreen } from '../screens/main/PaymentScreen';
 import { useAuth } from '../contexts/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 import { RootStackParamList } from './types';
 import { colors } from '../theme';
-
-// Only import PaymentScreen for Android (Stripe compliance for iOS)
-let PaymentScreen: any = null;
-if (Platform.OS !== 'ios') {
-  PaymentScreen = require('../screens/main/PaymentScreen').PaymentScreen;
-}
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -56,9 +51,7 @@ export const RootNavigator = () => {
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="EditProfile" component={EditProfileScreen} />
           {/* Payment screen only for Android - iOS uses IAP (App Store Guideline 3.1.1) */}
-          {Platform.OS !== 'ios' && PaymentScreen && (
-            <Stack.Screen name="Payment" component={PaymentScreen} />
-          )}
+          {Platform.OS !== 'ios' && <Stack.Screen name="Payment" component={PaymentScreen} />}
           <Stack.Screen name="Students" component={StudentsScreen} />
           <Stack.Screen name="CreateCourse" component={CreateCourseScreen} />
           <Stack.Screen name="EditCourse" component={EditCourseScreen} />
