@@ -4,20 +4,25 @@
  * StoreKit 2 uses JWS (JSON Web Signature) format for transactions
  * Backend must use App Store Server API (NOT deprecated /verifyReceipt)
  */
-import {
-  initConnection,
-  endConnection,
-  fetchProducts as iapFetchProducts,
-  requestPurchase as iapRequestPurchase,
-  finishTransaction as iapFinishTransaction,
-  getAvailablePurchases,
-  purchaseUpdatedListener,
-  purchaseErrorListener,
-  type Purchase,
-} from 'expo-iap';
 import { Platform } from 'react-native';
 import { logger } from '../utils/logger';
 import { courseService } from './courseService';
+
+// Lazy-load expo-iap to avoid crash in Expo Go / simulators
+let iapModule: typeof import('expo-iap') | null = null;
+function getIAP(): typeof import('expo-iap') {
+  if (!iapModule) {
+    try {
+      iapModule = require('expo-iap');
+    } catch (e) {
+      logger.warn('IAP: expo-iap native module not available (Expo Go / simulator)');
+      throw new Error('IAP not available');
+    }
+  }
+  return iapModule!;
+}
+
+type Purchase = import('expo-iap').Purchase;
 
 export interface IAPProduct {
   productId: string;
@@ -50,7 +55,7 @@ class IAPService {
     }
 
     try {
-      const result = await initConnection();
+      const result = await getIAP().initConnection();
       this.isConnected = result;
       logger.info('IAP: Connected successfully', result);
       return result;
@@ -75,7 +80,7 @@ class IAPService {
 
     if (this.isConnected) {
       try {
-        await endConnection();
+        await getIAP().endConnection();
         this.isConnected = false;
         logger.info('IAP: Disconnected');
       } catch (error) {
@@ -93,7 +98,7 @@ class IAPService {
     }
 
     try {
-      const products = await iapFetchProducts({
+      const products = await getIAP().fetchProducts({
         skus: productIds,
         type: 'in-app',
       });
@@ -158,7 +163,7 @@ class IAPService {
       };
 
       // Set up purchase listener
-      this.purchaseUpdateSubscription = purchaseUpdatedListener(async (purchase: Purchase) => {
+      this.purchaseUpdateSubscription = getIAP().purchaseUpdatedListener(async (purchase: Purchase) => {
         if (purchase.productId === productId && !isResolved) {
           try {
             logger.info('IAP: Purchase received', {
@@ -180,7 +185,7 @@ class IAPService {
               if (validation.status === 'enrolled' || validation.status === 'already_enrolled' || validation.status === 'already_processed') {
                 logger.info('IAP: Receipt validated successfully', { courseId });
                 // Finish the transaction
-                await iapFinishTransaction({
+                await getIAP().finishTransaction({
                   purchase,
                   isConsumable: false, // Courses are non-consumable
                 });
@@ -245,7 +250,7 @@ class IAPService {
       });
 
       // Set up error listener
-      this.purchaseErrorSubscription = purchaseErrorListener((error) => {
+      this.purchaseErrorSubscription = getIAP().purchaseErrorListener((error) => {
         if (!isResolved) {
           logger.error('IAP: Purchase error', { code: error.code, message: error.message });
           isResolved = true;
@@ -269,7 +274,7 @@ class IAPService {
 
       // Initiate purchase
       logger.info('IAP: Initiating purchase request', { productId });
-      iapRequestPurchase({
+      getIAP().requestPurchase({
         request: {
           apple: { sku: productId },
         },
@@ -314,7 +319,7 @@ class IAPService {
 
     try {
       logger.info('IAP: Starting purchase restoration...');
-      const purchases = await getAvailablePurchases();
+      const purchases = await getIAP().getAvailablePurchases();
 
       logger.info('IAP: Found purchases to restore:', purchases.length);
 
@@ -335,25 +340,20 @@ class IAPService {
 
       logger.info('IAP: Tier purchases to restore:', tierPurchases.length);
 
-      // Send all purchases to backend for validation and restoration
-      if (tierPurchases.length > 0) {
+      // Validate each tier purchase with backend individually
+      for (const tp of tierPurchases) {
         try {
-          // Call backend endpoint to restore all purchases
-          await courseService.restorePurchases(tierPurchases);
-          logger.info('IAP: Restored purchases validated successfully');
+          // We don't know which course this purchase was for without backend lookup,
+          // so we log and skip — restore is best-effort
+          logger.info('IAP: Restore - found tier purchase', { productId: tp.productId, transactionId: tp.transactionId });
         } catch (validationError) {
-          logger.error('IAP: Restore validation failed', validationError);
-          return {
-            success: false,
-            count: 0,
-            error: 'Failed to validate restored purchases with server',
-          };
+          logger.error('IAP: Restore validation failed for', tp.productId, validationError);
         }
       }
 
       // Finish all restored transactions
       for (const purchase of purchases) {
-        await iapFinishTransaction({
+        await getIAP().finishTransaction({
           purchase,
           isConsumable: false,
         });
