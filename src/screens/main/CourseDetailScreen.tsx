@@ -317,6 +317,34 @@ export const CourseDetailScreen: React.FC = () => {
                 <Ionicons name="ribbon-outline" size={20} color={colors.primary.main} />
                 <Text style={styles.addModuleText}>Issue Certificates</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.addModuleButton, { marginTop: spacing.sm, borderColor: colors.error }]}
+                onPress={() =>
+                  Alert.alert(
+                    'Delete Course',
+                    'Are you sure you want to delete this course? This action cannot be undone.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Delete',
+                        style: 'destructive',
+                        onPress: async () => {
+                          try {
+                            await courseService.deleteCourse(course.id);
+                            Alert.alert('Deleted', 'Course has been deleted.');
+                            navigation.goBack();
+                          } catch (e: any) {
+                            Alert.alert('Error', e?.response?.data?.detail || 'Failed to delete course');
+                          }
+                        },
+                      },
+                    ]
+                  )
+                }
+              >
+                <Ionicons name="trash-outline" size={20} color={colors.error} />
+                <Text style={[styles.addModuleText, { color: colors.error }]}>Delete Course</Text>
+              </TouchableOpacity>
             </>
           )}
         </View>

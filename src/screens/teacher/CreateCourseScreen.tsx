@@ -90,6 +90,13 @@ export const CreateCourseScreen: React.FC = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [coursePrice, setCoursePrice] = useState('0');
 
+  // Lesson date/time picker state
+  const [lessonPickerTarget, setLessonPickerTarget] = useState<{
+    moduleIndex: number;
+    lessonIndex: number;
+    mode: 'date' | 'time';
+  } | null>(null);
+
   // Modules & Lessons
   const [modules, setModules] = useState<TempModule[]>([]);
   const [selectedModuleIndex, setSelectedModuleIndex] = useState<number>(0);
@@ -172,7 +179,7 @@ export const CreateCourseScreen: React.FC = () => {
     moduleIndex: number,
     lessonIndex: number,
     field: keyof TempLesson,
-    value: string | number
+    value: string | number | Date
   ) => {
     const updated = [...modules];
     (updated[moduleIndex].lessons[lessonIndex] as any)[field] = value;
@@ -636,27 +643,82 @@ export const CreateCourseScreen: React.FC = () => {
               <View style={styles.dateTimeRow}>
                 <View style={styles.dateField}>
                   <Text style={styles.fieldLabel}>Date</Text>
-                  <Text style={styles.dateText}>
-                    {lesson.start_date.toLocaleDateString('en-GB', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                    })}
-                  </Text>
+                  <TouchableOpacity
+                    style={styles.dateText}
+                    onPress={() =>
+                      setLessonPickerTarget({
+                        moduleIndex: selectedModuleIndex,
+                        lessonIndex,
+                        mode: 'date',
+                      })
+                    }
+                  >
+                    <Text style={{ color: colors.text.primary }}>
+                      {lesson.start_date.toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                      })}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
                 <View style={styles.timeField}>
                   <Text style={styles.fieldLabel}>Time</Text>
-                  <TextInput
+                  <TouchableOpacity
                     style={styles.timeInput}
-                    placeholder="12:00"
-                    placeholderTextColor={colors.text.tertiary}
-                    value={lesson.start_time}
-                    onChangeText={(val) =>
-                      updateLesson(selectedModuleIndex, lessonIndex, 'start_time', val)
+                    onPress={() =>
+                      setLessonPickerTarget({
+                        moduleIndex: selectedModuleIndex,
+                        lessonIndex,
+                        mode: 'time',
+                      })
                     }
-                  />
+                  >
+                    <Text style={{ color: colors.text.primary }}>
+                      {lesson.start_time || '12:00'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
+              {lessonPickerTarget?.lessonIndex === lessonIndex && (
+                <DateTimePicker
+                  value={
+                    lessonPickerTarget.mode === 'date'
+                      ? lesson.start_date
+                      : (() => {
+                          const d = new Date();
+                          const [h, m] = (lesson.start_time || '12:00').split(':').map(Number);
+                          d.setHours(h || 12, m || 0, 0, 0);
+                          return d;
+                        })()
+                  }
+                  mode={lessonPickerTarget.mode}
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={(_, selected) => {
+                    if (Platform.OS !== 'ios') setLessonPickerTarget(null);
+                    if (selected) {
+                      if (lessonPickerTarget.mode === 'date') {
+                        updateLesson(
+                          lessonPickerTarget.moduleIndex,
+                          lessonPickerTarget.lessonIndex,
+                          'start_date',
+                          selected as any
+                        );
+                      } else {
+                        const hh = String(selected.getHours()).padStart(2, '0');
+                        const mm = String(selected.getMinutes()).padStart(2, '0');
+                        updateLesson(
+                          lessonPickerTarget.moduleIndex,
+                          lessonPickerTarget.lessonIndex,
+                          'start_time',
+                          `${hh}:${mm}`
+                        );
+                      }
+                    }
+                    if (Platform.OS === 'ios') setLessonPickerTarget(null);
+                  }}
+                />
+              )}
               <TextInput
                 style={[styles.input, styles.textAreaSmall]}
                 placeholder="Description"
