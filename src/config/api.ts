@@ -26,10 +26,16 @@ export const API_ENDPOINTS = {
   CATEGORY_BY_ID: (id: string) => `/courses/categories/${id}/`,
   COURSE_MODULES: '/courses/modules/',
   MODULE_BY_ID: (id: string) => `/courses/modules/${id}/`,
-  MODULE_ACCESS_STATUS: (id: string) => `/courses/modules/${id}/access-status/`,
-  MODULE_ENROLL: (id: string) => `/courses/modules/${id}/enroll/`,
-  MODULE_CREATE_STRIPE_SESSION: (id: string) => `/courses/modules/${id}/create-stripe-session/`,
-  MODULE_VALIDATE_APPLE_RECEIPT: (id: string) => `/courses/modules/${id}/validate-apple-receipt/`,
+  // Course-level enrollment & payment
+  COURSE_ENROLL: (id: string) => `/courses/courses/${id}/enroll/`,
+  COURSE_ACCESS_STATUS: (id: string) => `/courses/courses/${id}/access-status/`,
+  COURSE_CREATE_STRIPE_SESSION: (id: string) => `/courses/courses/${id}/create-stripe-session/`,
+  COURSE_VALIDATE_APPLE_RECEIPT: (id: string) => `/courses/courses/${id}/validate-apple-receipt/`,
+
+  // Certificates
+  COURSE_CERTIFICATES: (courseId: string) => `/courses/courses/${courseId}/certificates/`,
+  MY_CERTIFICATES: '/courses/certificates/my-certificates/',
+
   COURSE_LESSONS: '/courses/lessons/',
   LESSON_BY_ID: (id: string) => `/courses/lessons/${id}/`,
   LESSON_CHECK_ACCESS: (id: string) => `/courses/lessons/${id}/check_access/`,

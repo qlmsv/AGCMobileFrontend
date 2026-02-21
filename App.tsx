@@ -40,21 +40,33 @@ export default function App() {
   }, [fontsLoaded]);
 
   useEffect(() => {
-    // Only register if fonts are loaded to ensure we are ready
-    if (fontsLoaded) {
-      // Warm up IAP connection for iOS
-      if (Platform.OS === 'ios') {
-        iapService.initialize().catch((err) => {
-          logger.error('[App] Failed to initialize IAP:', err);
-        });
-      }
+    // Register FCM background handler once (outside render)
+    notificationService.setupBackgroundHandler();
+  }, []);
 
-      notificationService.registerForPushNotificationsAsync().then((token) => {
-        if (token) {
-          notificationService.sendTokenToBackend(token);
-        }
+  useEffect(() => {
+    if (!fontsLoaded) return;
+
+    // Warm up IAP connection for iOS
+    if (Platform.OS === 'ios') {
+      iapService.initialize().catch((err) => {
+        logger.error('[App] Failed to initialize IAP:', err);
       });
     }
+
+    // Register FCM token and send to backend
+    notificationService.registerForPushNotificationsAsync().then((token) => {
+      if (token) {
+        notificationService.sendTokenToBackend(token);
+      }
+    });
+
+    // Set up foreground notification handler
+    const unsubscribe = notificationService.setupForegroundHandler((message) => {
+      logger.info('[App] FCM foreground message:', message?.notification?.title);
+    });
+
+    return () => unsubscribe();
   }, [fontsLoaded]);
 
   if (!fontsLoaded) {

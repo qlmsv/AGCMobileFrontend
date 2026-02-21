@@ -43,7 +43,6 @@ interface TempModule {
   tempId: string;
   title: string;
   description: string;
-  price: string;
   lessons: TempLesson[];
 }
 
@@ -89,6 +88,7 @@ export const CreateCourseScreen: React.FC = () => {
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [hasCertificate, setHasCertificate] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [coursePrice, setCoursePrice] = useState('0');
 
   // Modules & Lessons
   const [modules, setModules] = useState<TempModule[]>([]);
@@ -128,13 +128,12 @@ export const CreateCourseScreen: React.FC = () => {
         tempId: generateTempId(),
         title: '',
         description: '',
-        price: '0',
         lessons: [],
       },
     ]);
   };
 
-  const updateModule = (index: number, field: 'title' | 'description' | 'price', value: string) => {
+  const updateModule = (index: number, field: 'title' | 'description', value: string) => {
     const updated = [...modules];
     updated[index][field] = value;
     setModules(updated);
@@ -272,12 +271,14 @@ export const CreateCourseScreen: React.FC = () => {
     setIsLoading(true);
     try {
       // 1. Create course
+      const parsedPrice = parseFloat(coursePrice || '0');
       const courseData: any = {
         title: title.trim(),
         description: description.trim(),
         category_id: selectedCategoryId,
         language,
-        is_free: true, // Courses are always free, only modules can be paid
+        is_free: parsedPrice === 0,
+        price: coursePrice || '0',
         status: 'published',
         duration,
         start_date: startDate.toISOString().split('T')[0],
@@ -300,8 +301,8 @@ export const CreateCourseScreen: React.FC = () => {
           title: mod.title.trim(),
           description: mod.description.trim(),
           position: i + 1,
-          is_free: !(mod.price && parseFloat(mod.price) > 0),
-          price: mod.price || '0',
+          is_free: true,
+          price: '0',
         });
         logger.info('Module created:', moduleRes.id);
 
@@ -486,6 +487,38 @@ export const CreateCourseScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
+      <Text style={styles.label}>Course Price</Text>
+      <View style={styles.tierSelector}>
+        {TIER_PRICES.map((tier) => (
+          <TouchableOpacity
+            key={tier.value}
+            style={[styles.tierOption, coursePrice === tier.value && styles.tierOptionSelected]}
+            onPress={() => setCoursePrice(tier.value)}
+          >
+            <View style={styles.tierOptionContent}>
+              <View style={styles.radioButton}>
+                {coursePrice === tier.value && <View style={styles.radioButtonInner} />}
+              </View>
+              <View style={styles.tierInfo}>
+                <Text style={styles.tierLabel}>{tier.label}</Text>
+                <Text style={styles.tierHint}>Users pay: {tier.userPays}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity
+          style={[styles.tierOption, coursePrice === '0' && styles.tierOptionSelected]}
+          onPress={() => setCoursePrice('0')}
+        >
+          <View style={styles.tierOptionContent}>
+            <View style={styles.radioButton}>
+              {coursePrice === '0' && <View style={styles.radioButtonInner} />}
+            </View>
+            <Text style={styles.tierLabel}>Free Course</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
       <Text style={styles.label}>Cover Image</Text>
       <TouchableOpacity style={styles.coverPicker} onPress={pickImage}>
         {coverImage ? (
@@ -531,40 +564,6 @@ export const CreateCourseScreen: React.FC = () => {
             onChangeText={(val) => updateModule(index, 'description', val)}
             multiline
           />
-          <View style={styles.tierSelector}>
-            <Text style={styles.label}>Module Price</Text>
-            {TIER_PRICES.map((tier) => (
-              <TouchableOpacity
-                key={tier.value}
-                style={[styles.tierOption, mod.price === tier.value && styles.tierOptionSelected]}
-                onPress={() => updateModule(index, 'price', tier.value)}
-              >
-                <View style={styles.tierOptionContent}>
-                  <View style={styles.radioButton}>
-                    {mod.price === tier.value && <View style={styles.radioButtonInner} />}
-                  </View>
-                  <View style={styles.tierInfo}>
-                    <Text style={styles.tierLabel}>{tier.label}</Text>
-                    <Text style={styles.tierHint}>Users pay: {tier.userPays}</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity
-              style={[
-                styles.tierOption,
-                (mod.price === '0' || !mod.price) && styles.tierOptionSelected,
-              ]}
-              onPress={() => updateModule(index, 'price', '0')}
-            >
-              <View style={styles.tierOptionContent}>
-                <View style={styles.radioButton}>
-                  {(mod.price === '0' || !mod.price) && <View style={styles.radioButtonInner} />}
-                </View>
-                <Text style={styles.tierLabel}>Free Module</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
         </View>
       ))}
 
@@ -710,6 +709,12 @@ export const CreateCourseScreen: React.FC = () => {
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Start Date:</Text>
           <Text style={styles.summaryValue}>{startDate.toLocaleDateString('en-GB')}</Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Price:</Text>
+          <Text style={styles.summaryValue}>
+            {coursePrice === '0' ? 'Free' : `$${coursePrice}`}
+          </Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Certificate:</Text>

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
@@ -243,16 +244,7 @@ export const ScheduleScreen: React.FC = () => {
         ) : (
           <View style={styles.coursesList}>
             {dayEvents.map((event) => (
-              <TouchableOpacity
-                key={event.id}
-                style={styles.courseItem}
-                onPress={() => {
-                  // Open zoom link if available
-                  if (event.zoom_link) {
-                    logger.info('Opening zoom link:', event.zoom_link);
-                  }
-                }}
-              >
+              <View key={event.id} style={styles.courseItem}>
                 <View style={styles.courseTime}>
                   <Text style={styles.timeText}>
                     {new Date(event.starts_at).toLocaleTimeString('en-US', {
@@ -261,13 +253,15 @@ export const ScheduleScreen: React.FC = () => {
                       hour12: false,
                     })}
                   </Text>
-                  <Text style={[styles.timeText, { color: colors.text.tertiary }]}>
-                    {new Date(event.ends_at).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: false,
-                    })}
-                  </Text>
+                  {event.ends_at && (
+                    <Text style={[styles.timeText, { color: colors.text.tertiary }]}>
+                      {new Date(event.ends_at).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                      })}
+                    </Text>
+                  )}
                 </View>
                 <View style={styles.courseDetails}>
                   <Text style={styles.courseTitle} numberOfLines={1}>
@@ -278,7 +272,30 @@ export const ScheduleScreen: React.FC = () => {
                     {event.module_title ? ` • ${event.module_title}` : ''}
                   </Text>
                 </View>
-              </TouchableOpacity>
+                {event.zoom_url && (
+                  <TouchableOpacity
+                    style={[
+                      styles.zoomBtn,
+                      !event.zoom_link_active && styles.zoomBtnDisabled,
+                    ]}
+                    disabled={!event.zoom_link_active}
+                    onPress={() => {
+                      if (event.zoom_link_active && event.zoom_url) {
+                        Linking.openURL(event.zoom_url).catch((err) =>
+                          logger.error('Failed to open Zoom URL', err)
+                        );
+                      }
+                    }}
+                  >
+                    <Text style={[
+                      styles.zoomBtnText,
+                      !event.zoom_link_active && styles.zoomBtnTextDisabled,
+                    ]}>
+                      {event.zoom_link_active ? 'Join' : 'Soon'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             ))}
           </View>
         )}
@@ -440,6 +457,24 @@ const styles = StyleSheet.create({
   },
   courseModules: {
     ...textStyles.caption,
+    color: colors.text.tertiary,
+  },
+  zoomBtn: {
+    backgroundColor: colors.primary.main,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+    marginLeft: spacing.sm,
+  },
+  zoomBtnDisabled: {
+    backgroundColor: colors.border.light,
+  },
+  zoomBtnText: {
+    ...textStyles.caption,
+    color: colors.text.inverse,
+    fontWeight: '600',
+  },
+  zoomBtnTextDisabled: {
     color: colors.text.tertiary,
   },
 });

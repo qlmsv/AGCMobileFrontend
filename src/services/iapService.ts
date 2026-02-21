@@ -123,7 +123,7 @@ class IAPService {
    * - purchase.purchaseToken contains the JWS (signed transaction)
    * - Backend should use App Store Server API to validate
    */
-  async purchaseModule(productId: string, moduleId: string): Promise<PurchaseResult> {
+  async purchaseCourse(productId: string, courseId: string): Promise<PurchaseResult> {
     if (!this.isConnected) {
       const connected = await this.initialize();
       if (!connected) {
@@ -132,7 +132,7 @@ class IAPService {
       }
     }
 
-    logger.info('IAP: Starting purchase flow', { productId, moduleId });
+    logger.info('IAP: Starting purchase flow', { productId, courseId });
 
     return new Promise((resolve) => {
       let isResolved = false;
@@ -170,15 +170,15 @@ class IAPService {
 
             if (purchase.purchaseState === 'purchased' && purchase.purchaseToken) {
               // Validate JWS with backend
-              logger.info('IAP: Validating receipt with backend', { moduleId });
-              const validation = await courseService.validateAppleReceipt(
-                moduleId,
+              logger.info('IAP: Validating receipt with backend', { courseId });
+              const validation = await courseService.validateCourseAppleReceipt(
+                courseId,
                 purchase.purchaseToken, // JWS token
                 purchase.id // Transaction ID
               );
 
-              if (validation.success) {
-                logger.info('IAP: Receipt validated successfully', { moduleId });
+              if (validation.status === 'enrolled' || validation.status === 'already_enrolled' || validation.status === 'already_processed') {
+                logger.info('IAP: Receipt validated successfully', { courseId });
                 // Finish the transaction
                 await iapFinishTransaction({
                   purchase,
@@ -193,7 +193,7 @@ class IAPService {
                   jws: purchase.purchaseToken,
                 });
               } else {
-                logger.error('IAP: Receipt validation failed', { moduleId });
+                logger.error('IAP: Receipt validation failed', { courseId });
                 isResolved = true;
                 cleanup();
                 resolve({
@@ -230,7 +230,7 @@ class IAPService {
             if (status === 401) {
               errMsg = 'Authentication error. Please log in again.';
             } else if (status === 404) {
-              errMsg = 'Module not found. Please contact support.';
+              errMsg = 'Course not found. Please contact support.';
             } else if (detail) {
               errMsg = detail;
             }

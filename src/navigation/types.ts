@@ -16,6 +16,7 @@ export type RootStackParamList = {
   AddModule: { courseId: string; modulesCount?: number };
   Terms: undefined;
   Privacy: undefined;
+  TeacherCertificates: { courseId: string };
 };
 
 export type AuthStackParamList = {

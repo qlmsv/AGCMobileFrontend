@@ -60,11 +60,17 @@ export interface VerifyCodeResponse {
   refresh: string;
 }
 
+export interface TierInfo {
+  product_id: string;
+  price: number;
+}
+
 export interface Course {
   id: string;
   author: string;
   title: string;
   description?: string;
+  short_description?: string;
   language?: string;
   duration?: string;
   start_date: string | null;
@@ -80,12 +86,37 @@ export interface Course {
   category: Category;
   category_id?: string;
   modules: Module[];
-  apple_product_id?: string; // Reserved for future full course purchase feature
+  apple_product_id?: string;
+  tier_info?: TierInfo | null;
   created_at: string;
   updated_at: string;
   is_favourite: boolean;
   is_enrolled: boolean;
   managers: string[];
+}
+
+export interface CourseEnrollment {
+  id: string;
+  user: string;
+  course: string;
+  status: 'pending' | 'paid' | 'completed' | 'cancelled' | 'refunded';
+  paid_amount: string;
+  payment_id: string | null;
+  purchased_via: 'free' | 'apple_iap' | 'stripe';
+  tier_purchased: string | null;
+  purchased_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Certificate {
+  id: string;
+  user: string;
+  course: string;
+  pdf_file: string | null;
+  verification_url: string | null;
+  issued_at: string | null;
+  created_at: string;
 }
 
 export interface Category {
@@ -199,7 +230,13 @@ export interface Message {
 
 export interface Notification {
   id: string;
-  type: 'CLASS_REMINDER_T15' | 'ADMIN_ANNOUNCEMENT' | 'NEW_COURSE' | 'CHAT_MESSAGE';
+  type:
+    | 'CLASS_REMINDER_T15'
+    | 'CLASS_REMINDER_T20'
+    | 'CLASS_REMINDER_T10'
+    | 'ADMIN_ANNOUNCEMENT'
+    | 'NEW_COURSE'
+    | 'CHAT_MESSAGE';
   title: string;
   body?: string;
   payload: NotificationPayload;
@@ -257,6 +294,7 @@ export interface CalendarEvent {
   course_title?: string;
   module_title?: string;
   starts_at: string;
-  ends_at: string;
-  zoom_link?: string | null;
+  ends_at: string | null;
+  zoom_url?: string | null;
+  zoom_link_active?: boolean;
 }

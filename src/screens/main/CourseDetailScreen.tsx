@@ -36,13 +36,13 @@ export const CourseDetailScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEnrolling, setIsEnrolling] = useState(false);
 
-  // Helper function to get tier price for iOS users
-  const getTierPrice = (modulePrice: number): string => {
-    if (modulePrice <= 15) return '12.99';
-    if (modulePrice <= 30) return '32.99';
-    if (modulePrice <= 110) return '129.99';
-    if (modulePrice <= 220) return '259.99';
-    return '389.99';
+  // Tier display price for iOS comes from course.tier_info.price (set by backend)
+  const getDisplayPrice = (): string => {
+    if (course?.is_free || !course?.price || parseFloat(course.price) === 0) return 'Free';
+    if (Platform.OS === 'ios' && course.tier_info?.price) {
+      return `$${course.tier_info.price}`;
+    }
+    return `$${course?.price}`;
   };
 
   const fetchCourseDetails = useCallback(async () => {
@@ -81,141 +81,84 @@ export const CourseDetailScreen: React.FC = () => {
       fetchCourseDetails();
     } catch (error: any) {
       logger.error('Enrollment error:', error);
-      const errorMessage = error.message || 'Could not enroll';
-      const errorData = error.response?.data?.data; // Check API response structure if available
-      const errorCode = errorData?.code;
+      const code = error?.response?.data?.code;
 
-      // Handle "Already Enrolled" case
-      if (
-        errorCode === 'already_enrolled' ||
-        errorMessage.includes('already enrolled') ||
-        errorMessage.includes('already_enrolled')
-      ) {
-        Alert.alert('Info', 'You are already enrolled in this course.');
-        fetchCourseDetails(); // Refresh to update UI
-      } else if (
-        errorMessage.includes('payment') ||
-        errorMessage.includes('purchase') ||
-        errorMessage.includes('pay') ||
-        errorCode === 'payment_required'
-      ) {
-        // Backend only supports Module-level purchases
-        const paidModules = modules.filter((m) => m.price && parseFloat(m.price) > 0);
-        const firstPaidModule = paidModules[0] || modules[0];
-
-        if (!firstPaidModule) {
-          Alert.alert('Error', 'No modules available for purchase.');
-          return;
-        }
-
+      if (code === 'already_enrolled') {
+        fetchCourseDetails();
+      } else if (code === 'payment_required') {
         if (Platform.OS === 'ios') {
-          // iOS: Direct module purchase via IAP
-          await handleExecutePurchase(firstPaidModule);
-        } else if (Platform.OS === 'android') {
-          // Android: Stripe payment
+          await handleIAPPurchase();
+        } else {
           Alert.alert(
             'Payment Required',
-            `This course requires payment. Would you like to proceed to purchase the first module?`,
+            'Purchase this course to get access to all content.',
             [
               { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Pay Now',
-                onPress: () => {
-                  void handleExecutePurchase(firstPaidModule);
-                },
-              },
+              { text: 'Pay Now', onPress: () => { void handleStripeCheckout(); } },
             ]
           );
-        } else {
-          Alert.alert('Payment Required', 'This course requires payment.');
         }
       } else {
-        Alert.alert('Enrollment Failed', errorMessage);
+        const msg = error?.response?.data?.detail || error?.message || 'Enrollment failed';
+        Alert.alert('Error', msg);
       }
     } finally {
       setIsEnrolling(false);
     }
   };
 
-  const handleExecutePurchase = async (paidModule: Module) => {
+  const handleIAPPurchase = async () => {
+    if (!course) return;
     try {
       setIsEnrolling(true);
-
-      if (Platform.OS === 'ios') {
-        // iOS: Strictly ONLY Apple In-App Purchase (App Store Guideline 3.1.1)
-        if (!iapService.isAvailable()) {
-          Alert.alert('Error', 'In-App Purchases are not available on this device.');
-          return;
-        }
-
-        // Tier-based IAP: Map module price to predefined tier
-        // Pricing includes 30% Apple commission (rounded to .99)
-        // Backend prices → User pays: $10→$12.99, $25→$32.99, $100→$129.99, $200→$259.99, $300→$389.99
-        const getProductIdForPrice = (price: number): string => {
-          if (price <= 15) return 'com.agc.mobile.module.tier1'; // User pays $12.99
-          if (price <= 30) return 'com.agc.mobile.module.tier2'; // User pays $32.99
-          if (price <= 110) return 'com.agc.mobile.module.tier3'; // User pays $129.99
-          if (price <= 220) return 'com.agc.mobile.module.tier4'; // User pays $259.99
-          return 'com.agc.mobile.module.tier5'; // User pays $389.99
-        };
-
-        const modulePrice = parseFloat(String(paidModule.price || 0));
-        const productId = getProductIdForPrice(modulePrice);
-
-        logger.info('Initiating Apple IAP for module:', {
-          moduleId: paidModule.id,
-          modulePrice,
-          tier: productId,
-        });
-
-        const result = await iapService.purchaseModule(productId, paidModule.id);
-
-        if (result.success) {
-          Alert.alert('Success', 'Purchase completed! You are now enrolled.');
-          fetchCourseDetails();
-        } else if (result.error !== 'Purchase cancelled') {
-          logger.error('IAP purchase failed:', result.error);
-          Alert.alert('Purchase Failed', result.error || 'Unable to complete purchase');
-        }
-      } else if (Platform.OS === 'android') {
-        // Android: Stripe payment (NOT available on iOS per App Store guidelines)
-        logger.info('Creating stripe session for module:', paidModule.id);
-        const session = await courseService.createStripeSession(paidModule.id);
-        const checkoutUrl = (session as any).checkout_url || session.url;
-        if (checkoutUrl) {
-          navigation.navigate('Payment', { url: checkoutUrl });
-        } else {
-          Alert.alert('Error', 'Payment session created but no URL received.');
-        }
+      if (!iapService.isAvailable()) {
+        Alert.alert('Error', 'In-App Purchases are not available on this device.');
+        return;
       }
-    } catch (payError: any) {
-      logger.error('Payment error:', payError);
-      const errorDetail =
-        payError?.response?.data?.detail || payError?.message || 'Failed to complete payment.';
-      Alert.alert('Error', errorDetail);
+      const productId = course.tier_info?.product_id;
+      if (!productId) {
+        Alert.alert('Error', 'Unable to determine product for this course.');
+        return;
+      }
+      logger.info('Initiating Apple IAP for course:', { courseId: course.id, productId });
+      const result = await iapService.purchaseCourse(productId, course.id);
+      if (result.success) {
+        Alert.alert('Success', 'Purchase completed! You are now enrolled.');
+        fetchCourseDetails();
+      } else if (result.error !== 'Purchase cancelled') {
+        logger.error('IAP purchase failed:', result.error);
+        Alert.alert('Purchase Failed', result.error || 'Unable to complete purchase');
+      }
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail || err?.message || 'Failed to complete purchase.';
+      Alert.alert('Error', detail);
+    } finally {
+      setIsEnrolling(false);
+    }
+  };
+
+  const handleStripeCheckout = async () => {
+    if (!course) return;
+    try {
+      setIsEnrolling(true);
+      const { checkout_url } = await courseService.createCourseStripeSession(course.id);
+      if (checkout_url) {
+        navigation.navigate('Payment', { url: checkout_url });
+      } else {
+        Alert.alert('Error', 'Payment session created but no URL received.');
+      }
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail || err?.message || 'Failed to create payment session.';
+      Alert.alert('Error', detail);
     } finally {
       setIsEnrolling(false);
     }
   };
 
   const renderModule = (module: Module, index: number) => {
-    const modulePrice = parseFloat(String(module.price || '0'));
-    const isPaidModule = modulePrice > 0;
-
-    // Check access: only true if explicitly true
-    // If has_access is missing or false, user has no access to paid modules
-    const hasAccess = module.has_access === true || module.has_access === 'true';
-    const isLocked = isPaidModule && !hasAccess;
-
-    // DEBUG: Log to see what backend returns
-    logger.info(`[Module ${index + 1}] "${module.title}":`, {
-      price: module.price,
-      isPaid: isPaidModule,
-      has_access_value: module.has_access,
-      has_access_type: typeof module.has_access,
-      hasAccess,
-      isLocked,
-    });
+    // Access is course-level: if not enrolled in the course, all modules are locked
+    const hasAccess = course?.is_enrolled === true || module.has_access === true || module.has_access === 'true';
+    const isLocked = !hasAccess;
 
     return (
       <View key={module.id} style={styles.moduleContainer}>
@@ -223,30 +166,16 @@ export const CourseDetailScreen: React.FC = () => {
           <Text style={styles.moduleTitle}>
             Module {index + 1}: {module.title}
           </Text>
-          {isPaidModule && (
-            <View style={styles.modulePriceBadge}>
-              <Text style={styles.modulePriceText}>
-                ${Platform.OS === 'ios' ? getTierPrice(modulePrice) : modulePrice}
-              </Text>
-            </View>
+          {isLocked && (
+            <Ionicons name="lock-closed" size={16} color={colors.text.tertiary} />
           )}
         </View>
 
         {isLocked ? (
           <View style={styles.lockedModule}>
-            <Ionicons name="lock-closed" size={32} color={colors.text.tertiary} />
-            <Text style={styles.lockedText}>This module is locked</Text>
             <Text style={styles.lockedSubtext}>
-              Purchase this module to access {module.lessons?.length || 0} lessons
+              {module.lessons?.length || 0} lessons — purchase the course to unlock
             </Text>
-            <TouchableOpacity
-              style={styles.purchaseModuleButton}
-              onPress={() => handleExecutePurchase(module)}
-            >
-              <Text style={styles.purchaseModuleButtonText}>
-                Purchase for ${Platform.OS === 'ios' ? getTierPrice(modulePrice) : modulePrice}
-              </Text>
-            </TouchableOpacity>
           </View>
         ) : (
           <>
@@ -366,20 +295,29 @@ export const CourseDetailScreen: React.FC = () => {
             <Text style={styles.emptyText}>No modules available yet.</Text>
           )}
 
-          {/* Add Module button for course author */}
+          {/* Teacher actions */}
           {course.author === user?.id && (
-            <TouchableOpacity
-              style={styles.addModuleButton}
-              onPress={() =>
-                navigation.navigate('AddModule', {
-                  courseId: course.id,
-                  modulesCount: modules.length,
-                })
-              }
-            >
-              <Ionicons name="add-circle-outline" size={20} color={colors.primary.main} />
-              <Text style={styles.addModuleText}>Add Module</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={styles.addModuleButton}
+                onPress={() =>
+                  navigation.navigate('AddModule', {
+                    courseId: course.id,
+                    modulesCount: modules.length,
+                  })
+                }
+              >
+                <Ionicons name="add-circle-outline" size={20} color={colors.primary.main} />
+                <Text style={styles.addModuleText}>Add Module</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.addModuleButton, { marginTop: spacing.sm }]}
+                onPress={() => navigation.navigate('TeacherCertificates', { courseId: course.id })}
+              >
+                <Ionicons name="ribbon-outline" size={20} color={colors.primary.main} />
+                <Text style={styles.addModuleText}>Issue Certificates</Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
       </ScrollView>
@@ -387,15 +325,7 @@ export const CourseDetailScreen: React.FC = () => {
       <View style={styles.footer}>
         <View style={styles.priceContainer}>
           <Text style={styles.priceLabel}>Price</Text>
-          <Text style={styles.priceValue}>
-            {course.is_free
-              ? 'Free'
-              : course.price
-                ? Platform.OS === 'ios'
-                  ? `$${getTierPrice(parseFloat(course.price))}`
-                  : `$${course.price}`
-                : 'Free'}
-          </Text>
+          <Text style={styles.priceValue}>{getDisplayPrice()}</Text>
         </View>
         <TouchableOpacity
           testID="enroll-button"
@@ -531,45 +461,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.xs,
   },
-  modulePriceBadge: {
-    backgroundColor: colors.primary.main,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
-  },
-  modulePriceText: {
-    ...textStyles.caption,
-    color: colors.text.inverse,
-    fontWeight: '600',
-  },
   lockedModule: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.md,
-  },
-  lockedText: {
-    ...textStyles.h4,
-    color: colors.text.primary,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
   },
   lockedSubtext: {
-    ...textStyles.body,
-    color: colors.text.secondary,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  purchaseModuleButton: {
-    backgroundColor: colors.primary.main,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-  },
-  purchaseModuleButtonText: {
-    ...textStyles.button,
-    color: colors.text.inverse,
-    fontWeight: '600',
+    ...textStyles.caption,
+    color: colors.text.tertiary,
+    fontStyle: 'italic',
   },
   lessonItem: {
     flexDirection: 'row',

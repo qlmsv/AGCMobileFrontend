@@ -1,113 +1,108 @@
-import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
+/**
+ * Notification Service — Firebase Cloud Messaging
+ *
+ * Replaces expo-notifications with @react-native-firebase/messaging.
+ * To set up:
+ *   npm install @react-native-firebase/app @react-native-firebase/messaging
+ *   iOS:  add GoogleService-Info.plist, pod install, enable Push Notifications capability
+ *   Android: add google-services.json, apply google-services plugin
+ */
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiService from './api';
 import { API_ENDPOINTS } from '../config/api';
 import { logger } from '../utils/logger';
 
-// Config notifications handler
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Dynamic import so the app doesn't crash if the package is not yet installed
+let messaging: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  messaging = require('@react-native-firebase/messaging').default;
+} catch {
+  logger.warn('Firebase messaging not available. Run: npm install @react-native-firebase/app @react-native-firebase/messaging');
+}
 
 export const notificationService = {
+  /**
+   * Request permission and return FCM token.
+   * Returns undefined if permission denied or Firebase not set up.
+   */
   async registerForPushNotificationsAsync(): Promise<string | undefined> {
-    let token;
+    if (!messaging) return undefined;
 
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
-      });
+    try {
+      if (Platform.OS === 'ios') {
+        const authStatus = await messaging().requestPermission();
+        const authorized =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+        if (!authorized) {
+          logger.warn('FCM: Permission not granted on iOS');
+          return undefined;
+        }
+      }
+
+      const token = await messaging().getToken();
+      logger.info('FCM token:', token?.slice(0, 30) + '...');
+      return token;
+    } catch (error) {
+      logger.error('Error getting FCM token:', error);
+      return undefined;
     }
-
-    if (Device.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        logger.warn('Failed to get push token for push notification!');
-        return;
-      }
-
-      // Get the token
-      try {
-        // You might need projectId from app.json if you are using EAS
-        // const projectId = ...
-        const tokenData = await Notifications.getExpoPushTokenAsync();
-        token = tokenData.data;
-        logger.info('Expo Push Token:', token);
-      } catch (error) {
-        logger.error('Error getting push token:', error);
-      }
-    } else {
-      logger.info('Must use physical device for Push Notifications');
-    }
-
-    return token;
   },
 
   async sendTokenToBackend(token: string) {
     try {
-      // Get auth token to check if user is authenticated
       const authToken = await AsyncStorage.getItem('access_token');
-
       if (!authToken) {
-        logger.info('Push token: User not authenticated, skipping backend registration');
+        logger.info('FCM: User not authenticated, skipping backend registration');
         return;
       }
 
       await apiService.post(API_ENDPOINTS.PUSH_DEVICES, {
-        registration_id: token,
-        type: 'expo',
+        token,
+        type: 'fcm',
+        platform: Platform.OS,
       });
-      logger.info('Push token registered successfully on backend');
+      logger.info('FCM token registered on backend');
     } catch (error: any) {
-      // Silently handle 401/404 errors - endpoint may not exist yet
       if (error?.response?.status === 401 || error?.response?.status === 404) {
-        logger.info('Push token: Backend endpoint not ready or requires auth');
+        logger.info('FCM: Backend endpoint not ready or requires auth');
       } else {
-        logger.error('Failed to send token to backend:', error);
+        logger.error('Failed to send FCM token to backend:', error);
       }
     }
   },
 
-  addNotificationReceivedListener(callback: (notification: Notifications.Notification) => void) {
-    return Notifications.addNotificationReceivedListener(callback);
+  /**
+   * Subscribe to foreground messages. Returns unsubscribe function.
+   */
+  setupForegroundHandler(callback: (message: any) => void): () => void {
+    if (!messaging) return () => {};
+    return messaging().onMessage(async (message: any) => {
+      logger.info('FCM foreground message:', message?.notification?.title);
+      callback(message);
+    });
   },
 
-  addNotificationResponseReceivedListener(
-    callback: (response: Notifications.NotificationResponse) => void
-  ) {
-    return Notifications.addNotificationResponseReceivedListener(callback);
+  /**
+   * Register background message handler (call once on app init, outside render).
+   */
+  setupBackgroundHandler() {
+    if (!messaging) return;
+    messaging().setBackgroundMessageHandler(async (message: any) => {
+      logger.info('FCM background message:', message?.notification?.title);
+    });
   },
 
-  removeNotificationSubscription(subscription: Notifications.Subscription) {
-    subscription.remove();
-  },
+  // ── Server-side notification API methods (unchanged) ─────────────────────
 
-  // Server-side notification API methods
   async getNotifications(params?: {
     ordering?: string;
     page?: number;
     search?: string;
   }): Promise<any[]> {
     const data = await apiService.get<any>(API_ENDPOINTS.NOTIFICATIONS, { params });
-    // Handle paginated response
     if (data && Array.isArray(data.results)) {
       return data.results;
     }

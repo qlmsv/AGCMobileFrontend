@@ -1,6 +1,6 @@
 import apiService from './api';
 import { API_ENDPOINTS } from '../config/api';
-import { Course, Category, Module, Lesson, CourseStudent } from '../types';
+import { Course, Category, Certificate, CourseEnrollment, Module, Lesson, CourseStudent } from '../types';
 import { extractResults } from '../utils/extractResults';
 
 export const courseService = {
@@ -81,46 +81,44 @@ export const courseService = {
     return extractResults<CourseStudent>(data);
   },
 
-  async enrollInCourse(courseId: string): Promise<void> {
-    const course = await this.getCourse(courseId);
-    const modules = course.modules || [];
+  async enrollInCourse(courseId: string): Promise<CourseEnrollment> {
+    return await apiService.post<CourseEnrollment>(API_ENDPOINTS.COURSE_ENROLL(courseId), {});
+  },
 
-    if (modules.length === 0) {
-      throw new Error('Course has no modules available for enrollment');
-    }
+  async getCourseAccessStatus(
+    courseId: string
+  ): Promise<{ course_id: string; is_free: boolean; has_access: boolean; need_payment: boolean }> {
+    return await apiService.get(API_ENDPOINTS.COURSE_ACCESS_STATUS(courseId));
+  },
 
-    const isFreeModule = (module: Module): boolean => {
-      if (module.is_free === true || module.is_free === 'true') return true;
-      if (module.is_free === false || module.is_free === 'false') return false;
-      const numericPrice = parseFloat(String(module.price ?? '0'));
-      return !Number.isFinite(numericPrice) || numericPrice <= 0;
-    };
+  async createCourseStripeSession(
+    courseId: string
+  ): Promise<{ checkout_url: string }> {
+    return await apiService.post(API_ENDPOINTS.COURSE_CREATE_STRIPE_SESSION(courseId), {});
+  },
 
-    const freeModules = modules.filter(isFreeModule);
+  async validateCourseAppleReceipt(
+    courseId: string,
+    signedTransaction: string,
+    transactionId: string
+  ): Promise<{ status: string; enrollment: CourseEnrollment; transaction_id: string }> {
+    return await apiService.post(API_ENDPOINTS.COURSE_VALIDATE_APPLE_RECEIPT(courseId), {
+      signed_transaction: signedTransaction,
+      transaction_id: transactionId,
+    });
+  },
 
-    const results = await Promise.allSettled(
-      freeModules.map((module) => this.enrollInModule(module.id))
+  async getMyCertificates(): Promise<Certificate[]> {
+    const data = await apiService.get(API_ENDPOINTS.MY_CERTIFICATES);
+    return extractResults<Certificate>(data);
+  },
+
+  async uploadCertificate(courseId: string, formData: FormData): Promise<Certificate> {
+    return await apiService.post<Certificate>(
+      API_ENDPOINTS.COURSE_CERTIFICATES(courseId),
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
     );
-
-    const allAlreadyEnrolled = results.every(
-      (result) =>
-        result.status === 'fulfilled' ||
-        (result.status === 'rejected' &&
-          (result.reason as any)?.response?.data?.code === 'already_enrolled')
-    );
-
-    if (!allAlreadyEnrolled) {
-      const otherErrors = results.filter(
-        (result) =>
-          result.status === 'rejected' &&
-          (result.reason as any)?.response?.data?.code !== 'already_enrolled' &&
-          (result.reason as any)?.response?.data?.code !== 'payment_required'
-      );
-
-      if (otherErrors.length > 0) {
-        throw (otherErrors[0] as PromiseRejectedResult).reason;
-      }
-    }
   },
 
   async getCategories(params?: {
@@ -171,47 +169,6 @@ export const courseService = {
 
   async deleteModule(id: string): Promise<void> {
     await apiService.delete(API_ENDPOINTS.MODULE_BY_ID(id));
-  },
-
-  async getModuleAccessStatus(moduleId: string): Promise<{ has_access: boolean }> {
-    return await apiService.get(API_ENDPOINTS.MODULE_ACCESS_STATUS(moduleId));
-  },
-
-  async enrollInModule(moduleId: string): Promise<Module> {
-    return await apiService.post<Module>(API_ENDPOINTS.MODULE_ENROLL(moduleId), {});
-  },
-
-  async createStripeSession(moduleId: string): Promise<{ url?: string; checkout_url?: string }> {
-    return await apiService.post(API_ENDPOINTS.MODULE_CREATE_STRIPE_SESSION(moduleId), {});
-  },
-
-  /**
-   * Validate Apple IAP purchase with backend
-   *
-   * StoreKit 2: sends JWS (signed transaction) NOT base64 receipt
-   * Backend must use App Store Server API to validate
-   */
-  async validateAppleReceipt(
-    moduleId: string,
-    signedTransaction: string,
-    transactionId: string
-  ): Promise<{ success: boolean; enrolled: boolean }> {
-    return await apiService.post(API_ENDPOINTS.MODULE_VALIDATE_APPLE_RECEIPT(moduleId), {
-      signed_transaction: signedTransaction, // JWS format for StoreKit 2
-      transaction_id: transactionId,
-    });
-  },
-
-  /**
-   * Restore all previous purchases (required by Apple)
-   * Sends all tier purchases to backend for validation and access restoration
-   */
-  async restorePurchases(
-    purchases: { productId: string; transactionId: string; jws: string }[]
-  ): Promise<{ success: boolean; restored_count: number }> {
-    return await apiService.post('/courses/restore-purchases/', {
-      purchases,
-    });
   },
 
   async getLessons(params?: {

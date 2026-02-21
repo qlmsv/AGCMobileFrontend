@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import { Course } from '../../types';
+import { Certificate, Course } from '../../types';
 import { courseService } from '../../services/courseService';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -35,6 +35,7 @@ export const ProfileScreen: React.FC = () => {
 
   const [myCourses, setMyCourses] = useState<Course[]>([]);
   const [favorites, setFavorites] = useState<Course[]>([]);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -62,16 +63,27 @@ export const ProfileScreen: React.FC = () => {
     }
   }, []);
 
+  const fetchCertificates = useCallback(async () => {
+    if (user?.role === 'teacher') return;
+    try {
+      const data = await courseService.getMyCertificates();
+      setCertificates(data);
+    } catch (error) {
+      logger.error('Failed to fetch certificates', error);
+    }
+  }, [user?.role]);
+
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await Promise.all([fetchMyCourses(), fetchFavorites()]);
+    await Promise.all([fetchMyCourses(), fetchFavorites(), fetchCertificates()]);
     setIsRefreshing(false);
-  }, [fetchMyCourses, fetchFavorites]);
+  }, [fetchMyCourses, fetchFavorites, fetchCertificates]);
 
   useEffect(() => {
     fetchMyCourses();
     fetchFavorites();
-  }, [fetchMyCourses, fetchFavorites]);
+    fetchCertificates();
+  }, [fetchMyCourses, fetchFavorites, fetchCertificates]);
 
   const handlePickImage = async () => {
     try {
@@ -286,7 +298,7 @@ export const ProfileScreen: React.FC = () => {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>0</Text>
+            <Text style={styles.statValue}>{certificates.length}</Text>
             <Text style={styles.statLabel}>Certificates</Text>
           </View>
         </View>
