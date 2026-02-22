@@ -1,8 +1,8 @@
 /**
- * Apple IAP Service using expo-iap (StoreKit 2)
+ * IAP Service using expo-iap (StoreKit 2 + Google Play Billing)
  *
- * StoreKit 2 uses JWS (JSON Web Signature) format for transactions
- * Backend must use App Store Server API (NOT deprecated /verifyReceipt)
+ * iOS: StoreKit 2, JWS transactions → validate-apple-receipt
+ * Android: Google Play Billing → validate-google-receipt
  */
 import { Platform } from 'react-native';
 import { logger } from '../utils/logger';
@@ -49,8 +49,8 @@ class IAPService {
    * Initialize IAP connection - call this on app start
    */
   async initialize(): Promise<boolean> {
-    if (Platform.OS !== 'ios') {
-      logger.info('IAP: Not iOS, skipping initialization');
+    if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
+      logger.info('IAP: Not iOS/Android, skipping initialization');
       return false;
     }
 
@@ -174,13 +174,19 @@ class IAPService {
             });
 
             if (purchase.purchaseState === 'purchased' && purchase.purchaseToken) {
-              // Validate JWS with backend
-              logger.info('IAP: Validating receipt with backend', { courseId });
-              const validation = await courseService.validateCourseAppleReceipt(
-                courseId,
-                purchase.purchaseToken, // JWS token
-                purchase.id // Transaction ID
-              );
+              // Validate with backend (platform-specific)
+              logger.info('IAP: Validating receipt with backend', { courseId, platform: Platform.OS });
+              const validation = Platform.OS === 'ios'
+                ? await courseService.validateCourseAppleReceipt(
+                    courseId,
+                    purchase.purchaseToken, // JWS token
+                    purchase.id // Transaction ID
+                  )
+                : await courseService.validateCourseGoogleReceipt(
+                    courseId,
+                    purchase.purchaseToken, // Google purchase token
+                    purchase.productId // Product ID
+                  );
 
               if (validation.status === 'enrolled' || validation.status === 'already_enrolled' || validation.status === 'already_processed') {
                 logger.info('IAP: Receipt validated successfully', { courseId });
@@ -272,12 +278,14 @@ class IAPService {
         }
       });
 
-      // Initiate purchase
-      logger.info('IAP: Initiating purchase request', { productId });
+      // Initiate purchase (platform-specific request)
+      logger.info('IAP: Initiating purchase request', { productId, platform: Platform.OS });
+      const purchaseRequest = Platform.OS === 'ios'
+        ? { apple: { sku: productId } }
+        : { google: { skus: [productId] } };
+
       getIAP().requestPurchase({
-        request: {
-          apple: { sku: productId },
-        },
+        request: purchaseRequest,
         type: 'in-app',
       }).catch((error) => {
         if (!isResolved) {
@@ -375,7 +383,7 @@ class IAPService {
    * Check if IAP is available on this device
    */
   isAvailable(): boolean {
-    return Platform.OS === 'ios';
+    return Platform.OS === 'ios' || Platform.OS === 'android';
   }
 }
 

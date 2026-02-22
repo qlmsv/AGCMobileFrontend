@@ -108,6 +108,17 @@ export const courseService = {
     });
   },
 
+  async validateCourseGoogleReceipt(
+    courseId: string,
+    purchaseToken: string,
+    productId: string
+  ): Promise<{ status: string; enrollment: CourseEnrollment; purchase_token: string }> {
+    return await apiService.post(API_ENDPOINTS.COURSE_VALIDATE_GOOGLE_RECEIPT(courseId), {
+      purchase_token: purchaseToken,
+      product_id: productId,
+    });
+  },
+
   async getMyCertificates(): Promise<Certificate[]> {
     const data = await apiService.get(API_ENDPOINTS.MY_CERTIFICATES);
     return extractResults<Certificate>(data);

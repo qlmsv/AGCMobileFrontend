@@ -31,6 +31,7 @@ export const API_ENDPOINTS = {
   COURSE_ACCESS_STATUS: (id: string) => `/courses/courses/${id}/access-status/`,
   COURSE_CREATE_STRIPE_SESSION: (id: string) => `/courses/courses/${id}/create-stripe-session/`,
   COURSE_VALIDATE_APPLE_RECEIPT: (id: string) => `/courses/courses/${id}/validate-apple-receipt/`,
+  COURSE_VALIDATE_GOOGLE_RECEIPT: (id: string) => `/courses/courses/${id}/validate-google-receipt/`,
 
   // Certificates
   COURSE_CERTIFICATES: (courseId: string) => `/courses/courses/${courseId}/certificates/`,

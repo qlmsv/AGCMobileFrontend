@@ -39,7 +39,7 @@ export const CourseDetailScreen: React.FC = () => {
   // Tier display price for iOS comes from course.tier_info.price (set by backend)
   const getDisplayPrice = (): string => {
     if (course?.is_free || !course?.price || parseFloat(course.price) === 0) return 'Free';
-    if (Platform.OS === 'ios' && course.tier_info?.price) {
+    if (iapService.isAvailable() && course.tier_info?.price) {
       return `$${course.tier_info.price}`;
     }
     return `$${course?.price}`;
@@ -86,7 +86,7 @@ export const CourseDetailScreen: React.FC = () => {
       if (code === 'already_enrolled') {
         fetchCourseDetails();
       } else if (code === 'payment_required') {
-        if (Platform.OS === 'ios') {
+        if (iapService.isAvailable()) {
           await handleIAPPurchase();
         } else {
           Alert.alert(

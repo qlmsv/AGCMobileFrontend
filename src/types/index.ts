@@ -102,7 +102,7 @@ export interface CourseEnrollment {
   status: 'pending' | 'paid' | 'completed' | 'cancelled' | 'refunded';
   paid_amount: string;
   payment_id: string | null;
-  purchased_via: 'free' | 'apple_iap' | 'stripe';
+  purchased_via: 'free' | 'apple_iap' | 'stripe' | 'google_play';
   tier_purchased: string | null;
   purchased_at: string | null;
   created_at: string;
