@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { courseService } from '../services/courseService';
 import { logger } from '../utils/logger';
 import { secureImageUrl } from '../utils/secureUrl';
+import { useIAPPrice } from '../hooks/useIAPPrice';
 
 interface CourseCardProps {
   course: Course;
@@ -28,6 +29,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   const isHorizontal = variant === 'horizontal';
   const [isFavorite, setIsFavorite] = useState(course.is_favourite || false);
   const [isToggling, setIsToggling] = useState(false);
+  const { displayPrice, isLoading: isPriceLoading } = useIAPPrice(course);
 
   const handleToggleFavorite = async () => {
     if (isToggling) return;
@@ -89,7 +91,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
 
         <View style={styles.footer}>
           <Text style={styles.price}>
-            {course.is_free ? 'Free' : course.price ? `$${course.price}` : 'Free'}
+            {isPriceLoading ? '...' : displayPrice}
           </Text>
           <Rating rating={course.rating || 5.0} />
         </View>

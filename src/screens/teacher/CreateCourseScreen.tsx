@@ -65,11 +65,11 @@ const generateTempId = () => Math.random().toString(36).substr(2, 9);
 
 // Tier-based pricing configuration
 const TIER_PRICES = [
-  { value: '10', label: '$10', tier: 'tier1', userPays: '$12.99' },
-  { value: '25', label: '$25', tier: 'tier2', userPays: '$32.99' },
-  { value: '100', label: '$100', tier: 'tier3', userPays: '$129.99' },
-  { value: '200', label: '$200', tier: 'tier4', userPays: '$259.99' },
-  { value: '300', label: '$300', tier: 'tier5', userPays: '$389.99' },
+  { value: '12.99', label: '$12.99', tier: 'tier1' },
+  { value: '32.99', label: '$32.99', tier: 'tier2' },
+  { value: '129.99', label: '$129.99', tier: 'tier3' },
+  { value: '259.99', label: '$259.99', tier: 'tier4' },
+  { value: '389.99', label: '$389.99', tier: 'tier5' },
 ];
 
 export const CreateCourseScreen: React.FC = () => {
@@ -508,7 +508,6 @@ export const CreateCourseScreen: React.FC = () => {
               </View>
               <View style={styles.tierInfo}>
                 <Text style={styles.tierLabel}>{tier.label}</Text>
-                <Text style={styles.tierHint}>Users pay: {tier.userPays}</Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -686,11 +685,11 @@ export const CreateCourseScreen: React.FC = () => {
                     lessonPickerTarget.mode === 'date'
                       ? lesson.start_date
                       : (() => {
-                          const d = new Date();
-                          const [h, m] = (lesson.start_time || '12:00').split(':').map(Number);
-                          d.setHours(h || 12, m || 0, 0, 0);
-                          return d;
-                        })()
+                        const d = new Date();
+                        const [h, m] = (lesson.start_time || '12:00').split(':').map(Number);
+                        d.setHours(h || 12, m || 0, 0, 0);
+                        return d;
+                      })()
                   }
                   mode={lessonPickerTarget.mode}
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}

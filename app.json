@@ -2,7 +2,7 @@
   "expo": {
     "name": "AGC Mobile",
     "slug": "agc-mobile-app",
-    "version": "1.0.48",
+    "version": "1.0.49",
     "orientation": "portrait",
     "icon": "./assets/final_icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.agc.mobile",
-      "buildNumber": "48",
+      "buildNumber": "49",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "This app uses the camera to allow you to take a profile picture or cover image for your course.",
@@ -25,7 +25,7 @@
       }
     },
     "android": {
-      "versionCode": 48,
+      "versionCode": 49,
       "adaptiveIcon": {
         "foregroundImage": "./assets/final_icon.png",
         "backgroundColor": "#ffffff"

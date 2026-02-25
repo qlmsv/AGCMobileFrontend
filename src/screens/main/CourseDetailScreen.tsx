@@ -22,6 +22,7 @@ import { logger } from '../../utils/logger';
 import { useAuth } from '../../contexts/AuthContext';
 import { secureImageUrl } from '../../utils/secureUrl';
 import { iapService } from '../../services/iapService';
+import { useIAPPrice } from '../../hooks/useIAPPrice';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -36,14 +37,7 @@ export const CourseDetailScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEnrolling, setIsEnrolling] = useState(false);
 
-  // Tier display price for iOS comes from course.tier_info.price (set by backend)
-  const getDisplayPrice = (): string => {
-    if (course?.is_free || !course?.price || parseFloat(course.price) === 0) return 'Free';
-    if (iapService.isAvailable() && course.tier_info?.price) {
-      return `$${course.tier_info.price}`;
-    }
-    return `$${course?.price}`;
-  };
+  const { displayPrice, isLoading: isPriceLoading } = useIAPPrice(course);
 
   const fetchCourseDetails = useCallback(async () => {
     try {
@@ -353,7 +347,7 @@ export const CourseDetailScreen: React.FC = () => {
       <View style={styles.footer}>
         <View style={styles.priceContainer}>
           <Text style={styles.priceLabel}>Price</Text>
-          <Text style={styles.priceValue}>{getDisplayPrice()}</Text>
+          <Text style={styles.priceValue}>{isPriceLoading ? '...' : displayPrice}</Text>
         </View>
         <TouchableOpacity
           testID="enroll-button"

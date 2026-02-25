@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1771481602179" clover="3.2.0">
-  <project timestamp="1771481602179" name="All files">
-    <metrics statements="1897" coveredstatements="77" conditionals="1271" coveredconditionals="30" methods="501" coveredmethods="43" elements="3669" coveredelements="150" complexity="0" loc="1897" ncloc="1897" packages="9" files="49" classes="49"/>
+<coverage generated="1771597062849" clover="3.2.0">
+  <project timestamp="1771597062849" name="All files">
+    <metrics statements="1899" coveredstatements="77" conditionals="1281" coveredconditionals="30" methods="501" coveredmethods="43" elements="3681" coveredelements="150" complexity="0" loc="1899" ncloc="1899" packages="9" files="49" classes="49"/>
     <package name="components">
       <metrics statements="37" coveredstatements="5" conditionals="65" coveredconditionals="14" methods="9" coveredmethods="1"/>
-      <file name="Button.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/components/Button.tsx">
+      <file name="Button.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/components/Button.tsx">
         <metrics statements="5" coveredstatements="5" conditionals="15" coveredconditionals="14" methods="1" coveredmethods="1"/>
         <line num="23" count="1" type="stmt"/>
         <line num="33" count="4" type="stmt"/>
@@ -12,7 +12,7 @@
         <line num="48" count="4" type="stmt"/>
         <line num="69" count="1" type="stmt"/>
       </file>
-      <file name="CourseCard.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/components/CourseCard.tsx">
+      <file name="CourseCard.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/components/CourseCard.tsx">
         <metrics statements="19" coveredstatements="0" conditionals="28" coveredconditionals="0" methods="3" coveredmethods="0"/>
         <line num="20" count="0" type="stmt"/>
         <line num="28" count="0" type="stmt"/>
@@ -34,13 +34,13 @@
         <line num="55" count="0" type="stmt"/>
         <line num="101" count="0" type="stmt"/>
       </file>
-      <file name="EmptyState.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/components/EmptyState.tsx">
+      <file name="EmptyState.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/components/EmptyState.tsx">
         <metrics statements="3" coveredstatements="0" conditionals="6" coveredconditionals="0" methods="1" coveredmethods="0"/>
         <line num="16" count="0" type="stmt"/>
         <line num="24" count="0" type="stmt"/>
         <line num="39" count="0" type="stmt"/>
       </file>
-      <file name="Input.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/components/Input.tsx">
+      <file name="Input.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/components/Input.tsx">
         <metrics statements="7" coveredstatements="0" conditionals="11" coveredconditionals="0" methods="3" coveredmethods="0"/>
         <line num="12" count="0" type="stmt"/>
         <line num="20" count="0" type="stmt"/>
@@ -50,19 +50,19 @@
         <line num="37" count="0" type="stmt"/>
         <line num="47" count="0" type="stmt"/>
       </file>
-      <file name="Rating.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/components/Rating.tsx">
+      <file name="Rating.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/components/Rating.tsx">
         <metrics statements="3" coveredstatements="0" conditionals="5" coveredconditionals="0" methods="1" coveredmethods="0"/>
         <line num="13" count="0" type="stmt"/>
         <line num="19" count="0" type="stmt"/>
         <line num="27" count="0" type="stmt"/>
       </file>
-      <file name="index.ts" path="/Users/kulmashev/AGCMobileFrontend/src/components/index.ts">
+      <file name="index.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/components/index.ts">
         <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
       </file>
     </package>
     <package name="config">
       <metrics statements="44" coveredstatements="44" conditionals="0" coveredconditionals="0" methods="39" coveredmethods="39"/>
-      <file name="api.ts" path="/Users/kulmashev/AGCMobileFrontend/src/config/api.ts">
+      <file name="api.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/config/api.ts">
         <metrics statements="31" coveredstatements="31" conditionals="0" coveredconditionals="0" methods="29" coveredmethods="29"/>
         <line num="1" count="1" type="stmt"/>
         <line num="3" count="1" type="stmt"/>
@@ -96,7 +96,7 @@
         <line num="63" count="1" type="stmt"/>
         <line num="67" count="1" type="stmt"/>
       </file>
-      <file name="apiSpecEndpoints.ts" path="/Users/kulmashev/AGCMobileFrontend/src/config/apiSpecEndpoints.ts">
+      <file name="apiSpecEndpoints.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/config/apiSpecEndpoints.ts">
         <metrics statements="13" coveredstatements="13" conditionals="0" coveredconditionals="0" methods="10" coveredmethods="10"/>
         <line num="6" count="1" type="stmt"/>
         <line num="86" count="1" type="stmt"/>
@@ -115,7 +115,7 @@
     </package>
     <package name="contexts">
       <metrics statements="57" coveredstatements="0" conditionals="14" coveredconditionals="0" methods="13" coveredmethods="0"/>
-      <file name="AuthContext.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/contexts/AuthContext.tsx">
+      <file name="AuthContext.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/contexts/AuthContext.tsx">
         <metrics statements="57" coveredstatements="0" conditionals="14" coveredconditionals="0" methods="13" coveredmethods="0"/>
         <line num="26" count="0" type="stmt"/>
         <line num="28" count="0" type="stmt"/>
@@ -178,7 +178,7 @@
     </package>
     <package name="screens.auth">
       <metrics statements="121" coveredstatements="0" conditionals="87" coveredconditionals="0" methods="31" coveredmethods="0"/>
-      <file name="EmailInputScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/auth/EmailInputScreen.tsx">
+      <file name="EmailInputScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/auth/EmailInputScreen.tsx">
         <metrics statements="30" coveredstatements="0" conditionals="32" coveredconditionals="0" methods="6" coveredmethods="0"/>
         <line num="33" count="0" type="stmt"/>
         <line num="34" count="0" type="stmt"/>
@@ -211,7 +211,7 @@
         <line num="148" count="0" type="cond" truecount="0" falsecount="2"/>
         <line num="164" count="0" type="stmt"/>
       </file>
-      <file name="InformationScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/auth/InformationScreen.tsx">
+      <file name="InformationScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/auth/InformationScreen.tsx">
         <metrics statements="66" coveredstatements="0" conditionals="43" coveredconditionals="0" methods="19" coveredmethods="0"/>
         <line num="28" count="0" type="stmt"/>
         <line num="153" count="0" type="stmt"/>
@@ -280,7 +280,7 @@
         <line num="394" count="0" type="stmt"/>
         <line num="427" count="0" type="stmt"/>
       </file>
-      <file name="VerificationScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/auth/VerificationScreen.tsx">
+      <file name="VerificationScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/auth/VerificationScreen.tsx">
         <metrics statements="20" coveredstatements="0" conditionals="12" coveredconditionals="0" methods="3" coveredmethods="0"/>
         <line num="32" count="0" type="stmt"/>
         <line num="33" count="0" type="stmt"/>
@@ -303,7 +303,7 @@
         <line num="69" count="0" type="stmt"/>
         <line num="114" count="0" type="stmt"/>
       </file>
-      <file name="WelcomeScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/auth/WelcomeScreen.tsx">
+      <file name="WelcomeScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/auth/WelcomeScreen.tsx">
         <metrics statements="5" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="0"/>
         <line num="14" count="0" type="stmt"/>
         <line num="15" count="0" type="stmt"/>
@@ -314,7 +314,7 @@
     </package>
     <package name="screens.main">
       <metrics statements="746" coveredstatements="0" conditionals="551" coveredconditionals="0" methods="165" coveredmethods="0"/>
-      <file name="ChatDetailScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/ChatDetailScreen.tsx">
+      <file name="ChatDetailScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/ChatDetailScreen.tsx">
         <metrics statements="67" coveredstatements="0" conditionals="63" coveredconditionals="0" methods="19" coveredmethods="0"/>
         <line num="28" count="0" type="stmt"/>
         <line num="29" count="0" type="stmt"/>
@@ -384,7 +384,7 @@
         <line num="270" count="0" type="stmt"/>
         <line num="300" count="0" type="stmt"/>
       </file>
-      <file name="ChatsScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/ChatsScreen.tsx">
+      <file name="ChatsScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/ChatsScreen.tsx">
         <metrics statements="149" coveredstatements="0" conditionals="111" coveredconditionals="0" methods="30" coveredmethods="0"/>
         <line num="33" count="0" type="stmt"/>
         <line num="34" count="0" type="stmt"/>
@@ -536,7 +536,7 @@
         <line num="533" count="0" type="stmt"/>
         <line num="562" count="0" type="stmt"/>
       </file>
-      <file name="CourseDetailScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/CourseDetailScreen.tsx">
+      <file name="CourseDetailScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/CourseDetailScreen.tsx">
         <metrics statements="109" coveredstatements="0" conditionals="123" coveredconditionals="0" methods="17" coveredmethods="0"/>
         <line num="28" count="0" type="stmt"/>
         <line num="29" count="0" type="stmt"/>
@@ -648,7 +648,7 @@
         <line num="374" count="0" type="stmt"/>
         <line num="427" count="0" type="stmt"/>
       </file>
-      <file name="CoursesScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/CoursesScreen.tsx">
+      <file name="CoursesScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/CoursesScreen.tsx">
         <metrics statements="55" coveredstatements="0" conditionals="48" coveredconditionals="0" methods="17" coveredmethods="0"/>
         <line num="26" count="0" type="stmt"/>
         <line num="40" count="0" type="stmt"/>
@@ -706,7 +706,7 @@
         <line num="202" count="0" type="stmt"/>
         <line num="259" count="0" type="stmt"/>
       </file>
-      <file name="EditProfileScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/EditProfileScreen.tsx">
+      <file name="EditProfileScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/EditProfileScreen.tsx">
         <metrics statements="61" coveredstatements="0" conditionals="36" coveredconditionals="0" methods="7" coveredmethods="0"/>
         <line num="22" count="0" type="stmt"/>
         <line num="23" count="0" type="stmt"/>
@@ -770,7 +770,7 @@
         <line num="152" count="0" type="stmt"/>
         <line num="249" count="0" type="stmt"/>
       </file>
-      <file name="HomeScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/HomeScreen.tsx">
+      <file name="HomeScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/HomeScreen.tsx">
         <metrics statements="40" coveredstatements="0" conditionals="10" coveredconditionals="0" methods="15" coveredmethods="0"/>
         <line num="30" count="0" type="stmt"/>
         <line num="31" count="0" type="stmt"/>
@@ -813,7 +813,7 @@
         <line num="182" count="0" type="stmt"/>
         <line num="192" count="0" type="stmt"/>
       </file>
-      <file name="LessonDetailScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/LessonDetailScreen.tsx">
+      <file name="LessonDetailScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/LessonDetailScreen.tsx">
         <metrics statements="29" coveredstatements="0" conditionals="18" coveredconditionals="0" methods="5" coveredmethods="0"/>
         <line num="19" count="0" type="stmt"/>
         <line num="20" count="0" type="stmt"/>
@@ -845,7 +845,7 @@
         <line num="106" count="0" type="stmt"/>
         <line num="114" count="0" type="stmt"/>
       </file>
-      <file name="PaymentScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/PaymentScreen.tsx">
+      <file name="PaymentScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/PaymentScreen.tsx">
         <metrics statements="24" coveredstatements="0" conditionals="16" coveredconditionals="0" methods="7" coveredmethods="0"/>
         <line num="10" count="0" type="stmt"/>
         <line num="11" count="0" type="stmt"/>
@@ -872,7 +872,7 @@
         <line num="73" count="0" type="stmt"/>
         <line num="87" count="0" type="stmt"/>
       </file>
-      <file name="PrivacyScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/PrivacyScreen.tsx">
+      <file name="PrivacyScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/PrivacyScreen.tsx">
         <metrics statements="5" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="0"/>
         <line num="8" count="0" type="stmt"/>
         <line num="9" count="0" type="stmt"/>
@@ -880,7 +880,7 @@
         <line num="14" count="0" type="stmt"/>
         <line num="127" count="0" type="stmt"/>
       </file>
-      <file name="ProfileScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/ProfileScreen.tsx">
+      <file name="ProfileScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/ProfileScreen.tsx">
         <metrics statements="90" coveredstatements="0" conditionals="71" coveredconditionals="0" methods="17" coveredmethods="0"/>
         <line num="32" count="0" type="stmt"/>
         <line num="33" count="0" type="stmt"/>
@@ -973,7 +973,7 @@
         <line num="416" count="0" type="stmt"/>
         <line num="437" count="0" type="stmt"/>
       </file>
-      <file name="ScheduleScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/ScheduleScreen.tsx">
+      <file name="ScheduleScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/ScheduleScreen.tsx">
         <metrics statements="89" coveredstatements="0" conditionals="39" coveredconditionals="0" methods="21" coveredmethods="0"/>
         <line num="21" count="0" type="stmt"/>
         <line num="22" count="0" type="stmt"/>
@@ -1065,7 +1065,7 @@
         <line num="289" count="0" type="stmt"/>
         <line num="314" count="0" type="stmt"/>
       </file>
-      <file name="SettingsScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/SettingsScreen.tsx">
+      <file name="SettingsScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/SettingsScreen.tsx">
         <metrics statements="23" coveredstatements="0" conditionals="16" coveredconditionals="0" methods="6" coveredmethods="0"/>
         <line num="24" count="0" type="stmt"/>
         <line num="25" count="0" type="stmt"/>
@@ -1091,7 +1091,7 @@
         <line num="117" count="0" type="stmt"/>
         <line num="163" count="0" type="stmt"/>
       </file>
-      <file name="TermsScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/main/TermsScreen.tsx">
+      <file name="TermsScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/main/TermsScreen.tsx">
         <metrics statements="5" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="0"/>
         <line num="8" count="0" type="stmt"/>
         <line num="9" count="0" type="stmt"/>
@@ -1101,8 +1101,8 @@
       </file>
     </package>
     <package name="screens.teacher">
-      <metrics statements="355" coveredstatements="0" conditionals="282" coveredconditionals="0" methods="94" coveredmethods="0"/>
-      <file name="AddModuleScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/teacher/AddModuleScreen.tsx">
+      <metrics statements="355" coveredstatements="0" conditionals="284" coveredconditionals="0" methods="94" coveredmethods="0"/>
+      <file name="AddModuleScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/teacher/AddModuleScreen.tsx">
         <metrics statements="35" coveredstatements="0" conditionals="31" coveredconditionals="0" methods="8" coveredmethods="0"/>
         <line num="26" count="0" type="stmt"/>
         <line num="34" count="0" type="stmt"/>
@@ -1140,8 +1140,8 @@
         <line num="152" count="0" type="stmt"/>
         <line num="192" count="0" type="stmt"/>
       </file>
-      <file name="CreateCourseScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/teacher/CreateCourseScreen.tsx">
-        <metrics statements="182" coveredstatements="0" conditionals="133" coveredconditionals="0" methods="56" coveredmethods="0"/>
+      <file name="CreateCourseScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/teacher/CreateCourseScreen.tsx">
+        <metrics statements="182" coveredstatements="0" conditionals="135" coveredconditionals="0" methods="56" coveredmethods="0"/>
         <line num="50" count="0" type="stmt"/>
         <line num="65" count="0" type="stmt"/>
         <line num="68" count="0" type="stmt"/>
@@ -1264,68 +1264,68 @@
         <line num="296" count="0" type="stmt"/>
         <line num="297" count="0" type="stmt"/>
         <line num="298" count="0" type="stmt"/>
-        <line num="305" count="0" type="stmt"/>
-        <line num="308" count="0" type="stmt"/>
+        <line num="306" count="0" type="stmt"/>
         <line num="309" count="0" type="stmt"/>
         <line num="310" count="0" type="stmt"/>
-        <line num="313" count="0" type="stmt"/>
+        <line num="311" count="0" type="stmt"/>
         <line num="314" count="0" type="stmt"/>
-        <line num="315" count="0" type="cond" truecount="0" falsecount="4"/>
-        <line num="317" count="0" type="stmt"/>
-        <line num="328" count="0" type="stmt"/>
-        <line num="331" count="0" type="stmt"/>
-        <line num="335" count="0" type="stmt"/>
-        <line num="337" count="0" type="cond" truecount="0" falsecount="3"/>
-        <line num="340" count="0" type="stmt"/>
-        <line num="342" count="0" type="stmt"/>
-        <line num="346" count="0" type="stmt"/>
+        <line num="315" count="0" type="stmt"/>
+        <line num="316" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="318" count="0" type="stmt"/>
+        <line num="329" count="0" type="stmt"/>
+        <line num="332" count="0" type="stmt"/>
+        <line num="336" count="0" type="stmt"/>
+        <line num="338" count="0" type="cond" truecount="0" falsecount="3"/>
+        <line num="341" count="0" type="stmt"/>
+        <line num="343" count="0" type="stmt"/>
         <line num="347" count="0" type="stmt"/>
-        <line num="354" count="0" type="stmt"/>
-        <line num="356" count="0" type="stmt"/>
+        <line num="348" count="0" type="stmt"/>
+        <line num="355" count="0" type="stmt"/>
         <line num="357" count="0" type="stmt"/>
-        <line num="359" count="0" type="stmt"/>
+        <line num="358" count="0" type="stmt"/>
         <line num="360" count="0" type="stmt"/>
         <line num="361" count="0" type="stmt"/>
         <line num="362" count="0" type="stmt"/>
-        <line num="388" count="0" type="stmt"/>
+        <line num="363" count="0" type="stmt"/>
         <line num="389" count="0" type="stmt"/>
-        <line num="414" count="0" type="stmt"/>
-        <line num="421" count="0" type="stmt"/>
-        <line num="438" count="0" type="stmt"/>
-        <line num="442" count="0" type="stmt"/>
-        <line num="452" count="0" type="stmt"/>
-        <line num="468" count="0" type="stmt"/>
-        <line num="469" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="482" count="0" type="stmt"/>
-        <line num="502" count="0" type="stmt"/>
+        <line num="390" count="0" type="stmt"/>
+        <line num="415" count="0" type="stmt"/>
+        <line num="422" count="0" type="stmt"/>
+        <line num="439" count="0" type="stmt"/>
+        <line num="443" count="0" type="stmt"/>
+        <line num="453" count="0" type="stmt"/>
+        <line num="469" count="0" type="stmt"/>
+        <line num="470" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="483" count="0" type="stmt"/>
         <line num="503" count="0" type="stmt"/>
-        <line num="510" count="0" type="stmt"/>
-        <line num="513" count="0" type="stmt"/>
-        <line num="523" count="0" type="stmt"/>
-        <line num="530" count="0" type="stmt"/>
-        <line num="536" count="0" type="stmt"/>
-        <line num="539" count="0" type="stmt"/>
-        <line num="557" count="0" type="stmt"/>
-        <line num="584" count="0" type="stmt"/>
+        <line num="504" count="0" type="stmt"/>
+        <line num="511" count="0" type="stmt"/>
+        <line num="514" count="0" type="stmt"/>
+        <line num="524" count="0" type="stmt"/>
+        <line num="531" count="0" type="stmt"/>
+        <line num="537" count="0" type="stmt"/>
+        <line num="540" count="0" type="stmt"/>
+        <line num="558" count="0" type="stmt"/>
         <line num="585" count="0" type="stmt"/>
-        <line num="596" count="0" type="stmt"/>
-        <line num="599" count="0" type="stmt"/>
-        <line num="621" count="0" type="stmt"/>
-        <line num="624" count="0" type="stmt"/>
-        <line num="634" count="0" type="stmt"/>
-        <line num="655" count="0" type="stmt"/>
-        <line num="666" count="0" type="stmt"/>
-        <line num="678" count="0" type="stmt"/>
-        <line num="688" count="0" type="stmt"/>
+        <line num="586" count="0" type="stmt"/>
+        <line num="597" count="0" type="stmt"/>
+        <line num="600" count="0" type="stmt"/>
+        <line num="622" count="0" type="stmt"/>
+        <line num="625" count="0" type="stmt"/>
+        <line num="635" count="0" type="stmt"/>
+        <line num="656" count="0" type="stmt"/>
+        <line num="667" count="0" type="stmt"/>
+        <line num="679" count="0" type="stmt"/>
         <line num="689" count="0" type="stmt"/>
-        <line num="702" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="724" count="0" type="stmt"/>
-        <line num="730" count="0" type="stmt"/>
-        <line num="733" count="0" type="stmt"/>
-        <line num="742" count="0" type="stmt"/>
-        <line num="798" count="0" type="stmt"/>
+        <line num="690" count="0" type="stmt"/>
+        <line num="703" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="725" count="0" type="stmt"/>
+        <line num="731" count="0" type="stmt"/>
+        <line num="734" count="0" type="stmt"/>
+        <line num="743" count="0" type="stmt"/>
+        <line num="799" count="0" type="stmt"/>
       </file>
-      <file name="EditCourseScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/teacher/EditCourseScreen.tsx">
+      <file name="EditCourseScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/teacher/EditCourseScreen.tsx">
         <metrics statements="96" coveredstatements="0" conditionals="79" coveredconditionals="0" methods="19" coveredmethods="0"/>
         <line num="33" count="0" type="stmt"/>
         <line num="48" count="0" type="stmt"/>
@@ -1424,7 +1424,7 @@
         <line num="332" count="0" type="stmt"/>
         <line num="376" count="0" type="stmt"/>
       </file>
-      <file name="StudentsScreen.tsx" path="/Users/kulmashev/AGCMobileFrontend/src/screens/teacher/StudentsScreen.tsx">
+      <file name="StudentsScreen.tsx" path="/Users/kulmashev/agc-workspace/agc-mobile/src/screens/teacher/StudentsScreen.tsx">
         <metrics statements="42" coveredstatements="0" conditionals="39" coveredconditionals="0" methods="11" coveredmethods="0"/>
         <line num="21" count="0" type="stmt"/>
         <line num="22" count="0" type="stmt"/>
@@ -1471,8 +1471,8 @@
       </file>
     </package>
     <package name="services">
-      <metrics statements="425" coveredstatements="0" conditionals="184" coveredconditionals="0" methods="130" coveredmethods="0"/>
-      <file name="api.ts" path="/Users/kulmashev/AGCMobileFrontend/src/services/api.ts">
+      <metrics statements="427" coveredstatements="0" conditionals="192" coveredconditionals="0" methods="130" coveredmethods="0"/>
+      <file name="api.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/services/api.ts">
         <metrics statements="56" coveredstatements="0" conditionals="14" coveredconditionals="0" methods="16" coveredmethods="0"/>
         <line num="6" count="0" type="stmt"/>
         <line num="15" count="0" type="stmt"/>
@@ -1531,7 +1531,7 @@
         <line num="149" count="0" type="stmt"/>
         <line num="153" count="0" type="stmt"/>
       </file>
-      <file name="authService.ts" path="/Users/kulmashev/AGCMobileFrontend/src/services/authService.ts">
+      <file name="authService.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/services/authService.ts">
         <metrics statements="33" coveredstatements="0" conditionals="11" coveredconditionals="0" methods="9" coveredmethods="0"/>
         <line num="12" count="0" type="stmt"/>
         <line num="17" count="0" type="stmt"/>
@@ -1567,7 +1567,7 @@
         <line num="95" count="0" type="cond" truecount="0" falsecount="2"/>
         <line num="97" count="0" type="stmt"/>
       </file>
-      <file name="chatService.ts" path="/Users/kulmashev/AGCMobileFrontend/src/services/chatService.ts">
+      <file name="chatService.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/services/chatService.ts">
         <metrics statements="29" coveredstatements="0" conditionals="35" coveredconditionals="0" methods="18" coveredmethods="0"/>
         <line num="7" count="0" type="stmt"/>
         <line num="13" count="0" type="stmt"/>
@@ -1599,8 +1599,8 @@
         <line num="143" count="0" type="stmt"/>
         <line num="144" count="0" type="stmt"/>
       </file>
-      <file name="courseService.ts" path="/Users/kulmashev/AGCMobileFrontend/src/services/courseService.ts">
-        <metrics statements="61" coveredstatements="0" conditionals="18" coveredconditionals="0" methods="40" coveredmethods="0"/>
+      <file name="courseService.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/services/courseService.ts">
+        <metrics statements="63" coveredstatements="0" conditionals="26" coveredconditionals="0" methods="40" coveredmethods="0"/>
         <line num="6" count="0" type="stmt"/>
         <line num="20" count="0" type="stmt"/>
         <line num="21" count="0" type="stmt"/>
@@ -1626,44 +1626,46 @@
         <line num="88" count="0" type="cond" truecount="0" falsecount="2"/>
         <line num="89" count="0" type="stmt"/>
         <line num="92" count="0" type="stmt"/>
-        <line num="93" count="0" type="stmt"/>
-        <line num="96" count="0" type="stmt"/>
-        <line num="98" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="102" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="103" count="0" type="stmt"/>
-        <line num="106" count="0" type="stmt"/>
-        <line num="108" count="0" type="cond" truecount="0" falsecount="3"/>
-        <line num="113" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="114" count="0" type="stmt"/>
-        <line num="116" count="0" type="cond" truecount="0" falsecount="3"/>
-        <line num="121" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="122" count="0" type="stmt"/>
+        <line num="93" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="94" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="95" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="96" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="99" count="0" type="stmt"/>
+        <line num="101" count="0" type="stmt"/>
+        <line num="102" count="0" type="stmt"/>
+        <line num="105" count="0" type="stmt"/>
+        <line num="107" count="0" type="cond" truecount="0" falsecount="3"/>
+        <line num="112" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="113" count="0" type="stmt"/>
+        <line num="115" count="0" type="cond" truecount="0" falsecount="3"/>
+        <line num="120" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="121" count="0" type="stmt"/>
+        <line num="131" count="0" type="stmt"/>
         <line num="132" count="0" type="stmt"/>
-        <line num="133" count="0" type="stmt"/>
-        <line num="137" count="0" type="stmt"/>
-        <line num="141" count="0" type="stmt"/>
-        <line num="145" count="0" type="stmt"/>
-        <line num="149" count="0" type="stmt"/>
+        <line num="136" count="0" type="stmt"/>
+        <line num="140" count="0" type="stmt"/>
+        <line num="144" count="0" type="stmt"/>
+        <line num="148" count="0" type="stmt"/>
+        <line num="156" count="0" type="stmt"/>
         <line num="157" count="0" type="stmt"/>
-        <line num="158" count="0" type="stmt"/>
-        <line num="162" count="0" type="stmt"/>
-        <line num="166" count="0" type="stmt"/>
-        <line num="170" count="0" type="stmt"/>
-        <line num="174" count="0" type="stmt"/>
-        <line num="178" count="0" type="stmt"/>
-        <line num="182" count="0" type="stmt"/>
-        <line num="186" count="0" type="stmt"/>
-        <line num="200" count="0" type="stmt"/>
-        <line num="213" count="0" type="stmt"/>
+        <line num="161" count="0" type="stmt"/>
+        <line num="165" count="0" type="stmt"/>
+        <line num="169" count="0" type="stmt"/>
+        <line num="173" count="0" type="stmt"/>
+        <line num="177" count="0" type="stmt"/>
+        <line num="181" count="0" type="stmt"/>
+        <line num="185" count="0" type="stmt"/>
+        <line num="199" count="0" type="stmt"/>
+        <line num="212" count="0" type="stmt"/>
+        <line num="222" count="0" type="stmt"/>
         <line num="223" count="0" type="stmt"/>
-        <line num="224" count="0" type="stmt"/>
-        <line num="228" count="0" type="stmt"/>
-        <line num="232" count="0" type="stmt"/>
-        <line num="236" count="0" type="stmt"/>
-        <line num="240" count="0" type="stmt"/>
-        <line num="244" count="0" type="stmt"/>
+        <line num="227" count="0" type="stmt"/>
+        <line num="231" count="0" type="stmt"/>
+        <line num="235" count="0" type="stmt"/>
+        <line num="239" count="0" type="stmt"/>
+        <line num="243" count="0" type="stmt"/>
       </file>
-      <file name="homeService.ts" path="/Users/kulmashev/AGCMobileFrontend/src/services/homeService.ts">
+      <file name="homeService.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/services/homeService.ts">
         <metrics statements="9" coveredstatements="0" conditionals="4" coveredconditionals="0" methods="2" coveredmethods="0"/>
         <line num="7" count="0" type="stmt"/>
         <line num="11" count="0" type="stmt"/>
@@ -1675,7 +1677,7 @@
         <line num="23" count="0" type="stmt"/>
         <line num="26" count="0" type="stmt"/>
       </file>
-      <file name="iapService.ts" path="/Users/kulmashev/AGCMobileFrontend/src/services/iapService.ts">
+      <file name="iapService.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/services/iapService.ts">
         <metrics statements="142" coveredstatements="0" conditionals="66" coveredconditionals="0" methods="15" coveredmethods="0"/>
         <line num="39" count="0" type="stmt"/>
         <line num="40" count="0" type="stmt"/>
@@ -1820,7 +1822,7 @@
         <line num="378" count="0" type="stmt"/>
         <line num="382" count="0" type="stmt"/>
       </file>
-      <file name="notificationService.ts" path="/Users/kulmashev/AGCMobileFrontend/src/services/notificationService.ts">
+      <file name="notificationService.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/services/notificationService.ts">
         <metrics statements="42" coveredstatements="0" conditionals="20" coveredconditionals="0" methods="11" coveredmethods="0"/>
         <line num="10" count="0" type="stmt"/>
         <line num="11" count="0" type="stmt"/>
@@ -1865,7 +1867,7 @@
         <line num="126" count="0" type="stmt"/>
         <line num="130" count="0" type="stmt"/>
       </file>
-      <file name="profileService.ts" path="/Users/kulmashev/AGCMobileFrontend/src/services/profileService.ts">
+      <file name="profileService.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/services/profileService.ts">
         <metrics statements="44" coveredstatements="0" conditionals="14" coveredconditionals="0" methods="13" coveredmethods="0"/>
         <line num="7" count="0" type="stmt"/>
         <line num="14" count="0" type="stmt"/>
@@ -1912,7 +1914,7 @@
         <line num="127" count="0" type="stmt"/>
         <line num="128" count="0" type="stmt"/>
       </file>
-      <file name="userService.ts" path="/Users/kulmashev/AGCMobileFrontend/src/services/userService.ts">
+      <file name="userService.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/services/userService.ts">
         <metrics statements="9" coveredstatements="0" conditionals="2" coveredconditionals="0" methods="6" coveredmethods="0"/>
         <line num="6" count="0" type="stmt"/>
         <line num="8" count="0" type="stmt"/>
@@ -1927,22 +1929,22 @@
     </package>
     <package name="theme">
       <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-      <file name="colors.ts" path="/Users/kulmashev/AGCMobileFrontend/src/theme/colors.ts">
+      <file name="colors.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/theme/colors.ts">
         <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
         <line num="2" count="1" type="stmt"/>
       </file>
-      <file name="index.ts" path="/Users/kulmashev/AGCMobileFrontend/src/theme/index.ts">
+      <file name="index.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/theme/index.ts">
         <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
         <line num="5" count="1" type="stmt"/>
       </file>
-      <file name="spacing.ts" path="/Users/kulmashev/AGCMobileFrontend/src/theme/spacing.ts">
+      <file name="spacing.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/theme/spacing.ts">
         <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
         <line num="4" count="1" type="stmt"/>
         <line num="16" count="1" type="stmt"/>
         <line num="27" count="1" type="stmt"/>
         <line num="64" count="1" type="stmt"/>
       </file>
-      <file name="typography.ts" path="/Users/kulmashev/AGCMobileFrontend/src/theme/typography.ts">
+      <file name="typography.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/theme/typography.ts">
         <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
         <line num="4" count="1" type="stmt"/>
         <line num="40" count="1" type="stmt"/>
@@ -1950,7 +1952,7 @@
     </package>
     <package name="utils">
       <metrics statements="104" coveredstatements="20" conditionals="88" coveredconditionals="16" methods="20" coveredmethods="3"/>
-      <file name="errorHandler.ts" path="/Users/kulmashev/AGCMobileFrontend/src/utils/errorHandler.ts">
+      <file name="errorHandler.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/utils/errorHandler.ts">
         <metrics statements="25" coveredstatements="0" conditionals="20" coveredconditionals="0" methods="4" coveredmethods="0"/>
         <line num="6" count="0" type="stmt"/>
         <line num="7" count="0" type="cond" truecount="0" falsecount="2"/>
@@ -1978,7 +1980,7 @@
         <line num="57" count="0" type="stmt"/>
         <line num="60" count="0" type="stmt"/>
       </file>
-      <file name="errorUtils.ts" path="/Users/kulmashev/AGCMobileFrontend/src/utils/errorUtils.ts">
+      <file name="errorUtils.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/utils/errorUtils.ts">
         <metrics statements="15" coveredstatements="0" conditionals="10" coveredconditionals="0" methods="2" coveredmethods="0"/>
         <line num="4" count="0" type="stmt"/>
         <line num="5" count="0" type="cond" truecount="0" falsecount="2"/>
@@ -1996,7 +1998,7 @@
         <line num="26" count="0" type="stmt"/>
         <line num="29" count="0" type="stmt"/>
       </file>
-      <file name="extractResults.ts" path="/Users/kulmashev/AGCMobileFrontend/src/utils/extractResults.ts">
+      <file name="extractResults.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/utils/extractResults.ts">
         <metrics statements="6" coveredstatements="0" conditionals="8" coveredconditionals="0" methods="1" coveredmethods="0"/>
         <line num="5" count="0" type="stmt"/>
         <line num="6" count="0" type="cond" truecount="0" falsecount="2"/>
@@ -2005,7 +2007,7 @@
         <line num="10" count="0" type="stmt"/>
         <line num="12" count="0" type="stmt"/>
       </file>
-      <file name="logger.ts" path="/Users/kulmashev/AGCMobileFrontend/src/utils/logger.ts">
+      <file name="logger.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/utils/logger.ts">
         <metrics statements="12" coveredstatements="0" conditionals="10" coveredconditionals="0" methods="5" coveredmethods="0"/>
         <line num="7" count="0" type="stmt"/>
         <line num="9" count="0" type="stmt"/>
@@ -2020,7 +2022,7 @@
         <line num="53" count="0" type="cond" truecount="0" falsecount="2"/>
         <line num="54" count="0" type="stmt"/>
       </file>
-      <file name="secureUrl.ts" path="/Users/kulmashev/AGCMobileFrontend/src/utils/secureUrl.ts">
+      <file name="secureUrl.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/utils/secureUrl.ts">
         <metrics statements="8" coveredstatements="0" conditionals="6" coveredconditionals="0" methods="1" coveredmethods="0"/>
         <line num="7" count="0" type="stmt"/>
         <line num="16" count="0" type="stmt"/>
@@ -2031,7 +2033,7 @@
         <line num="26" count="0" type="stmt"/>
         <line num="30" count="0" type="stmt"/>
       </file>
-      <file name="validation.ts" path="/Users/kulmashev/AGCMobileFrontend/src/utils/validation.ts">
+      <file name="validation.ts" path="/Users/kulmashev/agc-workspace/agc-mobile/src/utils/validation.ts">
         <metrics statements="38" coveredstatements="20" conditionals="34" coveredconditionals="16" methods="7" coveredmethods="3"/>
         <line num="9" count="1" type="stmt"/>
         <line num="10" count="3" type="cond" truecount="3" falsecount="1"/>

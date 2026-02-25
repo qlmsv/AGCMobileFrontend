@@ -44,25 +44,37 @@ class IAPService {
   public isConnected = false;
   private purchaseUpdateSubscription: { remove: () => void } | null = null;
   private purchaseErrorSubscription: { remove: () => void } | null = null;
+  private productCache: Map<string, IAPProduct> = new Map();
+  private initPromise: Promise<boolean> | null = null;
+  private activeProductFetches: Map<string, Promise<IAPProduct | null>> = new Map();
 
   /**
    * Initialize IAP connection - call this on app start
    */
   async initialize(): Promise<boolean> {
+    if (this.isConnected) return true;
+    if (this.initPromise) return this.initPromise;
+
     if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
       logger.info('IAP: Not iOS/Android, skipping initialization');
       return false;
     }
 
-    try {
-      const result = await getIAP().initConnection();
-      this.isConnected = result;
-      logger.info('IAP: Connected successfully', result);
-      return result;
-    } catch (error) {
-      logger.error('IAP: Failed to connect', error);
-      return false;
-    }
+    this.initPromise = (async () => {
+      try {
+        const result = await getIAP().initConnection();
+        this.isConnected = result;
+        logger.info('IAP: Connected successfully', result);
+        return result;
+      } catch (error) {
+        logger.error('IAP: Failed to connect', error);
+        return false;
+      } finally {
+        this.initPromise = null;
+      }
+    })();
+
+    return this.initPromise;
   }
 
   /**
@@ -97,28 +109,59 @@ class IAPService {
       await this.initialize();
     }
 
-    try {
-      const products = await getIAP().fetchProducts({
-        skus: productIds,
-        type: 'in-app',
-      });
+    const results: (IAPProduct | null)[] = [];
 
-      if (!products) {
-        return [];
-      }
+    // Fetch each product concurrently using a shared fetched map
+    await Promise.all(
+      productIds.map(async (id) => {
+        // 1. Return from cache if it exists
+        if (this.productCache.has(id)) {
+          results.push(this.productCache.get(id)!);
+          return;
+        }
 
-      return products.map((product) => ({
-        productId: product.id,
-        title: product.title,
-        description: product.description,
-        price: product.displayPrice,
-        priceAmount: product.price ?? undefined,
-        currency: product.currency,
-      }));
-    } catch (error) {
-      logger.error('IAP: Failed to get products', error);
-      return [];
-    }
+        // 2. Await in-progress fetch if it exists
+        if (this.activeProductFetches.has(id)) {
+          results.push(await this.activeProductFetches.get(id)!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+          return;
+        }
+
+        // 3. Initiate new fetch logic
+        const fetchPromise = (async (): Promise<IAPProduct | null> => {
+          try {
+            const products = await getIAP().fetchProducts({
+              skus: [id],
+              type: 'in-app',
+            });
+
+            if (products && products.length > 0) {
+              const product = products[0];
+              const mappedProduct = {
+                productId: product.id,
+                title: product.title,
+                description: product.description,
+                price: product.displayPrice,
+                priceAmount: product.price ?? undefined,
+                currency: product.currency,
+              };
+              this.productCache.set(id, mappedProduct);
+              return mappedProduct;
+            }
+            return null;
+          } catch (err) {
+            logger.error(`IAP: Failed to get product ${id}`, err);
+            return null;
+          } finally {
+            this.activeProductFetches.delete(id);
+          }
+        })();
+
+        this.activeProductFetches.set(id, fetchPromise);
+        results.push(await fetchPromise);
+      })
+    );
+
+    return results.filter(Boolean) as IAPProduct[];
   }
 
   /**
@@ -178,15 +221,15 @@ class IAPService {
               logger.info('IAP: Validating receipt with backend', { courseId, platform: Platform.OS });
               const validation = Platform.OS === 'ios'
                 ? await courseService.validateCourseAppleReceipt(
-                    courseId,
-                    purchase.purchaseToken, // JWS token
-                    purchase.id // Transaction ID
-                  )
+                  courseId,
+                  purchase.purchaseToken, // JWS token
+                  purchase.id // Transaction ID
+                )
                 : await courseService.validateCourseGoogleReceipt(
-                    courseId,
-                    purchase.purchaseToken, // Google purchase token
-                    purchase.productId // Product ID
-                  );
+                  courseId,
+                  purchase.purchaseToken, // Google purchase token
+                  purchase.productId // Product ID
+                );
 
               if (validation.status === 'enrolled' || validation.status === 'already_enrolled' || validation.status === 'already_processed') {
                 logger.info('IAP: Receipt validated successfully', { courseId });

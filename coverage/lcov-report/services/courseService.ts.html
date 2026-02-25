@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/61</span>
+                <span class='fraction'>0/65</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>0/26</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/61</span>
+                <span class='fraction'>0/63</span>
             </div>
         
             
@@ -308,8 +308,7 @@
 <a name='L243'></a><a href='#L243'>243</a>
 <a name='L244'></a><a href='#L244'>244</a>
 <a name='L245'></a><a href='#L245'>245</a>
-<a name='L246'></a><a href='#L246'>246</a>
-<a name='L247'></a><a href='#L247'>247</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L246'></a><a href='#L246'>246</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -402,13 +401,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -646,19 +644,18 @@ export const courseService = <span class="cstat-no" title="statement not covered
 <span class="cstat-no" title="statement not covered" >      throw new Error('Course has no modules available for enrollment');</span>
     }
 &nbsp;
+    const isFreeModule = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(m</span>odule: Module): boolean =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      if (module.is_free === true || module.is_free === 'true') <span class="cstat-no" title="statement not covered" >return true;</span></span>
+<span class="cstat-no" title="statement not covered" >      if (module.is_free === false || module.is_free === 'false') <span class="cstat-no" title="statement not covered" >return false;</span></span>
+      const numericPrice = <span class="cstat-no" title="statement not covered" >parseFloat(String(module.price ?? '0'));</span>
+<span class="cstat-no" title="statement not covered" >      return !Number.isFinite(numericPrice) || numericPrice &lt;= 0;</span>
+    };
+&nbsp;
+    const freeModules = <span class="cstat-no" title="statement not covered" >modules.filter(isFreeModule);</span>
+&nbsp;
     const results = <span class="cstat-no" title="statement not covered" >await Promise.allSettled(</span>
-      modules.map(<span class="fstat-no" title="function not covered" >(m</span>odule) =&gt; <span class="cstat-no" title="statement not covered" >this.enrollInModule(module.id))</span>
+      freeModules.map(<span class="fstat-no" title="function not covered" >(m</span>odule) =&gt; <span class="cstat-no" title="statement not covered" >this.enrollInModule(module.id))</span>
     );
-&nbsp;
-    const paymentRequired = <span class="cstat-no" title="statement not covered" >results.some(</span>
-<span class="fstat-no" title="function not covered" >      (r</span>esult) =&gt;
-<span class="cstat-no" title="statement not covered" >        result.status === 'rejected' &amp;&amp;</span>
-        (result.reason as any)?.response?.data?.code === 'payment_required'
-    );
-&nbsp;
-<span class="cstat-no" title="statement not covered" >    if (paymentRequired) {</span>
-<span class="cstat-no" title="statement not covered" >      throw new Error('Some modules require payment. Please purchase the course first.');</span>
-    }
 &nbsp;
     const allAlreadyEnrolled = <span class="cstat-no" title="statement not covered" >results.every(</span>
 <span class="fstat-no" title="function not covered" >      (r</span>esult) =&gt;
@@ -808,7 +805,7 @@ export const courseService = <span class="cstat-no" title="statement not covered
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-19T06:13:22.134Z
+                at 2026-02-20T14:17:42.799Z
             </div>
         <script src="../prettify.js"></script>
         <script>
