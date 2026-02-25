@@ -389,20 +389,35 @@ export const InformationScreen: React.FC<Props> = ({ navigation, route }) => {
               </Modal>
             </View>
 
-            <TouchableOpacity
-              style={styles.consentRow}
-              onPress={() => setConsentChecked(!consentChecked)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.checkbox, consentChecked && styles.checkboxChecked]}>
-                {consentChecked && (
-                  <Ionicons name="checkmark" size={14} color={colors.text.inverse} />
-                )}
-              </View>
+            <View style={styles.consentRow}>
+              <TouchableOpacity
+                style={styles.checkboxContainer}
+                onPress={() => setConsentChecked(!consentChecked)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.checkbox, consentChecked && styles.checkboxChecked]}>
+                  {consentChecked && (
+                    <Ionicons name="checkmark" size={14} color={colors.text.inverse} />
+                  )}
+                </View>
+              </TouchableOpacity>
               <Text style={styles.consentText}>
-                By clicking "Continue", you consent to the processing of your personal data.
+                I agree to the{' '}
+                <Text
+                  style={styles.linkText}
+                  onPress={() => navigation.getParent()?.navigate('Terms')}
+                >
+                  Terms of Service
+                </Text>{' '}
+                and{' '}
+                <Text
+                  style={styles.linkText}
+                  onPress={() => navigation.getParent()?.navigate('Privacy')}
+                >
+                  Privacy Policy
+                </Text>
               </Text>
-            </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.footer}>
@@ -524,15 +539,19 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.md,
   },
+  checkboxContainer: {
+    padding: spacing.xs,
+    marginLeft: -spacing.xs,
+  },
   checkbox: {
-    width: 44,
-    height: 44,
+    width: 24,
+    height: 24,
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 2,
+    marginRight: spacing.sm,
   },
   checkboxChecked: {
     backgroundColor: colors.primary.main,
@@ -542,6 +561,12 @@ const styles = StyleSheet.create({
     flex: 1,
     ...textStyles.caption,
     color: colors.text.secondary,
+    lineHeight: 20,
+    marginTop: 2,
+  },
+  linkText: {
+    color: colors.primary.main,
+    textDecorationLine: 'underline',
   },
   footer: {
     marginTop: spacing.xl,
