@@ -367,7 +367,7 @@ export const InformationScreen: React.FC<Props> = ({ navigation, route }) => {
                         style={[
                           styles.countryItem,
                           COUNTRY_CODES[selectedCountryIndex]?.countryCode === item.countryCode &&
-                            styles.countryItemSelected,
+                          styles.countryItemSelected,
                         ]}
                         onPress={() => {
                           const originalIndex = COUNTRY_CODES.findIndex(
@@ -525,8 +525,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   checkbox: {
-    width: 20,
-    height: 20,
+    width: 44,
+    height: 44,
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: 4,

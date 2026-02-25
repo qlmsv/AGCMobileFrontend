@@ -8,7 +8,7 @@
  *   Android: add google-services.json, apply google-services plugin
  */
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import apiService from './api';
 import { API_ENDPOINTS } from '../config/api';
 import { logger } from '../utils/logger';
@@ -53,7 +53,7 @@ export const notificationService = {
 
   async sendTokenToBackend(token: string) {
     try {
-      const authToken = await AsyncStorage.getItem('access_token');
+      const authToken = await SecureStore.getItemAsync('access_token');
       if (!authToken) {
         logger.info('FCM: User not authenticated, skipping backend registration');
         return;
@@ -78,7 +78,7 @@ export const notificationService = {
    * Subscribe to foreground messages. Returns unsubscribe function.
    */
   setupForegroundHandler(callback: (message: any) => void): () => void {
-    if (!messaging) return () => {};
+    if (!messaging) return () => { };
     return messaging().onMessage(async (message: any) => {
       logger.info('FCM foreground message:', message?.notification?.title);
       callback(message);

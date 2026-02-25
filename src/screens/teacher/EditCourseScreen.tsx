@@ -475,14 +475,14 @@ const styles = StyleSheet.create({
   toggleLabel: { ...textStyles.body, color: colors.text.primary },
   toggle: {
     width: 50,
-    height: 30,
+    height: 48,
     borderRadius: 15,
     backgroundColor: colors.neutral[300],
     justifyContent: 'center',
     paddingHorizontal: 3,
   },
   toggleActive: { backgroundColor: colors.primary.main },
-  toggleKnob: { width: 24, height: 24, borderRadius: 12, backgroundColor: 'white' },
+  toggleKnob: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'white' },
   toggleKnobActive: { alignSelf: 'flex-end' },
   coverPicker: {
     height: 180,

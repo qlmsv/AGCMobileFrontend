@@ -378,7 +378,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { API_BASE_URL, API_ENDPOINTS } from '../config/api';
 import { logger } from '../utils/logger';
 &nbsp;
@@ -405,7 +405,7 @@ class ApiService {
     // Request interceptor to add auth token
 <span class="cstat-no" title="statement not covered" >    this.client.interceptors.request.use(</span>
 <span class="fstat-no" title="function not covered" >      as</span>ync (config) =&gt; {
-        const token = <span class="cstat-no" title="statement not covered" >await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);</span>
+        const token = <span class="cstat-no" title="statement not covered" >await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);</span>
 <span class="cstat-no" title="statement not covered" >        if (token) {</span>
 <span class="cstat-no" title="statement not covered" >          config.headers.Authorization = `Bearer ${token}`;</span>
 <span class="cstat-no" title="statement not covered" >          logger.debug('🔑 Using access token', { url: config.url });</span>
@@ -428,7 +428,7 @@ class ApiService {
 <span class="cstat-no" title="statement not covered" >          originalRequest._retry = true;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >          try {</span>
-            const refreshToken = <span class="cstat-no" title="statement not covered" >await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);</span>
+            const refreshToken = <span class="cstat-no" title="statement not covered" >await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);</span>
 <span class="cstat-no" title="statement not covered" >            if (refreshToken) {</span>
 <span class="cstat-no" title="statement not covered" >              logger.debug('🔄 Refreshing token...');</span>
               const response = <span class="cstat-no" title="statement not covered" >await axios.post(</span>
@@ -443,7 +443,7 @@ class ApiService {
               );
 &nbsp;
               const { access } = <span class="cstat-no" title="statement not covered" >response.data;</span>
-<span class="cstat-no" title="statement not covered" >              await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access);</span>
+<span class="cstat-no" title="statement not covered" >              await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, access);</span>
 <span class="cstat-no" title="statement not covered" >              logger.debug('✅ Token refreshed successfully');</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >              originalRequest.headers.Authorization = `Bearer ${access}`;</span>
@@ -515,21 +515,21 @@ class ApiService {
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  as</span>ync setTokens(access: string, refresh: string) {
-<span class="cstat-no" title="statement not covered" >    await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access);</span>
-<span class="cstat-no" title="statement not covered" >    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh);</span>
+<span class="cstat-no" title="statement not covered" >    await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, access);</span>
+<span class="cstat-no" title="statement not covered" >    await SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, refresh);</span>
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  as</span>ync clearTokens() {
-<span class="cstat-no" title="statement not covered" >    await AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);</span>
-<span class="cstat-no" title="statement not covered" >    await AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);</span>
+<span class="cstat-no" title="statement not covered" >    await SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN);</span>
+<span class="cstat-no" title="statement not covered" >    await SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN);</span>
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  as</span>ync getAccessToken(): Promise&lt;string | null&gt; {
-<span class="cstat-no" title="statement not covered" >    return await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);</span>
+<span class="cstat-no" title="statement not covered" >    return await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);</span>
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  as</span>ync getRefreshToken(): Promise&lt;string | null&gt; {
-<span class="cstat-no" title="statement not covered" >    return await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);</span>
+<span class="cstat-no" title="statement not covered" >    return await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);</span>
   }
 }
 &nbsp;
@@ -541,7 +541,7 @@ export default new ApiService();
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-20T14:17:42.799Z
+                at 2026-02-25T17:29:40.278Z
             </div>
         <script src="../prettify.js"></script>
         <script>

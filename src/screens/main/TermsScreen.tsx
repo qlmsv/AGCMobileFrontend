@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   placeholder: {
-    width: 32,
+    width: 48,
   },
   content: {
     flex: 1,

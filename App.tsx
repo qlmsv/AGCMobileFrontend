@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
@@ -17,6 +17,10 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { notificationService } from './src/services/notificationService';
 import { iapService } from './src/services/iapService';
 import { logger } from './src/utils/logger';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
+import { OfflineBanner } from './src/components/OfflineBanner';
+import { DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { useColorScheme } from 'react-native';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -32,6 +36,8 @@ export default function App() {
     // Alias for code that uses 'Inter' directly if configured that way
     Inter: Inter_400Regular,
   });
+
+  const colorScheme = useColorScheme();
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
@@ -75,14 +81,19 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <SafeAreaProvider>
-        <AuthProvider>
-          <NavigationContainer>
-            <RootNavigator />
-            <StatusBar style="dark" />
-          </NavigationContainer>
-        </AuthProvider>
-      </SafeAreaProvider>
+      <ErrorBoundary>
+        <SafeAreaProvider>
+          <SafeAreaView style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' }}>
+            <OfflineBanner />
+            <AuthProvider>
+              <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <RootNavigator />
+                <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              </NavigationContainer>
+            </AuthProvider>
+          </SafeAreaView>
+        </SafeAreaProvider>
+      </ErrorBoundary>
     </GestureHandlerRootView>
   );
 }

@@ -63,7 +63,7 @@ const DURATION_OPTIONS = [
 
 const generateTempId = () => Math.random().toString(36).substr(2, 9);
 
-// Tier-based pricing configuration
+// Tier-based pricing configuration matching backend allowed prices
 const TIER_PRICES = [
   { value: '12.99', label: '$12.99', tier: 'tier1' },
   { value: '32.99', label: '$32.99', tier: 'tier2' },
@@ -885,8 +885,8 @@ const styles = StyleSheet.create({
   },
   stepItem: { alignItems: 'center', gap: spacing.xs },
   stepCircle: {
-    width: 28,
-    height: 28,
+    width: 44,
+    height: 44,
     borderRadius: 14,
     backgroundColor: colors.neutral[200],
     justifyContent: 'center',
@@ -956,7 +956,7 @@ const styles = StyleSheet.create({
   toggleLabel: { ...textStyles.body, color: colors.text.primary },
   toggle: {
     width: 50,
-    height: 28,
+    height: 48,
     borderRadius: 14,
     backgroundColor: colors.neutral[300],
     padding: 2,
@@ -964,8 +964,8 @@ const styles = StyleSheet.create({
   },
   toggleActive: { backgroundColor: colors.primary.main },
   toggleKnob: {
-    width: 24,
-    height: 24,
+    width: 44,
+    height: 44,
     borderRadius: 12,
     backgroundColor: colors.background.default,
   },
@@ -1140,8 +1140,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   radioButton: {
-    width: 20,
-    height: 20,
+    width: 44,
+    height: 44,
     borderRadius: 10,
     borderWidth: 2,
     borderColor: colors.border.default,
@@ -1150,9 +1150,9 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   radioButtonInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: '50%',
+    height: '50%',
+    borderRadius: 11,
     backgroundColor: colors.primary.main,
   },
   tierInfo: {

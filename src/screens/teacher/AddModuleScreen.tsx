@@ -22,13 +22,13 @@ import { logger } from '../../utils/logger';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-// Tier-based pricing configuration
+// Tier-based pricing configuration matching backend allowed prices
 const TIER_PRICES = [
-  { value: '10', label: '$10', tier: 'tier1', userPays: '$12.99' },
-  { value: '25', label: '$25', tier: 'tier2', userPays: '$32.99' },
-  { value: '100', label: '$100', tier: 'tier3', userPays: '$129.99' },
-  { value: '200', label: '$200', tier: 'tier4', userPays: '$259.99' },
-  { value: '300', label: '$300', tier: 'tier5', userPays: '$389.99' },
+  { value: '12.99', label: '$12.99', tier: 'tier1', userPays: '$12.99' },
+  { value: '32.99', label: '$32.99', tier: 'tier2', userPays: '$32.99' },
+  { value: '129.99', label: '$129.99', tier: 'tier3', userPays: '$129.99' },
+  { value: '259.99', label: '$259.99', tier: 'tier4', userPays: '$259.99' },
+  { value: '389.99', label: '$389.99', tier: 'tier5', userPays: '$389.99' },
 ];
 
 export const AddModuleScreen: React.FC = () => {
@@ -313,8 +313,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   radioButton: {
-    width: 20,
-    height: 20,
+    width: 44,
+    height: 44,
     borderRadius: 10,
     borderWidth: 2,
     borderColor: colors.border.default,
@@ -323,9 +323,9 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   radioButtonInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: '50%',
+    height: '50%',
+    borderRadius: 11,
     backgroundColor: colors.primary.main,
   },
   tierInfo: {

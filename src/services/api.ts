@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { API_BASE_URL, API_ENDPOINTS } from '../config/api';
 import { logger } from '../utils/logger';
 
@@ -26,7 +26,7 @@ class ApiService {
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
       async (config) => {
-        const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+        const token = await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
           logger.debug('🔑 Using access token', { url: config.url });
@@ -49,7 +49,7 @@ class ApiService {
           originalRequest._retry = true;
 
           try {
-            const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+            const refreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
             if (refreshToken) {
               logger.debug('🔄 Refreshing token...');
               const response = await axios.post(
@@ -64,7 +64,7 @@ class ApiService {
               );
 
               const { access } = response.data;
-              await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access);
+              await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, access);
               logger.debug('✅ Token refreshed successfully');
 
               originalRequest.headers.Authorization = `Bearer ${access}`;
@@ -136,21 +136,21 @@ class ApiService {
   }
 
   async setTokens(access: string, refresh: string) {
-    await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access);
-    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh);
+    await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, access);
+    await SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, refresh);
   }
 
   async clearTokens() {
-    await AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-    await AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+    await SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
+    await SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
   }
 
   async getAccessToken(): Promise<string | null> {
-    return await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+    return await SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
   }
 
   async getRefreshToken(): Promise<string | null> {
-    return await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+    return await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
   }
 }
 
