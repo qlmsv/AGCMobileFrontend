@@ -1,4 +1,4 @@
-package com.agc.mobile
+package com.apexglobal
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

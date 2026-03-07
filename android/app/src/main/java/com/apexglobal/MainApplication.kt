@@ -1,4 +1,4 @@
-package com.agc.mobile
+package com.apexglobal
 
 import android.app.Application
 import android.content.res.Configuration

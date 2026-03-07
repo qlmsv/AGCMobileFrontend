@@ -61,5 +61,19 @@ target 'AGCMobile' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+    
+    # Silence third-party deprecation warnings in Xcode
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
+      end
+      
+      # Fix for Xcode 15+ Hermes script build phase warning
+      target.build_phases.each do |build_phase|
+        if build_phase.class == Xcodeproj::Project::Object::PBXShellScriptBuildPhase && build_phase.name == '[CP-User] [Hermes] Replace Hermes for the right configuration, if needed'
+          build_phase.always_out_of_date = '1'
+        end
+      end
+    end
   end
 end

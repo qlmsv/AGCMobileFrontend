@@ -208,17 +208,30 @@ export const InformationScreen: React.FC<Props> = ({ navigation, route }) => {
           : null,
       };
       logger.info('📤 Sending profile data:', JSON.stringify(profileData, null, 2));
-      await profileService.createProfile(profileData);
+
+      try {
+        // Try to fetch existing profile first
+        const existingProfile = await profileService.getMyProfile();
+        logger.info('Profile already exists, updating instead of creating.');
+        await profileService.updateProfile(existingProfile.id, profileData);
+      } catch (profileError: any) {
+        if (profileError.response?.status === 404) {
+          logger.info('Profile not found, creating new profile...');
+          await profileService.createProfile(profileData);
+        } else {
+          throw profileError; // Rethrow if it's not a 404
+        }
+      }
+
       await refreshUser();
       // Navigation handled by AuthContext - user becomes authenticated with profile
     } catch (error: any) {
       logger.error('Create profile error:', error);
       logger.error('Error response:', error.response);
       logger.error('Error response data:', error.response?.data);
-      const errorDetails = JSON.stringify(error.response?.data || error.message || error, null, 2);
       Alert.alert(
         'Error',
-        `${error.response?.data?.detail || 'Failed to complete registration. Please try again.'}\n\nDetails: ${errorDetails}`
+        error.response?.data?.detail || 'Failed to complete registration. Please try again.'
       );
     } finally {
       setIsLoading(false);
@@ -306,7 +319,7 @@ export const InformationScreen: React.FC<Props> = ({ navigation, route }) => {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                Phone number <Text style={styles.required}>*</Text>
+                Phone number <Text style={styles.optional}>(optional)</Text>
               </Text>
               <View style={styles.phoneInputContainer}>
                 <TouchableOpacity
@@ -484,6 +497,10 @@ const styles = StyleSheet.create({
   },
   required: {
     color: colors.primary.main,
+  },
+  optional: {
+    color: colors.text.tertiary,
+    fontWeight: '400',
   },
   input: {
     height: layout.input.height,

@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
@@ -83,7 +83,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <ErrorBoundary>
         <SafeAreaProvider>
-          <SafeAreaView style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' }}>
+          <View style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' }}>
             <OfflineBanner />
             <AuthProvider>
               <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
@@ -91,7 +91,7 @@ export default function App() {
                 <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
               </NavigationContainer>
             </AuthProvider>
-          </SafeAreaView>
+          </View>
         </SafeAreaProvider>
       </ErrorBoundary>
     </GestureHandlerRootView>

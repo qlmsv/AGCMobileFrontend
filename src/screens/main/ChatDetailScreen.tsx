@@ -14,7 +14,7 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,6 +37,7 @@ export const ChatDetailScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const insets = useSafeAreaInsets();
 
   // Members modal
   const [showMembersModal, setShowMembersModal] = useState(false);
@@ -173,7 +174,7 @@ export const ChatDetailScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} testID="chat-detail-screen">
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']} testID="chat-detail-screen">
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
@@ -193,32 +194,33 @@ export const ChatDetailScreen: React.FC = () => {
         )}
       </View>
 
-      {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary.main} />
-        </View>
-      ) : (
-        <FlatList
-          testID="messages-list"
-          ref={flatListRef}
-          data={messages}
-          renderItem={renderMessageItem}
-          keyExtractor={(item, index) => item.id?.toString() || `msg-${index}`}
-          inverted // Show newest at bottom
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No messages yet. Start the conversation!</Text>
-            </View>
-          }
-        />
-      )}
-
       <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        keyboardVerticalOffset={0}
       >
-        <View style={styles.inputContainer}>
+        {isLoading ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color={colors.primary.main} />
+          </View>
+        ) : (
+          <FlatList
+            testID="messages-list"
+            ref={flatListRef}
+            data={messages}
+            renderItem={renderMessageItem}
+            keyExtractor={(item, index) => item.id?.toString() || `msg-${index}`}
+            inverted // Show newest at bottom
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No messages yet. Start the conversation!</Text>
+              </View>
+            }
+          />
+        )}
+
+        <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
           <TextInput
             testID="message-input"
             style={styles.input}
@@ -327,8 +329,12 @@ const styles = StyleSheet.create({
     ...textStyles.caption,
     color: colors.success,
   },
+  keyboardAvoid: {
+    flex: 1,
+  },
   listContent: {
     flexGrow: 1,
+    paddingVertical: spacing.sm,
   },
   emptyContainer: {
     flex: 1,

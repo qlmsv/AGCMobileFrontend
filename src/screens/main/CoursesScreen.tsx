@@ -183,7 +183,7 @@ export const CoursesScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} testID="courses-screen">
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']} testID="courses-screen">
       <View style={styles.header}>
         <Text style={styles.title}>Courses</Text>
       </View>

@@ -92,7 +92,7 @@ export const HomeScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container} testID="home-screen">
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']} testID="home-screen">
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}

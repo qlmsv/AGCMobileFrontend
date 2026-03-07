@@ -304,7 +304,7 @@ export const ScheduleScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} testID="schedule-screen">
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']} testID="schedule-screen">
       <View style={styles.header}>
         <Text style={styles.title}>My Schedule</Text>
       </View>
