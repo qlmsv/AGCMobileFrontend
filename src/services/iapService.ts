@@ -7,6 +7,7 @@
 import { Platform } from 'react-native';
 import { logger } from '../utils/logger';
 import { courseService } from './courseService';
+import { isAppleTierProductId } from '../utils/iapProductIds';
 
 // Lazy-load expo-iap to avoid crash in Expo Go / simulators
 let iapModule: typeof import('expo-iap') | null = null;
@@ -381,7 +382,7 @@ class IAPService {
       // Collect all tier purchases with their JWS tokens
       const tierPurchases = purchases
         .filter((p): p is Purchase & { purchaseToken: string } =>
-          Boolean(p.productId.includes('tier') && p.purchaseToken)
+          Boolean(isAppleTierProductId(p.productId) && p.purchaseToken)
         )
         .map((p) => ({
           productId: p.productId,

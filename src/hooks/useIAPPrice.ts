@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Course } from '../types';
 import { iapService } from '../services/iapService';
 import { logger } from '../utils/logger';
+import { getCourseProductIdForPlatform } from '../utils/iapProductIds';
 
 export const useIAPPrice = (course: Course | null) => {
     const [displayPrice, setDisplayPrice] = useState<string>('');
@@ -33,7 +34,7 @@ export const useIAPPrice = (course: Course | null) => {
                 return;
             }
 
-            const productId = course.tier_info?.product_id;
+            const productId = getCourseProductIdForPlatform(course);
 
             // If IAP is not available or product ID is missing, fallback to backend string
             if (!iapService.isAvailable() || !productId) {

@@ -23,6 +23,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { secureImageUrl } from '../../utils/secureUrl';
 import { iapService } from '../../services/iapService';
 import { useIAPPrice } from '../../hooks/useIAPPrice';
+import { getCourseProductIdForPlatform } from '../../utils/iapProductIds';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -109,7 +110,7 @@ export const CourseDetailScreen: React.FC = () => {
         Alert.alert('Error', 'In-App Purchases are not available on this device.');
         return;
       }
-      const productId = course.tier_info?.product_id;
+      const productId = getCourseProductIdForPlatform(course);
       if (!productId) {
         Alert.alert('Error', 'Unable to determine product for this course.');
         return;

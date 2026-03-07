@@ -62,6 +62,11 @@ export interface VerifyCodeResponse {
 
 export interface TierInfo {
   product_id: string;
+  apple_product_id?: string;
+  google_product_id?: string;
+  tier?: string;
+  tier_name?: string;
+  user_pays?: number;
   price: number;
 }
 
