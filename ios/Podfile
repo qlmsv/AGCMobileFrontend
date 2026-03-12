@@ -43,6 +43,8 @@ target 'AGCMobile' do
   end
 
   config = use_native_modules!(config_command)
+  react_native_package = JSON.parse(File.read(File.join(config[:reactNativePath], 'package.json')))
+  rn_version = react_native_package['version']
 
   use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
   use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
@@ -75,6 +77,22 @@ target 'AGCMobile' do
       end
       aggregate_target.user_project.save()
     end
+
+    installer.pods_project.targets.each do |target|
+      next unless target.name == 'hermes-engine'
+
+      target.build_phases.each do |build_phase|
+        next unless build_phase.class == Xcodeproj::Project::Object::PBXShellScriptBuildPhase
+        next unless build_phase.name == '[CP-User] [RN] [2] Build Hermes'
+
+        build_phase.shell_script = <<-EOS
+          . "${REACT_NATIVE_PATH}/scripts/xcode/with-environment.sh"
+          export CMAKE_BINARY=${CMAKE_BINARY:-/usr/local/bin/cmake}
+          /bin/bash "${PODS_ROOT}/../scripts/build-hermes-xcode-wrapper.sh" #{rn_version} "${PODS_ROOT}/hermes-engine/build_host_hermesc/ImportHermesc.cmake" "${REACT_NATIVE_PATH}/ReactCommon/jsi"
+        EOS
+      end
+    end
+    installer.pods_project.save()
     
     # Silence third-party deprecation warnings in Xcode
     installer.pods_project.targets.each do |target|
