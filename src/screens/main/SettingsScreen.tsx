@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../contexts/AuthContext';
 import { iapService } from '../../services/iapService';
+import { notificationService } from '../../services/notificationService';
+import { logger } from '../../utils/logger';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -28,6 +30,55 @@ export const SettingsScreen: React.FC = () => {
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [isPushSaving, setIsPushSaving] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    notificationService
+      .isPushEnabled()
+      .then((enabled) => {
+        if (isMounted) {
+          setPushEnabled(enabled);
+        }
+      })
+      .catch((error) => {
+        logger.error('Failed to load push notification preference:', error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handlePushToggle = async (nextValue: boolean) => {
+    const previousValue = pushEnabled;
+    setIsPushSaving(true);
+
+    try {
+      if (nextValue) {
+        const token = await notificationService.enablePushNotifications();
+        if (!token) {
+          setPushEnabled(false);
+          Alert.alert(
+            'Push Notifications Unavailable',
+            'Enable notification permissions for this app on a physical device, then try again.'
+          );
+          return;
+        }
+      } else {
+        await notificationService.disablePushNotifications();
+      }
+
+      setPushEnabled(nextValue);
+    } catch (error) {
+      logger.error('Failed to update push notification preference:', error);
+      Alert.alert('Error', 'Could not update push notification settings. Please try again.');
+      setPushEnabled(previousValue);
+    } finally {
+      setIsPushSaving(false);
+    }
+  };
 
   // Handle restore purchases for iOS - Required by Apple App Store
   const handleRestorePurchases = async () => {
@@ -76,16 +127,20 @@ export const SettingsScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>Notifications</Text>
           <View style={styles.item} testID="notification-settings">
             <Text style={styles.itemText}>Push Notifications</Text>
-            <Switch
-              testID="theme-toggle"
-              value={pushEnabled}
-              onValueChange={setPushEnabled}
-              trackColor={{ false: colors.neutral[300], true: colors.primary.light }}
-              thumbColor={pushEnabled ? colors.primary.main : colors.neutral[400]}
-              accessibilityRole="togglebutton"
-              accessibilityLabel="Push Notifications"
-              accessibilityState={{ checked: pushEnabled }}
-            />
+            {isPushSaving ? (
+              <ActivityIndicator size="small" color={colors.primary.main} />
+            ) : (
+              <Switch
+                testID="theme-toggle"
+                value={pushEnabled}
+                onValueChange={handlePushToggle}
+                trackColor={{ false: colors.neutral[300], true: colors.primary.light }}
+                thumbColor={pushEnabled ? colors.primary.main : colors.neutral[400]}
+                accessibilityRole="togglebutton"
+                accessibilityLabel="Push Notifications"
+                accessibilityState={{ checked: pushEnabled, busy: isPushSaving }}
+              />
+            )}
           </View>
           <View style={styles.item}>
             <Text style={styles.itemText}>Email Updates</Text>

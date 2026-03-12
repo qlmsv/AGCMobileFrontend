@@ -73,6 +73,7 @@ export const API_ENDPOINTS = {
   WEBPUSH_SUBSCRIPTIONS: '/notifications/webpush/subscriptions/',
   WEBPUSH_SUBSCRIPTION_BY_ID: (id: string) => `/notifications/webpush/subscriptions/${id}/`,
   PUSH_DEVICES: '/notifications/devices/',
+  PUSH_DEVICE_BY_TOKEN: '/notifications/devices/by_token/',
 
   // Banners
   BANNERS: '/banners/',

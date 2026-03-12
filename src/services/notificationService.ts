@@ -1,101 +1,263 @@
-/**
- * Notification Service — Firebase Cloud Messaging
- *
- * Replaces expo-notifications with @react-native-firebase/messaging.
- * To set up:
- *   npm install @react-native-firebase/app @react-native-firebase/messaging
- *   iOS:  add GoogleService-Info.plist, pod install, enable Push Notifications capability
- *   Android: add google-services.json, apply google-services plugin
- */
 import { Platform } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import apiService from './api';
 import { API_ENDPOINTS } from '../config/api';
 import { logger } from '../utils/logger';
 
-// Dynamic import so the app doesn't crash if the package is not yet installed
-let messaging: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  messaging = require('@react-native-firebase/messaging').default;
-} catch {
-  logger.warn('Firebase messaging not available. Run: npm install @react-native-firebase/app @react-native-firebase/messaging');
+const STORAGE_KEYS = {
+  PUSH_ENABLED: 'notifications.push_enabled',
+  PUSH_TOKEN: 'notifications.push_token',
+};
+
+const EAS_PROJECT_ID =
+  Constants.expoConfig?.extra?.eas?.projectId ??
+  Constants.easConfig?.projectId ??
+  '03c3678b-99e8-454f-b060-c34c8b58e10a';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+type NotificationPayload = Record<string, string | number | boolean | null | undefined>;
+
+async function ensureAndroidChannels() {
+  if (Platform.OS !== 'android') {
+    return;
+  }
+
+  await Notifications.setNotificationChannelAsync('default', {
+    name: 'General',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 250, 250, 250],
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+  });
+
+  await Notifications.setNotificationChannelAsync('lesson-reminders', {
+    name: 'Lesson Reminders',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 250, 150, 250],
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    sound: 'default',
+  });
+}
+
+async function requestPermissions(): Promise<boolean> {
+  if (!Device.isDevice) {
+    logger.warn('Push notifications require a physical device');
+    return false;
+  }
+
+  const current = await Notifications.getPermissionsAsync();
+  let status = current.status;
+
+  if (status !== 'granted') {
+    const requested = await Notifications.requestPermissionsAsync();
+    status = requested.status;
+  }
+
+  if (status !== 'granted') {
+    logger.warn('Push notification permission not granted');
+    return false;
+  }
+
+  return true;
+}
+
+async function storePushToken(token: string | null) {
+  if (token) {
+    await AsyncStorage.setItem(STORAGE_KEYS.PUSH_TOKEN, token);
+    return;
+  }
+
+  await AsyncStorage.removeItem(STORAGE_KEYS.PUSH_TOKEN);
+}
+
+async function getStoredPushToken(): Promise<string | null> {
+  return AsyncStorage.getItem(STORAGE_KEYS.PUSH_TOKEN);
+}
+
+function normalizeNotificationData(data: NotificationPayload | undefined): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(data ?? {}).flatMap(([key, value]) => {
+      if (value === null || value === undefined) {
+        return [];
+      }
+      return [[key, String(value)]];
+    })
+  );
 }
 
 export const notificationService = {
-  /**
-   * Request permission and return FCM token.
-   * Returns undefined if permission denied or Firebase not set up.
-   */
-  async registerForPushNotificationsAsync(): Promise<string | undefined> {
-    if (!messaging) return undefined;
+  async isPushEnabled(): Promise<boolean> {
+    const value = await AsyncStorage.getItem(STORAGE_KEYS.PUSH_ENABLED);
+    return value === null ? true : value === 'true';
+  },
 
+  async setPushEnabled(enabled: boolean): Promise<void> {
+    await AsyncStorage.setItem(STORAGE_KEYS.PUSH_ENABLED, String(enabled));
+  },
+
+  async registerForPushNotificationsAsync(): Promise<string | undefined> {
     try {
-      if (Platform.OS === 'ios') {
-        const authStatus = await messaging().requestPermission();
-        const authorized =
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-        if (!authorized) {
-          logger.warn('FCM: Permission not granted on iOS');
-          return undefined;
-        }
+      const enabled = await this.isPushEnabled();
+      if (!enabled) {
+        logger.info('Push registration skipped because user disabled notifications');
+        return undefined;
       }
 
-      const token = await messaging().getToken();
-      logger.info('FCM token:', token?.slice(0, 30) + '...');
+      await ensureAndroidChannels();
+
+      const granted = await requestPermissions();
+      if (!granted) {
+        return undefined;
+      }
+
+      const response = await Notifications.getExpoPushTokenAsync({
+        projectId: EAS_PROJECT_ID,
+      });
+      const token = response.data;
+
+      await storePushToken(token);
+      logger.info('Expo push token:', token.slice(0, 30) + '...');
       return token;
     } catch (error) {
-      logger.error('Error getting FCM token:', error);
+      logger.error('Error getting Expo push token:', error);
       return undefined;
     }
   },
 
   async sendTokenToBackend(token: string) {
     try {
-      const authToken = await SecureStore.getItemAsync('access_token');
-      if (!authToken) {
-        logger.info('FCM: User not authenticated, skipping backend registration');
-        return;
-      }
-
       await apiService.post(API_ENDPOINTS.PUSH_DEVICES, {
         token,
-        type: 'fcm',
+        device_name: Device.modelName ?? undefined,
         platform: Platform.OS,
       });
-      logger.info('FCM token registered on backend');
+      await storePushToken(token);
+      logger.info('Expo push token registered on backend');
     } catch (error: any) {
       if (error?.response?.status === 401 || error?.response?.status === 404) {
-        logger.info('FCM: Backend endpoint not ready or requires auth');
+        logger.info('Push device registration skipped until backend/auth is ready');
       } else {
-        logger.error('Failed to send FCM token to backend:', error);
+        logger.error('Failed to send Expo push token to backend:', error);
       }
     }
   },
 
-  /**
-   * Subscribe to foreground messages. Returns unsubscribe function.
-   */
-  setupForegroundHandler(callback: (message: any) => void): () => void {
-    if (!messaging) return () => { };
-    return messaging().onMessage(async (message: any) => {
-      logger.info('FCM foreground message:', message?.notification?.title);
-      callback(message);
-    });
+  async removeTokenFromBackend(token?: string | null) {
+    const tokenToDelete = token ?? (await getStoredPushToken());
+    if (!tokenToDelete) {
+      return;
+    }
+
+    try {
+      await apiService.post(API_ENDPOINTS.PUSH_DEVICE_BY_TOKEN, {
+        token: tokenToDelete,
+      });
+      logger.info('Push token removed from backend');
+    } catch (error: any) {
+      if (error?.response?.status === 404 || error?.response?.status === 401) {
+        logger.info('Push token cleanup skipped because token/session is already gone');
+      } else {
+        logger.error('Failed to remove push token from backend:', error);
+      }
+    } finally {
+      await storePushToken(null);
+    }
   },
 
-  /**
-   * Register background message handler (call once on app init, outside render).
-   */
-  setupBackgroundHandler() {
-    if (!messaging) return;
-    messaging().setBackgroundMessageHandler(async (message: any) => {
-      logger.info('FCM background message:', message?.notification?.title);
-    });
+  async syncPushRegistration(): Promise<string | undefined> {
+    const token = await this.registerForPushNotificationsAsync();
+    if (!token) {
+      return undefined;
+    }
+
+    await this.sendTokenToBackend(token);
+    return token;
   },
 
-  // ── Server-side notification API methods (unchanged) ─────────────────────
+  async enablePushNotifications(): Promise<string | undefined> {
+    await this.setPushEnabled(true);
+    const token = await this.syncPushRegistration();
+    if (token) {
+      return token;
+    }
+
+    await this.setPushEnabled(false);
+    await this.removeTokenFromBackend();
+    return undefined;
+  },
+
+  async disablePushNotifications(): Promise<void> {
+    await this.setPushEnabled(false);
+    await this.removeTokenFromBackend();
+  },
+
+  async unregisterDevice(): Promise<void> {
+    await this.removeTokenFromBackend();
+  },
+
+  setupForegroundHandler(callback: (notification: Notifications.Notification) => void): () => void {
+    const subscription = Notifications.addNotificationReceivedListener((notification) => {
+      logger.info('Push foreground notification:', notification.request.content.title);
+      callback(notification);
+    });
+
+    return () => subscription.remove();
+  },
+
+  setupNotificationResponseHandler(callback: (data: Record<string, string>) => void): () => void {
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      callback(
+        normalizeNotificationData(
+          response.notification.request.content.data as NotificationPayload | undefined
+        )
+      );
+    });
+
+    return () => subscription.remove();
+  },
+
+  async handleInitialNotificationResponse(
+    callback: (data: Record<string, string>) => void
+  ): Promise<void> {
+    const response = await Notifications.getLastNotificationResponseAsync();
+    if (!response) {
+      return;
+    }
+
+    callback(
+      normalizeNotificationData(
+        response.notification.request.content.data as NotificationPayload | undefined
+      )
+    );
+    await Notifications.clearLastNotificationResponseAsync();
+  },
+
+  setupTokenRefreshHandler(): () => void {
+    const subscription = Notifications.addPushTokenListener(async (token) => {
+      const nextToken = token.data;
+      const enabled = await this.isPushEnabled();
+
+      await storePushToken(nextToken);
+      if (!enabled) {
+        logger.info('Push token refreshed while notifications are disabled');
+        return;
+      }
+
+      await this.sendTokenToBackend(nextToken);
+    });
+
+    return () => subscription.remove();
+  },
 
   async getNotifications(params?: {
     ordering?: string;
@@ -110,7 +272,7 @@ export const notificationService = {
   },
 
   async getNotification(id: string): Promise<any> {
-    return await apiService.get(API_ENDPOINTS.NOTIFICATION_BY_ID(id));
+    return apiService.get(API_ENDPOINTS.NOTIFICATION_BY_ID(id));
   },
 
   async markNotificationAsRead(id: string): Promise<void> {
@@ -121,7 +283,7 @@ export const notificationService = {
     await apiService.post(API_ENDPOINTS.MARK_ALL_NOTIFICATIONS_READ, {});
   },
 
-  async getUnreadCount(): Promise<{ count: number }> {
-    return await apiService.get(API_ENDPOINTS.UNREAD_COUNT);
+  async getUnreadCount(): Promise<{ unread: number }> {
+    return apiService.get(API_ENDPOINTS.UNREAD_COUNT);
   },
 };

@@ -10,6 +10,7 @@ import { authService } from '../services/authService';
 import { User, Profile } from '../types';
 import { profileService } from '../services/profileService';
 import { logger } from '../utils/logger';
+import { notificationService } from '../services/notificationService';
 
 interface AuthContextType {
   user: User | null;
@@ -102,9 +103,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
-    await authService.logout();
-    setUser(null);
-    setProfile(null);
+    try {
+      await notificationService.unregisterDevice();
+    } catch (error) {
+      logger.error('Failed to unregister push device during logout:', error);
+    } finally {
+      await authService.logout();
+      setUser(null);
+      setProfile(null);
+    }
   };
 
   const refreshUser = async () => {
