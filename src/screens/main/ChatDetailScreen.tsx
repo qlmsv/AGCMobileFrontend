@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,10 +15,11 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { colors, spacing, borderRadius, textStyles } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
 import { chatService } from '../../services/chatService';
+import { realtimeService } from '../../services/realtimeService';
 import { userService } from '../../services/userService';
 import { Message, Chat, ChatMember } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
@@ -59,9 +60,46 @@ export const ChatDetailScreen: React.FC = () => {
     }
   }, [chatId]);
 
-  useEffect(() => {
-    fetchChatData();
-  }, [fetchChatData]);
+  const markChatAsRead = useCallback(async () => {
+    try {
+      await chatService.markChatAsRead(chatId);
+    } catch (error) {
+      logger.error('Error marking chat as read:', error);
+    }
+  }, [chatId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      let unsubscribeRealtime = () => {};
+
+      void (async () => {
+        await fetchChatData();
+        await markChatAsRead();
+
+        const disconnect = await realtimeService.connectChat(chatId, async (event) => {
+          if (event?.type !== 'message.new') {
+            return;
+          }
+
+          await fetchChatData();
+          await markChatAsRead();
+        });
+
+        if (isActive) {
+          unsubscribeRealtime = disconnect;
+          return;
+        }
+
+        disconnect();
+      })();
+
+      return () => {
+        isActive = false;
+        unsubscribeRealtime();
+      };
+    }, [chatId, fetchChatData, markChatAsRead])
+  );
 
   const fetchMembers = async () => {
     setIsLoadingMembers(true);
@@ -101,7 +139,7 @@ export const ChatDetailScreen: React.FC = () => {
     setShowMembersModal(true);
   };
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (!message.trim() || isSending) return;
 
     setIsSending(true);
@@ -126,6 +164,7 @@ export const ChatDetailScreen: React.FC = () => {
       logger.info('Message sent successfully:', newMessage);
       // Replace temp message with real one
       setMessages((prev) => prev.map((m) => (m.id === tempId ? newMessage : m)));
+      await markChatAsRead();
     } catch (error: any) {
       logger.error('Error sending message:', error);
       logger.error('Error response:', JSON.stringify(error.response?.data));
@@ -136,7 +175,7 @@ export const ChatDetailScreen: React.FC = () => {
     } finally {
       setIsSending(false);
     }
-  };
+  }, [chatId, markChatAsRead, message, isSending, user?.id]);
 
   const renderMessageItem = ({ item }: { item: Message }) => {
     const isMyMessage = item.sender === user?.id;
@@ -174,7 +213,11 @@ export const ChatDetailScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']} testID="chat-detail-screen">
+    <SafeAreaView
+      style={styles.container}
+      edges={['top', 'left', 'right']}
+      testID="chat-detail-screen"
+    >
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
@@ -220,7 +263,9 @@ export const ChatDetailScreen: React.FC = () => {
           />
         )}
 
-        <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
+        <View
+          style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}
+        >
           <TextInput
             testID="message-input"
             style={styles.input}

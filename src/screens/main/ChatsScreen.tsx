@@ -21,6 +21,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { chatService } from '../../services/chatService';
 import { courseService } from '../../services/courseService';
+import { realtimeService } from '../../services/realtimeService';
 import { ChatList, Course, Profile } from '../../types';
 import { EmptyState } from '../../components';
 import { logger } from '../../utils/logger';
@@ -29,6 +30,18 @@ import { useAuth } from '../../contexts/AuthContext';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 type TabType = 'all' | 'group' | 'personal';
+
+function getChatActivityTimestamp(chat: ChatList): number {
+  const timestamp = chat.last_message?.created_at ?? chat.created_at;
+  const value = Date.parse(timestamp);
+  return Number.isNaN(value) ? 0 : value;
+}
+
+function sortChatsByActivity(items: ChatList[]): ChatList[] {
+  return [...items].sort(
+    (left, right) => getChatActivityTimestamp(right) - getChatActivityTimestamp(left)
+  );
+}
 
 export const ChatsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -51,17 +64,17 @@ export const ChatsScreen: React.FC = () => {
   const [users, setUsers] = useState<Profile[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
-  const fetchChats = async () => {
+  const fetchChats = useCallback(async () => {
     try {
-      const data = await chatService.getChats({ ordering: '-created_at' });
-      setChats(data);
+      const data = await chatService.getChats();
+      setChats(sortChatsByActivity(data));
     } catch (error) {
       logger.error('Error fetching chats:', error);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, []);
 
   const fetchCourses = async () => {
     try {
@@ -150,8 +163,31 @@ export const ChatsScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
+      let isActive = true;
+      let unsubscribeRealtime = () => {};
+
       fetchChats();
-    }, [])
+
+      void (async () => {
+        const disconnect = await realtimeService.connectNotifications((event) => {
+          if (event?.type === 'chat_list.updated') {
+            fetchChats();
+          }
+        });
+
+        if (isActive) {
+          unsubscribeRealtime = disconnect;
+          return;
+        }
+
+        disconnect();
+      })();
+
+      return () => {
+        isActive = false;
+        unsubscribeRealtime();
+      };
+    }, [fetchChats])
   );
 
   // Filter chats based on tab and search
@@ -246,6 +282,7 @@ export const ChatsScreen: React.FC = () => {
   };
 
   const renderChatItem = ({ item, index }: { item: ChatList; index: number }) => {
+    const unreadCount = Number(item.unread_count) || 0;
     // Check for valid avatar URL (not null, undefined, or empty string)
     const hasAvatar = item.display_avatar && item.display_avatar.trim() !== '';
     // iOS blocks http:// - use secureImageUrl utility
@@ -270,7 +307,10 @@ export const ChatsScreen: React.FC = () => {
         )}
         <View style={styles.chatInfo}>
           <View style={styles.chatHeader}>
-            <Text style={styles.chatTitle} numberOfLines={1}>
+            <Text
+              style={[styles.chatTitle, unreadCount > 0 && styles.chatTitleUnread]}
+              numberOfLines={1}
+            >
               {item.display_title || 'Chat'}
             </Text>
             {item.last_message?.created_at && (
@@ -283,9 +323,17 @@ export const ChatsScreen: React.FC = () => {
             )}
           </View>
           <View style={styles.chatFooter}>
-            <Text style={styles.lastMessage} numberOfLines={1}>
+            <Text
+              style={[styles.lastMessage, unreadCount > 0 && styles.lastMessageUnread]}
+              numberOfLines={1}
+            >
               {item.last_message?.text || 'No messages yet'}
             </Text>
+            {unreadCount > 0 && (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+              </View>
+            )}
           </View>
         </View>
       </TouchableOpacity>
@@ -616,6 +664,7 @@ const styles = StyleSheet.create({
   chatInfo: { flex: 1, marginLeft: spacing.base, justifyContent: 'center' },
   chatHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   chatTitle: { ...textStyles.body, fontWeight: '600', color: colors.text.primary, flex: 1 },
+  chatTitleUnread: { color: colors.text.primary, fontWeight: '700' },
   timeText: { ...textStyles.caption, color: colors.text.tertiary },
   chatFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   lastMessage: {
@@ -623,6 +672,21 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     flex: 1,
     marginRight: spacing.sm,
+  },
+  lastMessageUnread: { color: colors.text.primary, fontWeight: '600' },
+  unreadBadge: {
+    minWidth: 22,
+    height: 22,
+    paddingHorizontal: 6,
+    borderRadius: 11,
+    backgroundColor: colors.primary.main,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unreadBadgeText: {
+    ...textStyles.caption,
+    color: colors.text.inverse,
+    fontWeight: '700',
   },
 
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },

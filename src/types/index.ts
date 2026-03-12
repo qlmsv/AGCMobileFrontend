@@ -186,7 +186,7 @@ export interface Chat {
   settings_json?: any;
   created_at: string;
   messages_counter: number;
-  unread_count: string;
+  unread_count: number;
   last_message: {
     id: number;
     text: string;
