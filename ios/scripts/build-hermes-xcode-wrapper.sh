@@ -6,6 +6,30 @@ release_version="$1"; shift
 hermesc_path="$1"; shift
 jsi_path="$1"; shift
 
+function set_minimum_os_version {
+    local plist_path="$1"
+    local min_version="$2"
+
+    if [[ ! -f "$plist_path" || -z "$min_version" ]]; then
+      return
+    fi
+
+    /usr/libexec/PlistBuddy -c "Delete :MinimumOSVersion" "$plist_path" >/dev/null 2>&1 || true
+    /usr/libexec/PlistBuddy -c "Add :MinimumOSVersion string $min_version" "$plist_path"
+}
+
+function generate_dsym {
+    local framework_binary="$1"
+    local dsym_path="$2"
+
+    if [[ ! -f "$framework_binary" ]]; then
+      return
+    fi
+
+    rm -rf "$dsym_path"
+    xcrun dsymutil "$framework_binary" -o "$dsym_path"
+}
+
 function get_platform_copy_destination {
     if [[ $1 == "macosx" ]]; then
       echo "macosx"
@@ -89,7 +113,19 @@ echo "Build Apple framework"
 echo "Copy Apple framework to destroot/Library/Frameworks"
 
 platform_copy_destination=$(get_platform_copy_destination $PLATFORM_NAME)
+framework_path="${PODS_ROOT}/hermes-engine/build/${PLATFORM_NAME}/API/hermes/hermes.framework"
+framework_plist="${framework_path}/Info.plist"
+framework_binary="${framework_path}/hermes"
+framework_dsym="${framework_path}.dSYM"
+destroot_path="${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/${platform_copy_destination}"
 
-cp -pfR \
-  "${PODS_ROOT}/hermes-engine/build/${PLATFORM_NAME}/API/hermes/hermes.framework" \
-  "${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/${platform_copy_destination}"
+set_minimum_os_version "$framework_plist" "$deployment_target"
+generate_dsym "$framework_binary" "$framework_dsym"
+
+mkdir -p "$destroot_path"
+rm -rf "${destroot_path}/hermes.framework" "${destroot_path}/hermes.framework.dSYM"
+
+cp -pfR "$framework_path" "$destroot_path"
+cp -pfR "$framework_dsym" "$destroot_path"
+
+set_minimum_os_version "${destroot_path}/hermes.framework/Info.plist" "$deployment_target"

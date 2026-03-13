@@ -93,6 +93,23 @@ target 'AGCMobile' do
       end
     end
     installer.pods_project.save()
+
+    frameworks_scripts = Dir.glob(File.join(__dir__, 'Pods', 'Target Support Files', 'Pods-*', 'Pods-*-frameworks.sh'))
+    hermes_framework_line = '  install_framework "${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/ios/hermes.framework"'
+    hermes_dsym_line = '  install_dsym "${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/ios/hermes.framework.dSYM" false'
+
+    frameworks_scripts.each do |script_path|
+      next unless File.exist?(script_path)
+
+      script = File.read(script_path)
+      next unless script.include?(hermes_framework_line)
+      next if script.include?(hermes_dsym_line)
+
+      File.write(
+        script_path,
+        script.gsub(hermes_framework_line, "#{hermes_framework_line}\n#{hermes_dsym_line}")
+      )
+    end
     
     # Silence third-party deprecation warnings in Xcode
     installer.pods_project.targets.each do |target|
